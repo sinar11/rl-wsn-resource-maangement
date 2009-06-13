@@ -1,0 +1,10 @@
+c -t * -i 0 -n red
+c -t * -i 1 -n blue
+c -t * -i 2 -n yellow
+c -t * -i 3 -n green
+c -t * -i 4 -n black
+c -t * -i 5 -n orange
+n -t * -s 0 -S UP -v square -c green
+n -t * -s 1 -S UP -v circle -c blue
+n -t * -s 2 -S UP -v square -c blue
+n -t * -s 3 -S UP -v square -c red
