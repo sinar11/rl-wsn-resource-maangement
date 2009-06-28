@@ -207,7 +207,7 @@ public class DRLSensorApp extends SensorApp implements drcl.comp.ActiveComponent
 
 	private void endTask(SensorTask task, SensorState state) {
 	 	setCPUMode(CPUBase.CPU_ACTIVE);
-        setRadioMode(RadioBase.RADIO_TRANSMIT);
+        //setRadioMode(RadioBase.RADIO_TRANSMIT);
         noOfTx=0;
         if(destId==-1){
             return; // no destination node present
@@ -290,7 +290,7 @@ public class DRLSensorApp extends SensorApp implements drcl.comp.ActiveComponent
     }
 
     public double getRemainingEnergy(){
-        double energy=BatteryContract.getRemainingEnergy(batteryPort);
+        double energy=100;//BatteryContract.INSTANCE.getContractContent();.getRemainingEnergy(batteryPort);
         if(energy<=0)
             throw new RuntimeException("Out of energy..");
         return energy;
@@ -356,7 +356,7 @@ public class DRLSensorApp extends SensorApp implements drcl.comp.ActiveComponent
         taskList.put(2, new SensorTask(2,SAMPLE, 0.01) {
             public void execute() {
                 setCPUMode(CPUBase.CPU_ACTIVE);
-                setRadioMode(RadioBase.RADIO_OFF);
+                //setRadioMode(RadioBase.RADIO_OFF);
                 noOfSensedEvents=0;
             }
             public synchronized double computeCost(double energySpent) {
@@ -374,7 +374,7 @@ public class DRLSensorApp extends SensorApp implements drcl.comp.ActiveComponent
             public void execute() {
                 noOfRx=0; noOfSensedEvents=0;
                 setCPUMode(CPUBase.CPU_OFF);
-                setRadioMode(RadioBase.RADIO_OFF);
+               // setRadioMode(RadioBase.RADIO_OFF);
             }
 
             public synchronized double computeCost(double energySpent) {

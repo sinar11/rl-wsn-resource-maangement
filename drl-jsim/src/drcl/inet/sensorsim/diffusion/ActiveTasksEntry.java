@@ -28,15 +28,8 @@
 
 package drcl.inet.sensorsim.diffusion ;
 
-import drcl.inet.sensorsim.* ;
-import drcl.data.*;
-import drcl.comp.*;
-import drcl.net.*;
-import drcl.inet.*;
-import drcl.inet.contract.*;
 import java.util.*;
-import drcl.comp.Port;
-import drcl.comp.Contract;
+
 
 /** This class implements an active task stored at the sink node.
 *

@@ -28,11 +28,8 @@
 
 package drcl.inet.mac;
 
-import drcl.data.*;
 import drcl.comp.*;
-import drcl.net.*;
-import drcl.util.ObjectUtil;
-import drcl.util.StringUtil;
+
 
 /**
  * This contract is defined for <code>WirelessPhy</code> to convey some infomation to mac, which seems not appropriate to be carried in a Packet.
@@ -59,25 +56,13 @@ public class MacPhyContract extends Contract
      * This class defines the data structure of the message between Mac and Phy components.
      */
     public static class Message extends drcl.comp.Message
-					implements drcl.data.Countable
 	{
-        /** The flag indicating whether this frame is corrupted or not.  */
-        boolean error;
-        
-        /** Received power */
-        double  RxPr;      
-        
-        /** Capture threshold */
-        double  CPThresh;  
-        
-        /** Receiving threshold. */
-    	double  RXThresh;
-        
-        /** Carrier Sensing Threshold. */
-        double  CSThresh;
-
-        /** The data packet.  */
-        Object  pkt;        
+        boolean error;      /** The flag indicating whether this frame is corrupted or not.  */
+        double  RxPr;       /** Received power */
+        double  CPThresh;   /** Capture threshold */
+    	double  RXThresh;   /** Receiving threshold. */
+        double  CSThresh;   /** Carrier Sensing Threshold. */
+        Object  pkt;        /** The data packet.  */
         
         public Message ()	{ }
 
@@ -126,15 +111,6 @@ public class MacPhyContract extends Contract
 		/** Get the data packet */
         public Object  getPkt()       { return pkt; }
 
-		public int getSize()
-		{ return ((Packet)pkt).getSize(); }
-
-		public int getNumberCount()
-		{ return ((Packet)pkt).getNumberCount(); }
-
-		public long getSizeCount()
-		{ return ((Packet)pkt).getSizeCount(); }
-
         /**
          * Sets the error flag.
          */
@@ -151,7 +127,7 @@ public class MacPhyContract extends Contract
 
         public String toString(String separator_) {
             String str;
-            str = "Mac-Phy Message:" + separator_ + "error=" + error + separator_ + "RxPr=" + RxPr + separator_ + "CPThresh=" + CPThresh + "RXThresh=" + RXThresh + "CSThresh=" + CSThresh;
+            str = "Node-Channel Message:" + separator_ + "error=" + error + separator_ + "RxPr=" + RxPr + separator_ + "CPThresh=" + CPThresh + "RXThresh=" + RXThresh + "CSThresh=" + CSThresh;
             str = str + separator_ + "Pkt=" + pkt.toString(); 
             return str;
         }

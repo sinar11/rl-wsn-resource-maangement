@@ -27,13 +27,9 @@
 
 package drcl.inet.mac;
 
-import drcl.*;
-import drcl.data.*;
 import drcl.comp.*;
 import drcl.net.*;
 import drcl.inet.*;
-import drcl.inet.mac.*;
-import drcl.util.scalar.IntSpace;
 import java.util.*;
 
 /**
@@ -42,9 +38,20 @@ import java.util.*;
  *
  * @author Ye Ge
  */
-public class Mac_802_11 extends Module implements ActiveComponent {
+public class Mac_802_11 extends drcl.inet.mac.Mac implements ActiveComponent {
     double last_time = 0.0;
-    
+
+
+    /**
+     *Added by Nicholas:
+     * This variable acts as a flag in order to synchronize
+     * the radio modes of both the MAC and wirelessphy layers
+     * together. So when the timer goes off at this layer
+     * (ie txTimer, rxTimer etc..) then the radioMode in the
+     * wirelessPhy card is also immeadiately reset.
+    */
+    public boolean is_uAMPS = false;
+
     /**
      * Flag to enable and disable tracing all events.
      */
@@ -112,19 +119,7 @@ public class Mac_802_11 extends Module implements ActiveComponent {
     public void disable_MAC_TRACE_EVENT( )  { MAC_TRACE_EVENT_ENABLED  = false; };
     /** Turns off the MAC_TRACE_TIMER_ENABLED flag. */ 
     public void disable_MAC_TRACE_TIMER( )  { MAC_TRACE_TIMER_ENABLED  = false; };
-    
-    protected static final String LL_PORT_ID           = ".linklayer";
-    protected static final String MAC_TRACE_PORT_ID    = ".mactrace";
-    protected static final String ENERGY_PORT_ID       = ".energy";
-    
-    protected Port llPort      = addPort(LL_PORT_ID, false);
-    protected Port tracePort   = addPort(MAC_TRACE_PORT_ID);
-    
-    /**
-     * interface to the energy module
-     */
-    protected Port energyPort  = addPort(ENERGY_PORT_ID, false); 
-    
+
     /** 
      * The event type of the link broken event. 
      */
@@ -134,7 +129,7 @@ public class Mac_802_11 extends Module implements ActiveComponent {
     Port brokenPort = addEventPort(EVENT_LINK_BROKEN_PORT_ID);
     
     /* constants for packet drop reasons */
-    private static final String DROP_END_OF_SIMULATION        = "END";
+ //   private static final String DROP_END_OF_SIMULATION        = "END";
     private static final String DROP_MAC_COLLISION            = "COL";
     private static final String DROP_MAC_DUPLICATE            = "DUP";
     private static final String DROP_MAC_PACKET_ERROR         = "ERR";
@@ -143,76 +138,28 @@ public class Mac_802_11 extends Module implements ActiveComponent {
     private static final String DROP_MAC_BUSY                 = "BSY";
     private static final String DROP_MAC_ATIM_RETRY_COUNT     = "MRC";
     
+/*NICHOLAS-->COMMENTED OUT BECAUSE THEY WERE NOT BEING USED.
     private static final String DROP_RTR_NO_ROUTE             = "NRTE";  // no route
     private static final String DROP_RTR_ROUTE_LOOP           = "LOOP";  // routing loop
     private static final String DROP_RTR_TTL                  = "TTL";   // ttl reached zero
     private static final String DROP_RTR_QFULL                = "IFQ";   // queue full
     private static final String DROP_RTR_QTIMEOUT             = "TOUT";  // packet expired
     private static final String DROP_RTR_MAC_CALLBACK         = "CBK";   // MAC callback
-    
+
     private static final String DROP_IFQ_QFULL                = "IFQ";   // no buffer space in IFQ
     private static final String DROP_IFQ_ARP_FULL             = "ARP";   // dropped by ARP
     private static final String DROP_OUTSIDE_SUBNET           = "OUT";   // dropped by base stations if received rtg updates from nodes outside its domain.
+*/
     private static final String DROP_MAC_BUFFER_FULL          = "BUF";
-    
-    /** Broadcast mac address. */
-    public static final long MAC_BROADCAST	 = -1;
-    
-    
+
+    //Added by Nicholas to keep track of number of collisions
+    int collision = 0; //to keep track of the total number of collisions experienced
+                       //by this sensor.
+
     /** Broadcast mac address. Used in LL_Demo. */
     //public static final long BCAST_ADDR      = -1;  // deleted after modifying LL_Demo.
     
-    public static final String[] MAC_STATE = {"MAC_IDLE",
-                                              "MAC_POLLING",
-                                              "MAC_RECV",
-                                              "MAC_SEND",
-                                              "MAC_RTS",
-                                              "MAC_CTS",
-                                              "MAC_ACK",
-                                              "MAC_COLL"};
-    
-	/** Idle state */
-    public static final int MAC_IDLE     = 0x0000;
-	/** Polling state */
-    public static final int MAC_POLLING  = 0x0001;
-	/** Recving state */
-    public static final int MAC_RECV     = 0x0010;
-	/** Transmitting state */
-    public static final int MAC_SEND     = 0x0100;
-	/** RTS sent */
-    public static final int MAC_RTS      = 0x0200;
-	/** CTS sent */
-    public static final int MAC_CTS      = 0x0400;
-	/** ACK sent */
-    public static final int MAC_ACK      = 0x0800;
-	/** Collision state */
-    public static final int MAC_COLL     = 0x1000;
-	/** Beacon transmitted */
-    public static final int MAC_BEACON   = 0x2000;
-	/** Inside ATIM window */
-    public static final int MAC_ATIM     = 0x4000;
-    
-	/** beaconing */
-    public static final int MF_BEASON   = 0x0008; 
-	/** used as mask for control frame */
-    public static final int MF_CONTROL  = 0x0010; 
-	/** Announce slot open for contension */
-    public static final int MF_SLOTS    = 0x001a; 
-	/** Request to send */
-    public static final int MF_RTS      = 0x001b; 
-	/** Clear to send */
-    public static final int MF_CTS      = 0x001c; 
-	/** Acknowledgement */
-    public static final int MF_ACK      = 0x001d; 
-	/** contention free period end */
-    public static final int MF_CF_END   = 0x001e; 
-	/** Polling */
-    public static final int MF_POLL     = 0x001f; 
-	/** Used as a mask for data frame */
-    public static final int MF_DATA     = 0x0020; 
-	/** Ack for data frame */
-    public static final int MF_DATA_ACK = 0x0021; 
-    
+
     /**
      * class for buffered packets in IEEE 802.11 PSM
      */
@@ -246,42 +193,11 @@ public class Mac_802_11 extends Module implements ActiveComponent {
             return -1;
         }
     }
-    
-    /**
-     * class which is defined for the MAC testing purpose
-     */
-    class DummyEnergyModel {
-        boolean is_sleep = false;
-        boolean is_on = true;
-        double residual_energy;
-        
-        public DummyEnergyModel() {
-        }
-        
-        boolean if_on() {
-            is_on = ((EnergyModel)energyPort.sendReceive(null)).getOn();
-            return is_on;
-        }
-        
-        boolean if_sleep() {
-            is_sleep = ((EnergyModel)energyPort.sendReceive(null)).getSleep();
-            return is_sleep;
-        }
-        
-        double residual_energy() {
-            residual_energy = ((EnergyModel)energyPort.sendReceive(null)).getEnergy();
-            return residual_energy;
-        }
-        
-        void setSleep(boolean sleep_) {
-            is_sleep = sleep_;
-            energyPort.doSending(new BooleanObj(sleep_));
-        }
-    }
-    
+
     /**
      * Physical Layer Management Information Base.
-     */
+       * DSSS stands for Direct Sequence Spread Spectrum. 
+    */
     class PHY_MIB {
         /* static */
         int    DSSS_CWMin                 = 31;
@@ -292,7 +208,7 @@ public class Mac_802_11 extends Module implements ActiveComponent {
         double DSSS_SIFSTime			  = 0.000010;	// 10us
         int    DSSS_PreambleLength		  = 144;	    // 144 bits
         int    DSSS_PLCPHeaderLength	  = 48;	        // 48 bits
-        
+
         int           CWMin;
         int           CWMax;
         double	      SlotTime;
@@ -301,7 +217,7 @@ public class Mac_802_11 extends Module implements ActiveComponent {
         double	      SIFSTime;
         int           PreambleLength;
         int           PLCPHeaderLength;
-        
+
         public PHY_MIB() {
             CWMin = DSSS_CWMin;
             CWMax = DSSS_CWMax;
@@ -313,7 +229,7 @@ public class Mac_802_11 extends Module implements ActiveComponent {
             PLCPHeaderLength = DSSS_PLCPHeaderLength;
         }
     }
-    
+
     /**
      * MAC Layer Management Information Base.
      */
@@ -330,7 +246,7 @@ public class Mac_802_11 extends Module implements ActiveComponent {
         int MAC_MaxReceiveLifetime		= 512;		// time units
 		double MAC_BeaconPeriod = 0.100; // in second
 		double MAC_ATIMWindow = 0.008; //in second
-        
+
         int MAC_ATIMRetryLimit = 7;
         //     MACAddress;
         //	   GroupAddresses;
@@ -342,7 +258,7 @@ public class Mac_802_11 extends Module implements ActiveComponent {
         int    MaxReceiveLifetime;
         //	   ManufacturerID;
         //	   ProductID;
-        
+
         int    TransmittedFragmentCount = 0;
         int    MulticastTransmittedFrameCount = 0;
         int    FailedCount = 0;
@@ -355,10 +271,10 @@ public class Mac_802_11 extends Module implements ActiveComponent {
         int    ReceivedFragmentCount = 0;
         int    MulticastReceivedFrameCount = 0;
         int    FCSErrorCount = 0;
-        
+
         double BeaconPeriod = 0;
         double ATIMWindow   = 0;
-        
+
         public MAC_MIB() {
 			RTSThreshold            = MAC_RTSThreshold;
 			ShortRetryLimit         = MAC_ShortRetryLimit;
@@ -370,7 +286,7 @@ public class Mac_802_11 extends Module implements ActiveComponent {
 			ATIMWindow   			= MAC_ATIMWindow;
         }
     }
-    
+
 	/** Set the RTS threshold (size of packet to transmit RTS) */
     public void setRTSThreshold(int rstthreshold_) {
         macmib_.RTSThreshold = rstthreshold_;
@@ -385,35 +301,7 @@ public class Mac_802_11 extends Module implements ActiveComponent {
     public void setATIMWindow(double atim_) {
         macmib_.ATIMWindow = atim_;
     }
-    /**
-     * Calculate the transmission time of given bytes.
-     */
-    double txtime(int bytes) {
-        return (8. * bytes / bandwidth_);
-    }
-    
-    /**
-     * Calculates the transmission time of a given packet.
-     */
-    double txtime(Packet p) {
-        return 8. * (p.size) / bandwidth_;
-    }
 
-    /**
-     * My MAC address
-     */
-    long   macaddr_;		
-    
-    /**
-     * Channel bit rate.
-     */
-    double bandwidth_;      
-    
-    /**
-     * MAC overhead.
-     */
-    double delay_;		    
-    
     /**
      * Sets the channel bandwidth and calculates all related variables.
      *
@@ -421,7 +309,7 @@ public class Mac_802_11 extends Module implements ActiveComponent {
      */
     public void   setBandwidth(double bw_) {
         bandwidth_ = bw_;
-        
+
         sifs_ = phymib_.SIFSTime;
         pifs_ = sifs_ + phymib_.SlotTime;
         difs_ = sifs_ + 2*phymib_.SlotTime;
@@ -429,7 +317,7 @@ public class Mac_802_11 extends Module implements ActiveComponent {
         tx_sifs_ = sifs_ - phymib_.RxTxTurnaroundTime;
         tx_pifs_ = tx_sifs_ + phymib_.SlotTime;
         tx_difs_ = tx_sifs_ + 2 * phymib_.SlotTime;
-        
+
         setEtherHdrLen();
         setEtherRTSLen();
         setEtherCTSLen();
@@ -441,25 +329,8 @@ public class Mac_802_11 extends Module implements ActiveComponent {
         setCTSTimeout();
         setNAVTimeout();
     }
-    
-    /**
-     * Gets the channel bandwidth.
-     *
-     */
-    public double bandwidth() { return bandwidth_; }
 
-    /**
-     * Set the MAC address 
-     *
-     *@param addr_  the MAC address
-	 */
-    public void   setMacAddress(long addr_) { macaddr_ = addr_; }
-    
-    /**
-     * Get the Mac address
-	 */
-    public long   getMacAddress( ) { return macaddr_; }
-    
+
     private   int  ETHER_HDR_LEN;
     private   int  ETHER_RTS_LEN;
     private   int  ETHER_CTS_LEN;
@@ -493,8 +364,13 @@ public class Mac_802_11 extends Module implements ActiveComponent {
     private   double ACK_Time;    //  seconds
     private   double Beacon_Time; //  seconds
     
-    /* while calling DATA_Time(), len_ has already counted the extra overhead bits in */
-    private   double DATA_Time(int len_) {        // seconds
+    /**
+     * while calling DATA_Time(), len_ has already counted the extra overhead bits in
+     * @param len_ the length of the packet
+     * @return the time required to transmit/receive the data
+     */
+    private double DATA_Time(int len_) {        // seconds
+        //System.out.println("Sensor"+this.macaddr_+ " has a packet whose length is: " + len_ + " with bw: " + bandwidth_);
         return 8 * len_ / bandwidth_;
     }
     
@@ -556,7 +432,13 @@ public class Mac_802_11 extends Module implements ActiveComponent {
     private   int  ACK_DURATION( ) {
         return 0x00;                // we are not doing fragments now
     }
-    
+
+    /**
+     * This method is called upon to determine the transmission
+     * time that is required for this packet (size dependent)
+     * @param p packet to be transmitted
+     * @return the time t needed for the transfer.
+     */
     protected double TX_Time(Packet p) {
         
         _assert("TX_Time", "p != null", p != null);
@@ -592,7 +474,36 @@ public class Mac_802_11 extends Module implements ActiveComponent {
             nav_timer_.start(t);
         }
     }
-    
+
+    /***********************************************************************/
+
+
+    /*long   macaddr_;    //My MAC Address
+    double bandwidth_;  //Channel Bit Rate
+    double delay_;      //MAC Overhead
+    */
+
+    /* ============================================================
+       Duplicate Detection state
+       ============================================================ */
+    int    sta_seqno_;	// next seqno that I'll use
+    Hashtable cache_;   //hashtable is used to record the recently received mac frame sequence number to detect the duplicate frames
+
+
+    //WirelessPhy netif_;
+//    DummyEnergyModel netif_;
+
+    /* ============================================================
+       Internal MAC State
+       ============================================================ *
+    int rx_state_;	    //Incoming state (MAC_RECV or MAC_IDLE)
+    int tx_state_;      //Outgoing state
+
+
+    boolean tx_active_; //Transmitter is ACTIVE or not
+    int state_;	        //MAC's current state
+*/
+
     protected PHY_MIB phymib_;
     protected MAC_MIB macmib_;
     
@@ -615,28 +526,9 @@ public class Mac_802_11 extends Module implements ActiveComponent {
      * Network Allocation Vector.
      */
     double		nav_;		
-    
-    /**
-     * Incoming state (MAC_RECV or MAC_IDLE).
-     */
-    int         rx_state_;	
-    
-    /**
-     * Outgoing state.
-     */
-    int         tx_state_;	
-    
-    /**
-     * Transmitter is ACTIVE or not.
-     */ 
-    boolean    	tx_active_;	 
-    
-    /**
-     * MAC's current state.
-     */
-    int         state_;	
-    
-    // these three variables are defined here to keep some information pased from wirelessphy related to the packet being received.
+
+    // these three variables are defined here to keep some information pased
+    // from wirelessphy related to the packet being received.
     
     /**
      * Whether this received packet is of error.
@@ -705,11 +597,9 @@ public class Mac_802_11 extends Module implements ActiveComponent {
     boolean got_beacon_ = false;
     boolean psm_enabled_ = true;
     
-   
-    //WirelessPhy netif_;
-    DummyEnergyModel netif_;
-    
-    /* 
+    //ACATimer queueCheck;
+
+    /*
        psm mode is decided by mac layer,
        at physical layer only three states are possible: active, doze, shut-down
      */
@@ -742,17 +632,15 @@ public class Mac_802_11 extends Module implements ActiveComponent {
 
         if (psm_enabled_) {
             psm_mode_ = PSM_PWR_SAVE;
-            netif_.setSleep(true);
+
+            //NICHOLAS
+            // Put card to sleep  SET_RADIO_MODE = 1  RADIO_SLEEP = 1
+            //Object temp = energyPort.sendReceive(new EnergyContract.Message(1,-1.0, 1));
+
             tbtt_timer_.start(2*macmib_.BeaconPeriod - Math.IEEEremainder(tsf_timer_.getTSF(), macmib_.BeaconPeriod*1e6)/1e6);
             trace("start beacon timer", "TIMER");
         }
     }
-    
-    /* ============================================================
-       Duplicate Detection state
-       ============================================================ */
-    int    sta_seqno_;	// next seqno that I'll use
-    Hashtable cache_;   //hashtable is used to record the recently received mac frame sequence number to detect the duplicate frames
     
     public Mac_802_11() {
         super();
@@ -768,13 +656,13 @@ public class Mac_802_11 extends Module implements ActiveComponent {
         pktRTS_ = null;
         pktCTRL_ = null;
         
-        cw_ = phymib_.CWMin;
+        cw_ = phymib_.CWMin;  //set the contention window to CWMin to start
         
         ssrc_ = 0;  slrc_ = 0;
         
-        setBandwidth(2000000.0);  // 2M bps
+        setBandwidth(1000000.0);  // 1M bps
         
-        sta_seqno_ = 1;
+        sta_seqno_ = 1; //set the first sequence # to 1
         
         cache_ = new Hashtable();
        
@@ -791,21 +679,25 @@ public class Mac_802_11 extends Module implements ActiveComponent {
         beacon_timer_ = new BeaconTimer(this);
         tsf_timer_    = new TSFTimer(this, 0);
         psm_buffer    = new Vector();
-        
+
         //XXX: for now
-        netif_ = new DummyEnergyModel();
+        //netif_ = new DummyEnergyModel();
     }
-    
+
+
     /**
      * Handling timeout event.
      * @param evt_ event object got from the timer port
      */
     protected synchronized void timeout(Object evt_) {
 
+        /*This event is called when a packet is received that is below the receiving
+          threshold. (i.e from dataArriveAtDownPort)
+        */
         if (evt_ instanceof MacPhyContract.Message) {
             // _assert("Mac_802_11 timeout", "tx_active_ == false", tx_active_ == false);
             MacPhyContract.Message msg = (MacPhyContract.Message) evt_;
-            
+
             interferencePwr -= msg.getRxPr();
             if (interferencePwr < msg.getCSThresh()/1000)
                 interferencePwr = 0.0;
@@ -813,14 +705,14 @@ public class Mac_802_11 extends Module implements ActiveComponent {
             if (rx_state_ == MAC_RECV) {
                 if (interferencePwr < msg.getCSThresh() && pktRx_ == null) {
                     rx_state_ = MAC_IDLE;
-                    CHECK_BACKOFF_TIMER();  
-                }    
+                    CHECK_BACKOFF_TIMER();
+                }
             }
             return;
         }
-        
+
         int type_ = ((MacTimeoutEvt)evt_).evt_type;
-        
+
         switch(type_) {
             case MacTimeoutEvt.Nav_timeout:
                 handleNavTimeout();
@@ -851,14 +743,14 @@ public class Mac_802_11 extends Module implements ActiveComponent {
                 return;
         }
     }
-    
-    
+
+
     private void _assert(String where, String why, boolean continue_) {
         if ( continue_ == false )
             drcl.Debug.error(where, why, true);
         return;
     }
-    
+
     /** Handles BackoffTimer Timeout Event. */
     protected void handleBackoffTimeout() {  
         bf_timer_.handle();
@@ -989,7 +881,9 @@ public class Mac_802_11 extends Module implements ActiveComponent {
         recv_timer();         
     }
     
-    /** Handles TxTimer Timeout Event. */
+    /**
+     * Handles TxTimer Timeout Event.
+    */
     protected void handleTxTimeout() {
         
         // release_1208    
@@ -1001,7 +895,9 @@ public class Mac_802_11 extends Module implements ActiveComponent {
         send_timer();         
     }
     
-    /** Handles BeaconTimer Timeout Event. */
+    /**
+     * Handles BeaconTimer Timeout Event.
+    */
     protected void handleBeaconTimeout() {
         
         // release_1208    
@@ -1017,7 +913,9 @@ public class Mac_802_11 extends Module implements ActiveComponent {
             bf_timer_.start(phymib_.CWMin*2, is_idle());
     }
     
-    /** Handles TBTTTimer Timeout Event. */
+    /**
+     * Handles TBTTTimer Timeout Event.
+    */
     protected void handleTBTTTimeout() {
         
         // release_1208    
@@ -1036,11 +934,12 @@ public class Mac_802_11 extends Module implements ActiveComponent {
             atim_timer_.stop();
         
         atim_timer_.start(macmib_.ATIMWindow);
-        
-        // immediately wake up if not already awake
-        if (netif_.if_sleep()) {
-            netif_.setSleep(false);
-        }
+//NICHOLAS
+        // immediately wake up if not already awake  SET_RADIO_MODE = 1  RADIO_IDLE = 0
+        Object temp = energyPort.sendReceive(new EnergyContract.Message(1,-1.0,0));
+       // if (netif_.if_sleep()) {
+       //     netif_.setSleep(false);
+       // }
         
         // our next TBTT is exactly one BeaconPeriod away
         double tbtt = macmib_.BeaconPeriod - Math.IEEEremainder(tsf_timer_.getTSF(), macmib_.BeaconPeriod * 1e6) / 1e6;
@@ -1126,10 +1025,13 @@ public class Mac_802_11 extends Module implements ActiveComponent {
         } else if (!recvd_atim_ && has_packet_tx_ == 0 && initial_wake_count == 0)
             goto_sleep();
     }
-    
-    /* =======================================================
-       The "real" Timer Handler Routine
-       ======================================================= */
+
+
+    /**
+     * The "real" Timer Handler Routine.  This is the method that
+     * is called and depending on the state of the MAC layer
+     * certain actions will be taken.
+     */
     private void send_timer() {
         
         // release_1208    
@@ -1169,7 +1071,14 @@ public class Mac_802_11 extends Module implements ActiveComponent {
         }
         tx_resume("send timer: "+tx_state_);
     }
-    
+
+    /**
+     * The backoff timer might have been paused if the channel
+     * become busy again so this method is a check to see if the
+     * channel is idle then resume the backoff timer. On the other
+     * hand if backoff timer is running but the channel is not
+     * idle then pause it.
+    */
     private void CHECK_BACKOFF_TIMER() {
         if ( is_idle() && bf_timer_.paused() ) {
             bf_timer_.resume(difs_);
@@ -1179,7 +1088,7 @@ public class Mac_802_11 extends Module implements ActiveComponent {
         }
     }
     
-    private void TRANSMIT(Mac_802_11_Packet p, double t)  {
+    protected void TRANSMIT(Mac_802_11_Packet p, double t)  {
         
         // release_1208    
         //if ( isDebugEnabled() == true )  debug("TRANSMIT");
@@ -1224,14 +1133,87 @@ public class Mac_802_11 extends Module implements ActiveComponent {
         
         
     }
-    
-    private void SET_RX_STATE(int x) {
+
+    /**
+     * Added by Nicholas
+     * Used to get the number collisions that this
+     * radio has experienced so far.
+     * @return
+    */
+    public int getCollision()
+    {
+        return collision;
+    }
+
+    /**
+     * Used to set update the receiving state of the MAC card.
+     * @param x the state (ie. MAC_IDLE, MAC_RECV..)
+     */
+    protected void SET_RX_STATE(int x) {
         rx_state_ = x;
+
+        //--------------------
+        //added by Nicholas:
+        //set the radio to sleep till its time to send too
+        //Contract type: SET_RADIO_MODE = 1 and set the radio mode to whatever
+        //x was when passed in. This allows the MAC layer and wirelessPHy to
+        //the radioMode in sync. Since the energy model is based on the radio
+        //mode it is critical that the modes be switched promptly and kept in sync.
+        //RADIO_IDLE = 0
+        if (!isIs_uAMPS()) {
+            if (x == MAC_IDLE) {
+                energyPort.sendReceive(new EnergyContract.Message(1,-1.0, 0));
+            }
+        }
+        //--------------------
+
         CHECK_BACKOFF_TIMER();
     }
-    
-    private void SET_TX_STATE(int x) {
+
+    /**
+     * Gets whether or not we are running in uAMPS mode. If so
+     * then we will allow the application layer to have control
+     * over the hardware layers.
+     * @return
+    */
+    public boolean isIs_uAMPS()
+    {
+        return is_uAMPS;
+    }
+
+    /**
+     * Sets whether or not we are running in uAMPS mode. If so
+     * then we will allow the application layer to have control
+     * over the hardware layers.
+     * @param is_uAMPS
+    */
+    public void setIs_uAMPS(boolean is_uAMPS)
+    {
+        this.is_uAMPS = is_uAMPS;
+    }
+
+
+    /**
+     * Used to set update the transmitting state of the MAC card.
+     * @param x the state (ie. MAC_IDLE, MAC_SEND..)
+    */
+    protected void SET_TX_STATE(int x) {
         tx_state_ = x;
+
+        //--------------------
+        //added by Nicholas:
+        //set the radio to sleep till its time to send too
+        //Contract type: SET_RADIO_MODE = 1 and set the radio mode to whatever
+        //x was when passed in. This allows the MAC layer and wirelessPHy to
+        //the radioMode in sync. Since the energy model is based on the radio
+        //mode it is critical that the modes be switched promptly and kept in sync.
+        //RADIO_IDLE = 0
+        if (!isIs_uAMPS()) {
+            if (x == MAC_IDLE) {
+                energyPort.sendReceive(new EnergyContract.Message(1,-1.0, 0));
+            }
+        }
+
         CHECK_BACKOFF_TIMER();
     }
     
@@ -1305,7 +1287,7 @@ public class Mac_802_11 extends Module implements ActiveComponent {
                     case Mac_802_11_Frame_Control.MAC_Subtype_Data:
                         if ( ((Mac_802_11_Data_Frame)p).getDa() == this.macaddr_ ||
                         ((Mac_802_11_Data_Frame)p).getSa() == this.macaddr_ ||
-                        ((Mac_802_11_Data_Frame)p).getDa() == this.MAC_BROADCAST ) {
+                        ((Mac_802_11_Data_Frame)p).getDa() == MAC_BROADCAST ) {
                             trace(why + " drop DATA frame" + " < " + ((Mac_802_11_Data_Frame)p).toString() + " >", "PACKET");
                             return;
                         }
@@ -1337,6 +1319,7 @@ public class Mac_802_11 extends Module implements ActiveComponent {
         
         // release_1208    
         //if ( isDebugEnabled() == true )  debug("collision");
+        collision ++;
 
         switch(rx_state_) {
             case MAC_RECV:
@@ -1519,8 +1502,13 @@ public class Mac_802_11 extends Module implements ActiveComponent {
     
     
     private void goto_sleep() {
-        if (psm_buffer.size() < 5)
-            netif_.setSleep(true);
+        if (psm_buffer.size() < 5)  {
+            //NICHOLAS
+            //netif_.setSleep(true);
+            // Put card to sleep  SET_RADIO_MODE = 1  RADIO_SLEEP = 1
+
+            energyPort.sendReceive(new EnergyContract.Message(1,-1.0, 1));
+        }
     }
     
     /* ======================================================================
@@ -1707,10 +1695,16 @@ public class Mac_802_11 extends Module implements ActiveComponent {
         return 0;
     }
     
-    /*
-     * Low-level transmit functions that actually place the packet onto
-     * the channel.
-     */
+
+    /**
+     * This function creates the RTS (Request To Send) packet which means a STA
+     * is requesting to use the channel. This does not actually send the RTS packet
+     * is just creates it (iff dst is not a bcast & packet size > RTS threshold since
+     * the Mac802.11 standard does not require the use of RTS/CTS if data size
+     * is small.  The packet is created and stored in pktRTS_ to be sent out when
+     * appropriate.
+     * @param dst
+    */
     private void sendRTS(long dst) {
         
         Mac_802_11_RTS_Frame rf;
@@ -1725,7 +1719,7 @@ public class Mac_802_11 extends Module implements ActiveComponent {
          *
          *  also skip if destination is a broadcast
          */
-        if( pktTx_.size < macmib_.RTSThreshold || dst == this.MAC_BROADCAST ) {
+        if( pktTx_.size < macmib_.RTSThreshold || dst == MAC_BROADCAST ) {
             return;
         }
         
@@ -1772,51 +1766,63 @@ public class Mac_802_11 extends Module implements ActiveComponent {
         pktCTRL_ = af;
         trace("sendACK()" + pktCTRL_.toString(), "EVENT");
     }
-    
-    private void sendDATA(Packet p, long dst) {  
+
+    /**
+     * This takes what was simply an LLpacket passed down from the LL layer and creates
+     * a Mac 802.11 Frame based on the IEEE Standards for 802.11 section 7.1.2. The frame
+     * must start with a Frame control (FC) field. Once we created the proper packet we
+     * store it in the instance variable pktTx_ which will be the packet to be sent out
+     * next time the channel is clear and ok to send.
+     * @param p is the packet that needs to be encapsulated into a MAC frame.
+     * @param dst where this packet p needs to be sent to.
+    */
+    private void sendDATA(Packet p, long dst) {
         
         Mac_802_11_Data_Frame df;
         Mac_802_11_Frame_Control fc;
 
         _assert("Mac_802_11 addr:" + this.macaddr_ + "  sendDATA() "+getTime() + " "+ pktTx_, "pktTx_ == null", (pktTx_ == null));
-        
+
+        /*The FC field consists of the following fields:
+        * Protocol Version, Type, Subtype, To DS, From DS, More Fragments, Retry, Power Management,
+        * More Data, Wired Equivalent Privacy (WEP), and Order.
+        */
         fc = new Mac_802_11_Frame_Control(Mac_802_11_Frame_Control.MAC_Subtype_Data,
         Mac_802_11_Frame_Control.MAC_Type_Data,
         Mac_802_11_Frame_Control.MAC_ProtocolVersion);
-        
-        
+
         fc.set_fc_flags(false, false, false, false, false, false, false, false);
-        
-        if ( dst != this.MAC_BROADCAST )
+
+        if ( dst != MAC_BROADCAST )
             df = new Mac_802_11_Data_Frame(fc, DATA_DURATION(), dst, macaddr_, 0, 0, false, ETHER_HDR_LEN, p.size, p);
         else
             df = new Mac_802_11_Data_Frame(fc, 0, dst, macaddr_, 0, 0, false, ETHER_HDR_LEN, p.size, p);
         pktTx_ = df;
-        
+
         ((Mac_802_11_Data_Frame) pktTx_).scontrol = sta_seqno_;
         sta_seqno_ = sta_seqno_ + 1;
     }
-    
-    private void sendBeacon() { 
+
+    private void sendBeacon() {
         Mac_802_11_Beacon_Frame bf;
         Mac_802_11_Frame_Control fc;
-        
+
         _assert("Mac_802_11 sendBeacon()", "pktBeacon__ == null", (pktBeacon_ == null));
-        
+
         fc = new Mac_802_11_Frame_Control(Mac_802_11_Frame_Control.MAC_Subtype_Beacon,
         Mac_802_11_Frame_Control.MAC_Type_Management,
         Mac_802_11_Frame_Control.MAC_ProtocolVersion);
-        
+
         fc.set_fc_flags(false, false, false, false, false, false, false, false);
-        
+
         //bh = new Mac_802_11_Beacon_Header(macmib_.BeaconPeriod*1e3, macmib_.ATIMWindow*1e3);
         //Rong: skip specification of atim window size, beacon period in the beacon message
         //I don't really have a beacon body
         bf = new Mac_802_11_Beacon_Frame(fc, 0, macaddr_, 0, ETHER_BEACON_LEN, 0);
-        
+
         pktBeacon_ = bf;
     }
-    
+
     /* ======================================================================
            Retransmission Routines
        ====================================================================== */
@@ -1851,7 +1857,11 @@ public class Mac_802_11 extends Module implements ActiveComponent {
             bf_timer_.start(cw_, is_idle());
         }
     }
-    
+
+    /**
+     * If this STA did not receive an ACK within the required timeframe a
+     * retransmission will be attempted.
+     */
     private void RetransmitDATA() {
         // release_1208    
         if ( isDebugEnabled() == true )
@@ -1859,8 +1869,8 @@ public class Mac_802_11 extends Module implements ActiveComponent {
 
         int rcount, thresh;
         
-        Mac_802_11_Data_Frame df;
-        Mac_802_11_Frame_Control fc;
+       // Mac_802_11_Data_Frame df; //NICHOLAS: COMMENTED OUT FC SINCE ITS NEVER USED
+       // Mac_802_11_Frame_Control fc;  //NICHOLAS: COMMENTED OUT FC SINCE ITS NEVER USED
         
         _assert("Mac_802_11 RetransmitDATA()", "bf_timer_.busy() == false", (bf_timer_.busy() == false));
         _assert("Mac_802_11 RetransmitDATA()", "pktTx_ != null", (pktTx_ != null));
@@ -1871,7 +1881,8 @@ public class Mac_802_11 extends Module implements ActiveComponent {
          *  are never retransmitted.
          */
         
-        fc = ((Mac_802_11_Data_Frame)pktTx_).getFc();
+        //NICHOLAS: COMMENTED OUT FC SINCE ITS NEVER USED
+        // fc = ((Mac_802_11_Data_Frame)pktTx_).getFc();
         
         if (((Mac_802_11_Data_Frame)pktTx_).getDa() == MAC_BROADCAST) {
             pktTx_ = null;
@@ -1884,7 +1895,8 @@ public class Mac_802_11 extends Module implements ActiveComponent {
             
             return;
         }
-        
+
+        //counter keeping track of the number of failed ACKs
         macmib_.ACKFailureCount++;
         
         boolean useShortCount;
@@ -2111,7 +2123,7 @@ public class Mac_802_11 extends Module implements ActiveComponent {
         switch(type) {
             case Mac_802_11_Frame_Control.MAC_Type_Management:
                 if (!psm_enabled_) {
-                    discard(pktRx_, this.DROP_MAC_PACKET_ERROR);
+                    discard(pktRx_, DROP_MAC_PACKET_ERROR);
                     // goto done;
                     
                     pktRx_ = null;
@@ -2133,7 +2145,7 @@ public class Mac_802_11 extends Module implements ActiveComponent {
 
                             break;
                         default:
-                            discard(pktRx_, this.DROP_MAC_PACKET_ERROR);
+                            discard(pktRx_, DROP_MAC_PACKET_ERROR);
                             
                             pktRx_ = null;
                             rx_resume();
@@ -2177,19 +2189,22 @@ public class Mac_802_11 extends Module implements ActiveComponent {
             rx_resume();
     }
     
-    
-    // refer to recv() and send() in ns2
+
     /**
-     * Processing the frames arriving from the up port.
-     */
+     * The MAC Layer receives the frames from the queue. This method handles those
+     * incomming packets from the above layers and prepares them to be sent out.
+     *      Refer to recv() and send() in ns2
+     * @param data_
+     * @param upPort_
+    */
     protected synchronized void dataArriveAtUpPort(Object data_, drcl.comp.Port upPort_) {
         Packet p = (Packet) ((LLPacket) data_).getBody();
         
         trace("recevie LLPacket from upper layer " + " < " + ((LLPacket) data_).toString() + " > ", "PACKET");
         
-        long src_macaddr, dst_macaddr;
-        src_macaddr = ((LLPacket) data_).getSrcMacAddr();
-        dst_macaddr = ((LLPacket) data_).getDstMacAddr();
+       // long src_macaddr = ((LLPacket) data_).getSrcMacAddr();
+        long dst_macaddr = ((LLPacket) data_).getDstMacAddr();
+
         
         boolean fastroute = false; //reserved for future use
         boolean to_transmit = false;
@@ -2206,11 +2221,13 @@ public class Mac_802_11 extends Module implements ActiveComponent {
                     fastroute is turned on, transmit the packet immediately
                 3.3 inside the ATIM window, no ack has been received and fastroute is off,
                     buffer the packet
-         */
+        */
         
         if (psm_enabled_) {
-            
-            if (netif_.if_sleep() || (atim_timer_.busy() && !got_beacon_) || pktTx_ != null) {
+//NICHOLAS      check if radio mode is in sleeep state RADIO_SLEEP = 1 GET_RADIO_MODE = 2;
+            int radioMode = ((EnergyContract.Message)energyPort.sendReceive(new EnergyContract.Message(2,-1.0,-1))).getRadioMode();
+            if ((radioMode == 1)  || (atim_timer_.busy() && !got_beacon_) || pktTx_ != null) {
+            //if (netif_.if_sleep() || (atim_timer_.busy() && !got_beacon_) || pktTx_ != null) {
                 psm_buffer.addElement(new BUFFER_ENTRY(p, dst_macaddr, false, false, false, 0));
                 return;
             }
@@ -2272,20 +2289,19 @@ public class Mac_802_11 extends Module implements ActiveComponent {
         
         if (!psm_enabled_ || fastroute || to_transmit) {
             // sendDATA(p, dst_macaddr, src_macaddr);   // if support promiscous arp
-            sendDATA(p, dst_macaddr);
+            sendDATA(p, dst_macaddr);   //creates the MAC frame to be sent out
             sendRTS(dst_macaddr);
             
             // If the medium is IDLE, we must wait for a DIFS Space before transmitting.
             if ( bf_timer_.busy() == false ) {
+                //is_idle checks if the rx_state and tx_state variables are both set to MAC_IDLE
+                //in other words if we aren't in a receiving or transmitting state then initiate
+                //defer timer.
                 if ( is_idle() ) {
-                   /*
-                    * If we are already deferring, there is no need to reset the Defer timer
-                    */
-                    if ( df_timer_.busy() == false ) df_timer_.start(difs_);
+                   //If we are already deferring, there is no need to reset the Defer timer
+                    if ( df_timer_.busy() == false ) df_timer_.start(difs_); //difs_ is set in constructor through setbandwitdth()
                 }
-               /*
-                * If the medium is NOT IDLE, then we start the backoff timer.
-                */
+               //If the medium is NOT IDLE, then we start the backoff timer.
                 else {
                     bf_timer_.start(cw_, is_idle());
                 }
@@ -2293,26 +2309,32 @@ public class Mac_802_11 extends Module implements ActiveComponent {
         }
     }
     
+
     /**
-     * Processing the data from the down port.
-     */
+     * This is the method that handles the incomming data from the wirelessPhy component.
+     * It will attempt to receive it.
+     * @param data_
+     * @param downPort_
+    */
     protected synchronized void dataArriveAtDownPort(Object data_, drcl.comp.Port downPort_) {
-        /*
-         * If the interfacec is currently in transmit mode, then it probably won't even see this packet.
-         * However, the "air" arround me is BUSY so I need to let the packet proceed. Just set the error
-         * flag in the header so that this packet will get thrown away
-         */
-        
+
         /* Rong: to turn off the carrier sensing to be a malicious user */
         if (is_malicious_) {
             data_ = null;
             return;
         }
-        
+
+        //cast the packet.
         MacPhyContract.Message msg = ( MacPhyContract.Message ) data_;
         
         trace("recevie the first bit of a Mac_802_11_Packet from lower layer"+msg.getPkt(), "EVENT");
-        // if in transmission state, drop the signal
+
+        /*
+         * If the interfacec is currently in transmit mode, then it probably won't even see this packet.
+         * However, the "air" arround me is BUSY so I need to let the packet proceed. Just set the error
+         * flag in the header so that this packet will get thrown away
+         *      -- if in transmission state, drop the signal--
+         */
         if ( this.tx_active_ && msg.getError() == false ) {
             msg.setError(true);
             ((Mac_802_11_Packet) msg.getPkt()).setForcedError(true);
@@ -2320,32 +2342,37 @@ public class Mac_802_11 extends Module implements ActiveComponent {
         
         //Rong: the physial layer should pass me all the signal that has been received
         if ( rx_state_ == MAC_IDLE ) {
+
             //if it is greater than the receiving threshold
-            
             if (msg.getRxPr() >= msg.getRXThresh()) {
-                
+
+                //set the state (i.e. rx_state_) to receiving
                 SET_RX_STATE(MAC_RECV);
+
+                //extract from the msg the receiving packet and store it in the instance variable pktRx_
                 pktRx_ = (Mac_802_11_Packet) (msg.getPkt());
                 
                 txinfo_pktRx_error = msg.getError();
-                txinfo_pktRx_RxPr  = msg.getRxPr();
+                txinfo_pktRx_RxPr  = msg.getRxPr();     //get the receiving power.
                 txinfo_pktRx_CPThresh = msg.getCPThresh();
                 rx_timer_.start(TX_Time(pktRx_));  // schedule when the last bit will be received
             }
-            else {
+            else { //the receiving signal strength was not strong enough being dropped.
                 if (interferencePwr + msg.getRxPr() > msg.getCSThresh()) {
                     //if greater than the carrier sense range
                     SET_RX_STATE(MAC_RECV);
                     //System.out.println("Below RXThresh, over CSThresh, interference =" + (interferencePwr+msg.getRxPr())+"CSThresh =" + msg.getCSThresh());
                 }
                 interferencePwr += msg.getRxPr();
-                pktRx_ = null;
+                pktRx_ = null;      //we can't actually read the incoming packet so we set it to null.
                 setTimeout((Object)msg, TX_Time((Mac_802_11_Packet)msg.getPkt()));
             }
         }
-        else {
-           /*
-            * If the power of the incoming packet is smaller than the power of the packet currently being received by at
+        else { //we get in here if the receiving state is not idle
+
+            /*
+            * If the power of the incoming packet is smaller than the power of the
+            * packet currently being received by at
             * least the capture threshold, then we ignore the new packet.
             */
             if (pktRx_ == null) {//interference
@@ -2372,9 +2399,9 @@ public class Mac_802_11 extends Module implements ActiveComponent {
     
     
     private void recvRTS(Mac_802_11_Packet p) {
-        Mac_802_11_Frame_Control fc;
-        
-        fc = p.getFc();
+   //NICHOLAS -> COMMENTED OUT THE NEXT 2 LINES SINCE THEY WERE NOT BEING USED.
+        // Mac_802_11_Frame_Control fc;
+        // fc = p.getFc();
         
         if(tx_state_ != MAC_IDLE) {
             discard(p, DROP_MAC_BUSY);
@@ -2426,7 +2453,7 @@ public class Mac_802_11 extends Module implements ActiveComponent {
         
     }
     
-    private void recvDATA(Mac_802_11_Packet p) {
+    protected void recvDATA(Mac_802_11_Packet p) {
         long dst, src;
         int  size;
         
@@ -2487,8 +2514,7 @@ public class Mac_802_11 extends Module implements ActiveComponent {
         }
         
         Packet p2 = (Packet) p.getBody();
-        // two possible packets: InetPacket or ARPPacket
-        
+        // two possible packets: InetPacket or ARPPacket     
         llPort.doSending(p2);     // the contract from MAC to LL is really simple here, no Message is defined
         if ( p2 instanceof InetPacket )
             trace("sending Packet to upper layer " + " < " + ((InetPacket) p2).toString() + " > ", "EVENT");

@@ -27,8 +27,7 @@
 //
 
 package drcl.inet.sensorsim.diffusion ;
- 
-import drcl.net.*;
+
 
 /** This class implements a timer handling timeout event. 
 * This timeout event is able to carry an object when it is set.

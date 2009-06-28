@@ -1,4 +1,4 @@
-// @(#)SensorPositionReportContract.java   10/2004
+// @(#)SensorPositionReportContract.java   1/2004
 // Copyright (c) 1998-2004, Distributed Real-time Computing Lab (DRCL) 
 // All rights reserved.
 // 
@@ -29,15 +29,11 @@
 package drcl.inet.sensorsim;
 
 import drcl.comp.*;
-import drcl.data.*;
-import drcl.net.*;
-import drcl.util.ObjectUtil;
-import drcl.util.StringUtil;
 
 /** This class implements the contract between mobility model and position tracker.
 *
 * @author Ahmed Sobeih
-* @version 1.1, 10/19/2004
+* @version 1.0, 12/19/2003
 */
 public class SensorPositionReportContract extends Contract
 {
@@ -62,32 +58,35 @@ public class SensorPositionReportContract extends Contract
     public static class Message extends drcl.comp.Message
 	{
         long   nid;             //  node id
-        double X, Y, Z;      //  new position
-        double X0, Y0, Z0;   //  original position
-        boolean NMS_DetectTargetFlag ; 
-        
+        double X, Y, Z;         //  new position
+        double X0, Y0, Z0;      //  original position
+
+        boolean NMS_DetectTargetFlag ;
+
 		public Message ()
-		{ NMS_DetectTargetFlag = false ; }
+		{
+            NMS_DetectTargetFlag = false ;
+        }
+
         
 		public Message (long nid_, double X_, double Y_, double Z_, double X0_, double Y0_, double Z0_)
 		{
 			nid = nid_; X = X_;  Y = Y_;  Z = Z_; X0 = X0_;  Y0 = Y0_;  Z0 = Z0_;
-                        NMS_DetectTargetFlag = false ;
+            NMS_DetectTargetFlag = false ;
 		}
 
-                public Message (long nid_, double X_, double Y_, double Z_, double X0_, double Y0_, double Z0_, boolean NMS_DetectTargetFlag_)
-                {
-			nid = nid_; X = X_;  Y = Y_;  Z = Z_; X0 = X0_;  Y0 = Y0_;  Z0 = Z0_;
-                        NMS_DetectTargetFlag = NMS_DetectTargetFlag_ ;                        
-                }
-                
+        public Message (long nid_, double X_, double Y_, double Z_, double X0_, double Y0_, double Z0_, boolean NMS_DetectTargetFlag_)
+        {
+		    nid = nid_; X = X_;  Y = Y_;  Z = Z_; X0 = X0_;  Y0 = Y0_;  Z0 = Z0_;
+            NMS_DetectTargetFlag = NMS_DetectTargetFlag_ ;
+        }
+
         /* the is only used while SensorMobilityModel responding WirelessPhy's query and reporting its own position */
         public Message (double X_, double Y_, double Z_)
 		{
 			nid = -1;
             X = X_;  Y = Y_;  Z = Z_; 
             X0 = X_;  Y0 = Y_;  Z0 = Z_;
-            NMS_DetectTargetFlag = false ;
 		}
         
         public long   getNid() { return nid; }
@@ -97,7 +96,8 @@ public class SensorPositionReportContract extends Contract
 		public double getX0()  { return X0; }
 		public double getY0()  { return Y0; }
 		public double getZ0()  { return Z0; }
-                public boolean isDetected() {return NMS_DetectTargetFlag; }
+        public boolean isDetected() {return NMS_DetectTargetFlag; }
+
 		/*
 		public void duplicate(Object source_)
 		{
@@ -116,5 +116,5 @@ public class SensorPositionReportContract extends Contract
 		{
 			return "Position Report:" + separator_ + "nid=" + nid + separator_ + "X=" + X + separator_ + "Y=" + Y + separator_ + "Z=" + Z + separator_ + "X0=" + X0 + separator_ + "Y0=" + Y0 + separator_ + "Z0=" + Z0;
 		}
-	}
+	}//end of inner class
 }

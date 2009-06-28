@@ -1,4 +1,4 @@
-// @(#)SensorRadioPropagationQueryContract.java   10/2004
+// @(#)SensorRadioPropagationQueryContract.java   1/2004
 // Copyright (c) 1998-2004, Distributed Real-time Computing Lab (DRCL) 
 // All rights reserved.
 // 
@@ -29,15 +29,11 @@
 package drcl.inet.sensorsim;
 
 import drcl.comp.*;
-import drcl.data.*;
-import drcl.net.*;
-import drcl.inet.*;
-import drcl.inet.data.*;
 
 /** This class implements the contract between the sensor physical layer and the propagation model.
 *
 * @author Ahmed Sobeih
-* @version 1.1, 10/19/2004
+* @version 1.0, 12/19/2003
 */
 public class SensorRadioPropagationQueryContract extends Contract 
 {    

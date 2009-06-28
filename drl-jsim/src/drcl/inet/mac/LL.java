@@ -30,11 +30,9 @@ package drcl.inet.mac;
 
 import drcl.comp.*;
 import drcl.net.*;
-import drcl.inet.*; 
-import drcl.inet.contract.*;
-import java.util.*;
+import drcl.inet.*;
 import drcl.comp.Port;
-import drcl.comp.Contract;
+
 
     /* 
      *  receive an IP packet from upperlayer component ( as the first step, it can be PacketDispatcher.
@@ -191,42 +189,55 @@ public class LL extends drcl.net.Module
         /* this part will be modified later according to the implementation of ad-hoc routing */
         InetPacket pkt = (InetPacket) data_;
 
+//System.out.println("Sensor"+pkt.getSource()+" The packet has reached the LL.dataArriveAtUpPort layer");
         if (pktarrival._isEventExportEnabled())
 			pktarrival.exportEvent(EVENT_PKT_ARRIVAL, pkt, "from local up port " + upPort_.getID()); 
         
         long dst, src;
-        
+
+        //ADDED BY NICHOLAS:
+        double [] dst_loc = new double[3]; //the coordinates of  the receiving node
+        dst_loc = pkt.getDest_loc();
+ //System.out.println("Sensor"+pkt.getSource()+" Dest Loc(after): " + dst_loc[0]+", " + dst_loc[1]+", " + dst_loc[2]);
+
         ////////////////////////////////////////////////////////////////////////////////////
     	// Modified by Will
     	//dst = pkt.getDestination();   // temporary solution,
         // the correct destination ipaddr should be the next hop node's ip address instead of the final destination of this pkt
-        dst = pkt.getNextHop();   // correct solution,
+   //I commented it-Nick
+   //dst = pkt.getNextHop();   // correct solution,
         //debug("LL recv new pkt from upport: " + pkt + " nexthop "+ dst);
         ////////////////////////////////////////////////////////////////////////////////////
 
         //XXX Ye
-        // fixing the bug in PktSending.getBcastPacket()        
-        
-        dst = pkt.getDestination();
-        if ( dst != Address.ANY_ADDR ) 
-            dst = pkt.getNextHop(); 
+        // fixing the bug in PktSending.getBcastPacket()
 
-    	src = pkt.getSource();
-        
+
+        dst = pkt.getDestination();
+        src = pkt.getSource();
+
+        /*Nicholas -> modified for onehop model **********************/
+        pkt.setNextHop(pkt.getDestination());
+        //System.out.println("src = " + src + ",  dst = " + dst + " next hop is: " + pkt.getNextHop());
+
+        if ( dst != Address.ANY_ADDR )
+            dst = pkt.getNextHop();
+
         long src_macaddr, dst_macaddr;
-        //System.out.println("src = " + src + ",  dst = " + dst);        
+
         if ( dst == Address.ANY_ADDR )  {    // any address
             src_macaddr = myMacAddr;  // temporary solution for performance reason, no need to query the mac address.
             dst_macaddr = Mac_802_11.MAC_BROADCAST;
-            //System.out.println("gocha  dst_macaddr = " + Mac_802_11.MAC_BROADCAST);        
-            LLPacket llpkt = new LLPacket(dst_macaddr, src_macaddr, pkt.size, pkt);
+            //System.out.println("gocha  dst_macaddr = " + Mac_802_11.MAC_BROADCAST);
+            //LLPacket llpkt = new LLPacket(dst_macaddr, src_macaddr, pkt.size, pkt);
+            LLPacket llpkt = new LLPacket(dst_macaddr, src_macaddr, dst_loc, pkt.size, pkt);
             downPort.doSending(llpkt);
     	    //debug("LL pkt " + llpkt);
         }
         else {
             src_macaddr = myMacAddr;  // temporary solution for performance reason, no need to query the mac address.
             dst_macaddr = 0;
-            LLPacket llpkt = new LLPacket(dst_macaddr, src_macaddr, pkt.size, pkt);
+            LLPacket llpkt = new LLPacket(dst_macaddr, src_macaddr, dst_loc, pkt.size, pkt);
             ARPContract.Message msg = new ARPContract.Message(ARPContract.Message.ARP_Resolve, dst, llpkt); 
             arpPort.doSending(msg);   // need to do ARP resolve
         }    

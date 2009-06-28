@@ -28,10 +28,6 @@
 
 package drcl.inet.mac;
 
-import java.math.*; 
-import drcl.inet.*;
-import drcl.net.*;
-import drcl.comp.*;
 
 /**
  * The class implements some functions of DeferTimer of IEEE 802.11 protocol.

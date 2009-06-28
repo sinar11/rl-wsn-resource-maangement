@@ -28,11 +28,6 @@
 
 package drcl.inet.mac;
 
-import java.math.*; 
-import drcl.inet.*;
-import drcl.net.*;
-import drcl.comp.*;
-
 /**
  * RxTimer
  * 

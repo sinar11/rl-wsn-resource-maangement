@@ -28,14 +28,6 @@
 
 package drcl.inet.sensorsim;
 
-import drcl.comp.*;
-import drcl.net.*;
-import drcl.inet.*; 
-import drcl.inet.contract.*;
-import java.util.*;
-import drcl.comp.Port;
-import drcl.comp.Contract;
-
 /** This class implements the location information of a sensor node. 
 *
 * @author Ahmed Sobeih

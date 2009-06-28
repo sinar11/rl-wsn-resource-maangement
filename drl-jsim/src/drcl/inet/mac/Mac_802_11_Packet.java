@@ -53,14 +53,14 @@ public abstract class Mac_802_11_Packet extends Packet
      /* constant definations */
 	public String getName()  { return "MAC-802.11 Packet"; }
     
-    boolean forcedError;       // for simulation use only
+    protected boolean forcedError;       // for simulation use only
 	public void setForcedError(boolean b_) {	forcedError = b_; }
 	public boolean isForcedError( ) { return forcedError; }
 
     /* common fields in all four different frames */
-    Mac_802_11_Frame_Control fc;        // 2 bytes
-   	int                      duration;  // 2 bytes
-	int                      fcs;       // 4 bytes
+    protected Mac_802_11_Frame_Control fc;        // 2 bytes
+   	protected int                      duration;  // 2 bytes
+	protected int                      fcs;       // 4 bytes
     
 
 	public static final int ETHER_ADDR_LEN = 6;
@@ -94,11 +94,10 @@ public abstract class Mac_802_11_Packet extends Packet
 	  */
 	 
 	public void set_fc_flags(boolean order_, boolean wep_, 
-                    boolean more_data_, boolean pwr_mgt_, 
-                    boolean retry_, boolean more_frag_,
-					boolean from_ds_, boolean to_ds_) {
-		fc.set_fc_flags(order_, wep_, more_data_, pwr_mgt_, 
-                        retry_, more_frag_, from_ds_, to_ds_); 
+                             boolean more_data_, boolean pwr_mgt_,
+                             boolean retry_, boolean more_frag_,
+					         boolean from_ds_, boolean to_ds_) {
+		fc.set_fc_flags(order_, wep_, more_data_, pwr_mgt_, retry_, more_frag_, from_ds_, to_ds_);
 	}
     
 	/** Construct a 802_11 packet */
@@ -108,7 +107,7 @@ public abstract class Mac_802_11_Packet extends Packet
 	}	
 	
 	/** Construct a 802_11 packet 
-	  * @param hszie_ - header size
+	  * @param hsize_ - header size
       * @param bsize_ - body size
       * @param body_ - packet body
 	  */
@@ -119,7 +118,7 @@ public abstract class Mac_802_11_Packet extends Packet
 	}
 	
    	/** Construct a 802_11 packet 
-	  * @param hszie_ - header size
+	  * @param hsize_ - header size
       * @param bsize_ - body size
       * @param body_ - packet body
       * @param ferror_ - indicating if the packet is corrupted
@@ -131,7 +130,7 @@ public abstract class Mac_802_11_Packet extends Packet
 	}
     
    	/** Construct a 802_11 packet 
-	  * @param hszie_ - header size
+	  * @param hsize_ - header size
       * @param bsize_ - body size
       * @param body_ - packet body
 	  * @param fc_ - MAC frame control

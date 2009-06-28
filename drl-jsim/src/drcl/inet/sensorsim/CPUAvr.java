@@ -1,5 +1,5 @@
-// @(#)CPUAvr.java   10/2004
-// Copyright (c) 1998-2004, Distributed Real-time Computing Lab (DRCL) 
+// @(#)CPUAvr.java   12/2003
+// Copyright (c) 1998-2003, Distributed Real-time Computing Lab (DRCL) 
 // All rights reserved.
 // 
 // Redistribution and use in source and binary forms, with or without
@@ -28,64 +28,61 @@
 
 package drcl.inet.sensorsim;
 
-import drcl.comp.*;
-
-/** This class implements a CPU model with reasonable values for active, idle, sleep and off currents.
-*
-* @author Ahmed Sobeih
-* @version 1.1, 10/19/2004
+/**
+ * This class implements a CPU model with reasonable values for active, idle, sleep and off currents.
+ *
+ * @author Ahmed Sobeih
+ * @version 1.0, 12/19/2003
+ *
+ * Modified by Nicholas Merizzi March 2005 -> To integrate the wireless and sensorsim
+ * energy models into one model.
 */
+
 public class CPUAvr extends CPUBase
 {
-  	// Values for currents of different CPU modes
-	public static final double ACTIVE_CUR = 2.9e-3; // 2.9 mA
-	public static final double IDLE_CUR = 2.9e-3;  	// 2.9 mA
-	public static final double SLEEP_CUR = 1.9e-3;  // 1.9 mA
-	public static final double OFF_CUR = 1e-6;    	// 1 microA
 
-	public CPUAvr()
-	{
+	public CPUAvr() {
 		super();
-		cpuMode=CPU_ACTIVE;
-		activeCur=ACTIVE_CUR;
-		idleCur=IDLE_CUR;
-		sleepCur = SLEEP_CUR;
-		offCur=OFF_CUR;
+        initializeSimple();
 		flag=false;
 	}
  
-	/** Reports the current to the battery model.  */
-	public void reportCurrent(double current)
-	{
-       // System.out.println("CPU setting current:"+current);
-		BatteryContract.setConsumerCurrent(BatteryBase.CPU_MODEL, current, batteryPort);
+
+    /**
+     * Reports the current to the battery model.
+     * @param type The actual radio mode
+     * @param time how long its been in that mode for
+     */
+	public void reportCurrent(int type, double time)
+    {
+		batteryPort.doSending(new BatteryContract.Message(type, time));
 	}
 
-	/** Sets the CPU mode and reports the current to the battery model. */
-	public int setCPUMode(int mode) 
-	{
-        if(this.cpuMode==mode)
-            return 1;
-		switch (mode)
-		{
-			case CPU_ACTIVE:
-				reportCurrent(activeCur);
-				break;
-			case CPU_IDLE:
-				reportCurrent(idleCur);
-				break;
-			case CPU_SLEEP: 
-				if ( flag == false )
-					reportCurrent(sleepCur);
-				else  
-					reportCurrent(offCur);    
-				break;
-			case CPU_OFF:
-				reportCurrent(offCur);
-				break;
-		}
-		cpuMode = mode; 
+    /**
+     * Initializes the simple battery model.
+    */
+	public void initializeSimple()
+    {
+		lastTimeOut=0.0;
+	}
+
+	/**
+     * Sets the CPU mode and reports the current to the battery model.
+    */
+	public synchronized int setCPUMode(int mode)
+    {
+        double now = getTime() ;
+
+        //CPU_IDLE=0, CPU_SLEEP=1, CPU_ACTIVE=2, CPU_OFF=3
+        if (now >= lastTimeOut) {
+            reportCurrent(this.cpuMode, (now - lastTimeOut));
+            lastTimeOut = now;
+        }else {
+            System.out.println("CPUAvr.java Negative Time Gap!");
+        }
+		this.cpuMode = mode;
 		reportCpuMode(mode);
+        //lastTimeOut = now;
 		return 1;
-	} 
+	}
 }

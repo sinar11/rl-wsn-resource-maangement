@@ -1,5 +1,5 @@
-// @(#)TargetAgent.java   12/2004
-// Copyright (c) 1998-2004, Distributed Real-time Computing Lab (DRCL) 
+// @(#)TargetAgent.java   12/2003
+// Copyright (c) 1998-2003, Distributed Real-time Computing Lab (DRCL) 
 // All rights reserved.
 // 
 // Redistribution and use in source and binary forms, with or without
@@ -29,25 +29,27 @@
 package drcl.inet.sensorsim;
 
 import drcl.comp.*;
-import drcl.inet.data.*;
-import drcl.net.*;
 import drcl.util.random.*;
 
-/** This class implements a target node in a wireless sensor network. 
-*
-* @author Ahmed Sobeih
-* @version 1.1, 10/19/2004
+/**
+ * This class implements a target node in a wireless sensor network. It implements
+ * activeComponent which is a key j-sim interface that has to be implemented for a
+ * component to be active as a data source
+ *
+ * @author Ahmed Sobeih
+ * @version 1.0, 12/19/2003
 */
+
 public class TargetAgent extends drcl.net.Module implements drcl.comp.ActiveComponent
 {
 	public static final int TARGET_GAUSSIAN		= 0 ; 
 	public static final int TARGET_SINUSOIDAL	= 1 ; 
 
-	public static final double BCAST_RATE	= 0.01 ;  // every 0.01 secs
-	public static final double SAMPLE_RATE	= 400.0 ; // at 400 Hz sampling rate
-	public static final double MEAN		= 0.1 ; // gaussian mean
-	public static final double VAR		= 0.5 ; // gaussian standard deviation
-	public static final double SIN_FREQ	= 40.0 ; // 40 Hz
+	public static final double BCAST_RATE	= 0.1 ;  	// every 0.01 secs
+	public static final double SAMPLE_RATE	= 400.0 ; 	// at 400 Hz sampling rate
+	public static final double MEAN		= 0.1 ; 		// gaussian mean
+	public static final double VAR		= 0.5 ; 		// gaussian standard deviation
+	public static final double SIN_FREQ	= 40.0 ; 		// 40 Hz
 
 	public static final double M_PI 	= Math.PI ; /* = 3.14159265358979323846 */
 
@@ -62,10 +64,9 @@ public class TargetAgent extends drcl.net.Module implements drcl.comp.ActiveComp
 	int targetType;
 	double sinTime;	
 	GaussianDistribution gen;
-	int BcastSeqNum ; // a monotonically increasing sequence number at a target node. Incremented on sending a new TargetPacket
 
 	public TargetAgent() {
-        	super();
+        super();
 		rTimer = null ;
 		bufIndex=0;
 		sampleRate = SAMPLE_RATE;
@@ -75,24 +76,21 @@ public class TargetAgent extends drcl.net.Module implements drcl.comp.ActiveComp
 		sinTime=0.0;
 		gen = null ;
 		removeDefaultUpPort();
-		BcastSeqNum = 0 ;
 	}
 
     public String getName() { return "TargetAgent"; }
     
-    public void duplicate(Object source_) 
-    {
+    public void duplicate(Object source_) {
         super.duplicate(source_);
         TargetAgent that_ = (TargetAgent) source_;
-	bufIndex = that_.bufIndex;
-	sampleRate = that_.sampleRate;
-	bcastRate = that_.bcastRate;
-	gaussianVar = that_.gaussianVar;
-	sinFreq = that_.sinFreq;
-	targetType = that_.targetType;
-	sinTime = that_.sinTime;	
-	gen = that_.gen;
-	BcastSeqNum = that_.BcastSeqNum ;
+		bufIndex = that_.bufIndex;
+		sampleRate = that_.sampleRate;
+		bcastRate = that_.bcastRate;
+		gaussianVar = that_.gaussianVar;
+		sinFreq = that_.sinFreq;
+		targetType = that_.targetType;
+		sinTime = that_.sinTime;	
+		gen = that_.gen;
     }
 
 	/** Sets the sample rate with which the target node generates stimuli. */
@@ -108,28 +106,28 @@ public class TargetAgent extends drcl.net.Module implements drcl.comp.ActiveComp
 	{
 		long s ;
 	        if ( type_.equals("gaussian") ) {
-			targetType = TARGET_GAUSSIAN ;
-			gaussianVar = value ;
-			s = SEED_RNG ;
-			// Uncomment the following line to get different results in every run
-			// s = (long)(Math.abs(java.lang.System.currentTimeMillis()*Math.random()*100)) ;
-			gen = new GaussianDistribution(MEAN, gaussianVar, s);
-			return 1 ;
+                targetType = TARGET_GAUSSIAN ;
+                gaussianVar = value ;
+                s = SEED_RNG ;
+                // Uncomment the following line to get different results in every run
+                // s = (long)(Math.abs(java.lang.System.currentTimeMillis()*Math.random()*100)) ;
+                gen = new GaussianDistribution(MEAN, gaussianVar, s);
+                return 1 ;
 	        } else if ( type_.equals("sinusoidal") ) {
-			targetType = TARGET_SINUSOIDAL ;
-			sinFreq = value ;
-			return 1 ;
+                targetType = TARGET_SINUSOIDAL ;
+                sinFreq = value ;
+                return 1 ;
 	        } else {
-			System.out.println("TargetAgent.setTargetType ERROR: UNDEFINED TARGET TYPE");
-			return -1 ;
+                System.out.println("TargetAgent.setTargetType ERROR: UNDEFINED TARGET TYPE");
+                return -1 ;
 	        }
 	}
 
 	protected void _start ()  {
 		long s ;
 		s = SEED_RNG ;
-                // Uncomment the following line to get different results in every run
-                // s = (long)(Math.abs(java.lang.System.currentTimeMillis()*Math.random()*100)) ;
+        // Uncomment the following line to get different results in every run
+        // s = (long)(Math.abs(java.lang.System.currentTimeMillis()*Math.random()*100)) ;
 		gen = new GaussianDistribution(MEAN, gaussianVar, s);
 		sendPacket() ;
 	}
@@ -164,8 +162,7 @@ public class TargetAgent extends drcl.net.Module implements drcl.comp.ActiveComp
 		    }
 		}	
 
-		downPort.doSending(new TargetPacket(sampleSize, BcastSeqNum, payload, new Double(getTime()))) ;
-		BcastSeqNum = BcastSeqNum + 1 ;
+		downPort.doSending(new TargetPacket(sampleSize, payload)) ;
 
 		// Reset the timer to send a new TargetPacket after bcastRate
 		// If commented, the target node will send only one packet	

@@ -31,7 +31,6 @@ package drcl.inet.contract;
 import drcl.comp.*;
 import drcl.net.Packet;
 import drcl.inet.InetPacket;
-import drcl.util.StringUtil;
 
 /**
 The packet sending contract.
@@ -56,9 +55,6 @@ This constract defines three packet sending services at the reactor:
 	explicit-multicasting request.  Upon receipt of such a request, the
 	reactor sends the packet at all interfaces except the ones specified.
 </dl>
-In all cases, if the protocol ID field of the InetPacket is zero, the reactor
-will replace it with the port ID of the port through which the reactor receives
-the packet.
 This class also provides a set of static methods
 ({@link #getForwardPack(drcl.net.Packet, long, long, boolean, int, long)
 getForwardPack(...)},
@@ -79,17 +75,13 @@ public class PktSending extends Contract
 {
 	public static final PktSending INSTANCE = new PktSending();
 
-	public PktSending()
-	{ super(); }
+	public PktSending() { super(); }
 	
-	public PktSending(int role_)
-	{ super(role_); }
+	public PktSending(int role_) { super(role_); }
 	
-	public String getName()
-	{ return "PacketSending Contract"; }
+	public String getName()      { return "PacketSending Contract"; }
 	
-	public Object getContractContent()
-	{ return null; }
+	public Object getContractContent() { return null; }
 	
 	/**
 	 * Creates and returns a default-forwarding request.
@@ -128,7 +120,27 @@ public class PktSending extends Contract
 				routerAlert_, tos_, 0/*id*/, 0/*flag*/, 0/*frag offset*/,
 				pkt_, pktsize_);
 	}
-	
+
+    /**NICHOLAS
+         * Creates and returns a default-forwarding request.
+         *
+         * @param pkt_ the packet.
+         * @param src_ source.
+         * @param dest_ destination.
+         * @param routerAlert_ "router alert" flag.
+         * @param ttl_ "time-to-live".
+         * @param tos_ type of service.
+     PktSending.getForwardPack(p_, src_, dest_, dest_loc,routerAlert_, TTL_, ToS_)
+    */
+    public static InetPacket getForwardPack(Packet pkt_, long src_, long dest_, double[] dest_loc,
+									boolean routerAlert_, int ttl_, long tos_)
+	{
+		return new InetPacket(src_, dest_, dest_loc, 0/*protocol*/, ttl_, 0/*hops*/,
+				routerAlert_, tos_, 0/*id*/, 0/*flag*/, 0/*frag offset*/,
+				pkt_, pkt_.size);
+	}
+
+
 	/**
 	 * Creates and returns an explicit-multicasting request.
 	 * 
@@ -208,7 +220,7 @@ public class PktSending extends Contract
 	 * @param routerAlert_ "router alert" flag.
 	 * @param ttl_ "time-to-live".
 	 * @param tos_ type of service.
-	 * @param excludedIf_ indices of the interfaces to be excluded from
+	 * @param excludedIfs_ indices of the interfaces to be excluded from
 	 * 		forwarding of the packet.
 	 * @param nexthop_ address of the next hop 
 	 */
@@ -281,7 +293,7 @@ public class PktSending extends Contract
 	 * @param routerAlert_ "router alert" flag.
 	 * @param ttl_ "time-to-live".
 	 * @param tos_ type of service.
-	 * @param excludedIf_ indices of the interfaces to be excluded from
+	 * @param excludedIfs_ indices of the interfaces to be excluded from
 	 * 		forwarding of the packet.
 	 */
 	public static Message getBcastPack(Packet pkt_, long src_, long dest_,
@@ -305,7 +317,7 @@ public class PktSending extends Contract
 	 * @param routerAlert_ "router alert" flag.
 	 * @param ttl_ "time-to-live".
 	 * @param tos_ type of service.
-	 * @param excludedIf_ indices of the interfaces to be excluded from
+	 * @param excludedIfs_ indices of the interfaces to be excluded from
 	 * 		forwarding of the packet.
 	 */
 	public static Message getBcastPack(Object pkt_, int pktsize_, long src_,

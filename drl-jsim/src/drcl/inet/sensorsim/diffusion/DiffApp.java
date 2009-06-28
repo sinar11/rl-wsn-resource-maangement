@@ -29,14 +29,10 @@
 package drcl.inet.sensorsim.diffusion ;
 
 import drcl.inet.sensorsim.* ;
-import drcl.data.*;
 import drcl.comp.*;
-import drcl.net.*;
-import drcl.inet.*;
-import drcl.inet.contract.*;
 import java.util.*;
 import drcl.comp.Port;
-import drcl.comp.Contract;
+
 
 /** This class implements directed diffusion (Mobicom 2000).
 *
@@ -352,7 +348,7 @@ public class DiffApp extends drcl.inet.sensorsim.SensorApp
 	}
 
 	/** Handles information received over the sensor channel  */
-	protected synchronized void recvSensorEvent(Object data_)
+	public synchronized void recvSensorEvent(Object data_)
 	{
 		/* A sensor node that detects a target searches its interest cache for a matching interest entry. A matching entry is one whose rect encompasses the sensor location and the type of the entry matches the detected target type. */
 
@@ -650,7 +646,7 @@ public class DiffApp extends drcl.inet.sensorsim.SensorApp
 			}
 			else	/* if an interest entry does exist in the interest cache */
 			{
-				double lastTimeSent = intrstEntry.getLastTimeSent() ;
+				//double lastTimeSent = intrstEntry.getLastTimeSent() ;
 
 				/* Check to see if a gradient already exists in the gradientList of the interest cache entry */
 				GradientEntry grdntEntry = intrstEntry.gradientList_lookup(source, currentTime) ;
