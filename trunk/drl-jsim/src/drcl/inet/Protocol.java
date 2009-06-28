@@ -28,14 +28,11 @@
 
 package drcl.inet;
 
-import java.util.*;
 import drcl.comp.*;
 import drcl.comp.contract.EventContract;
 import drcl.net.*;
-import drcl.data.IntObj;
 import drcl.inet.contract.*;
 import drcl.inet.data.*;
-import drcl.util.scalar.IntSpace;
 
 /**
 The base class for transport, routing and other signaling protocols.
@@ -628,13 +625,22 @@ public class Protocol extends Module implements InetConstants
 		downPort.doSending(PktSending.getMcastPack(p_, bodysize_, src_, dest_,
 								routerAlert_, TTL_, ToS_, ifs_));
 	}
-	
+
+    /**NICHOLAS: Route lookup forwarding.
+     * call from WirelessAgent:
+     * forward(sensorPkt,bytesLeft,dst_loc, drcl.net.Address.NULL_ADDR, dst_, false, 255, 0);
+     * */
+	public void forward(Packet p_, int bodysize_, double[] dest_loc, long src_, long dest_,
+					boolean routerAlert_, int TTL_, long ToS_)
+	{
+		downPort.doSending(PktSending.getForwardPack(p_, src_, dest_, dest_loc,routerAlert_, TTL_, ToS_));
+	}
+
 	/** Route lookup forwarding. */
 	public void forward(Packet p_, long src_, long dest_, 
 					boolean routerAlert_, int TTL_, long ToS_)
 	{
-		downPort.doSending(PktSending.getForwardPack(p_, src_, dest_,
-								routerAlert_, TTL_, ToS_));
+		downPort.doSending(PktSending.getForwardPack(p_, src_, dest_,routerAlert_, TTL_, ToS_));
 	}
 	
 	/** Route lookup forwarding. */

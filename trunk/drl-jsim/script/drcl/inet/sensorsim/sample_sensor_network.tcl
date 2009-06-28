@@ -2,6 +2,12 @@
 # Author: Ahmed Sobeih
 # Date: 12/23/2003
 
+#
+#Modified by Nicholas Merizzi to reflect changes 
+#to the original design as discussed at 
+#	http://www.cas.mcmaster.ca/~merizzn/
+
+
 source "../../../test/include.tcl"
 
 cd [mkdir -q drcl.comp.Component /aodvtest]
@@ -162,29 +168,6 @@ for {set i [expr $sink_id + 1]} {$i < [expr $node_num - $target_node_num]} {incr
 	! app setSinkNid $sink_id
 	! app setCoherentThreshold 1000.0
 
-# Energy Model
-	set cc($i) [java::new drcl.inet.sensorsim.BatteryCoinCell 1.00]
-	java::call drcl.comp.Util setRuntime $cc($i) [java::new drcl.comp.ARuntime]
-
-	set cpu($i) [java::new drcl.inet.sensorsim.CPUAvr]
-	java::call drcl.comp.Util setRuntime $cpu($i) [java::new drcl.comp.ARuntime]
-
-	set radio($i) [java::new drcl.inet.sensorsim.RadioSimple]
-	java::call drcl.comp.Util setRuntime $radio($i) [java::new drcl.comp.ARuntime]
-
-	connect $cc($i)/batteryOut@ -to $cpu($i)/batteryIn@
-	connect $cc($i)/battery@ -and $cpu($i)/battery@
-	$cpu($i) setCPUMode 2
-
-	connect $cc($i)/batteryOut@ -to $radio($i)/batteryIn@
-	connect $cc($i)/battery@ -and $radio($i)/battery@
-	$radio($i) setRadioMode 4
-
-	$cpu($i) attachApp [! app getPort .cpu]
-	$radio($i) attachApp [! app getPort .radio]
-
-# End Energy Model
-
 	# create nodes
 	mkdir drcl.inet.sensorsim.SensorAgent agent
 
@@ -235,6 +218,7 @@ for {set i [expr $sink_id + 1]} {$i < [expr $node_num - $target_node_num]} {incr
 	! wphy setRxThresh 0.0
 	! wphy setCSThresh 0.0	
 
+
 	mkdir drcl.inet.mac.FreeSpaceModel propagation 
 
         set PD [mkdir drcl.inet.core.PktDispatcher      pktdispatcher]
@@ -265,7 +249,31 @@ for {set i [expr $sink_id + 1]} {$i < [expr $node_num - $target_node_num]} {incr
 	connect ll/.arp@ -and arp/.arp@
 	
 	connect -c pktdispatcher/0@down -and ll/up@   
-	 
+	
+	#*************
+	#NICHOLAS
+	#added to let the MAC802.11 layer
+	#it is in charge of maintaining the
+	#radio modes.
+	! mac setIs_uAMPS 0
+	! wphy setMIT_uAMPS 0
+	#*************
+
+	#*************
+	#Nicholas: 
+	#The energy module is contained within the 
+	#wirelessPhy.java component. The following connects
+	#the CPU model, application layer, and wirelessPhy
+	#components together.
+	connect app/.energy@ -and wphy/.appEnergy@
+	mkdir drcl.inet.sensorsim.CPUAvr cpu
+
+	connect app/.cpu@ -and cpu/.reportCPUMode@
+	connect cpu/.battery@ -and wphy/.cpuEnergyPort@
+
+	# End Energy Model
+	#**************
+		 
 	set nid $i
 	
 	! arp setAddresses  $nid $nid

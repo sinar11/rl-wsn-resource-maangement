@@ -82,9 +82,10 @@ public class FreeSpaceModel extends drcl.inet.mac.RadioPropagationModel
         RadioPropagationQueryContract.Message msg = (RadioPropagationQueryContract.Message) data_;
         
         Lambda = msg.getLambda();
-        if ( isCartesian ) 
+        if ( isCartesian ) {
             d    = msg.getDxyz();
-        else 
+           // System.out.println("FreeSpaceModel.processPathLossQuery() Calculated the distance to be: +"+ d);
+        }else
             d    = msg.getDxyz2();
         loss = calculatePathLoss(Lambda, d);
         queryPort.doSending(new RadioPropagationQueryContract.Message(loss));
@@ -93,7 +94,7 @@ public class FreeSpaceModel extends drcl.inet.mac.RadioPropagationModel
     /**
      * Calculate the path loss.
      *
-     *@param Lamda_ the wavelength. 
+     *@param Lambda_ the wavelength.
      *@param d_     the distance between the two points. 
      */
     protected double calculatePathLoss(double Lambda_, double d_) {
@@ -104,7 +105,7 @@ public class FreeSpaceModel extends drcl.inet.mac.RadioPropagationModel
     /**
      * Calculates the path loss using free space model.
      *
-     *@param Lamda_ the wavelength. 
+     *@param Lambda_ the wavelength.
      *@param d_     the distance between the two points. 
      *
      */
@@ -125,8 +126,8 @@ public class FreeSpaceModel extends drcl.inet.mac.RadioPropagationModel
          *       (4 * pi * d)^2 * L
          */
         
-        double M = Lambda_ / (4 * Math.PI * d_);
-        return M*M;
+        double result = (Lambda_*Lambda_) / (((4*Math.PI)*(4*Math.PI)) * (d_*d_));
+        return(result);
     }
 
    	public String info() { 

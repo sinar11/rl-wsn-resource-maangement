@@ -1,4 +1,4 @@
-// @(#)SensorAppAgentContract.java   10/2004
+// @(#)SensorAppAgentContract.java   1/2004
 // Copyright (c) 1998-2004, Distributed Real-time Computing Lab (DRCL) 
 // All rights reserved.
 // 
@@ -28,17 +28,15 @@
 
 package drcl.inet.sensorsim;
 
-import drcl.data.*;
-import drcl.net.*;
 import drcl.comp.*;
-import drcl.util.ObjectUtil;
-import drcl.util.StringUtil;
 
-/** This class implements the contract between the sensor layer and the sensor application layer.
-*
-* @author Ahmed Sobeih
-* @version 1.1, 10/19/2004
+/**
+ * This class implements the contract between the sensor layer and the sensor application layer.
+ *
+ * @author Ahmed Sobeih
+ * @version 1.0, 12/19/2003
 */
+
 public class SensorAppAgentContract extends Contract
 {
 	public static final SensorAppAgentContract INSTANCE = new SensorAppAgentContract();
@@ -61,15 +59,22 @@ public class SensorAppAgentContract extends Contract
 		int dataSize ;
 		double snr;
 		long target_nid; // the id of the target node to which this data pertains
-		double target_X ;
+        double target_X ;
 		double target_Y ;
 		double target_Z ;
 		int target_SeqNum ;
 		public Object body ; // the encapsulated data in the TargetPacket
-        
-        	public Message ()	{ }
 
-		public Message (int dataSize_, double snr_, long target_nid_, double target_X_, double target_Y_, double target_Z_, int target_SeqNum_, Object body_)
+        public Message ()	{ }
+
+		public Message (int dataSize_, double snr_, long target_nid_)
+		{
+			dataSize = dataSize_ ;
+			snr = snr_;
+			target_nid = target_nid_;
+		}
+
+        public Message (int dataSize_, double snr_, long target_nid_, double target_X_, double target_Y_, double target_Z_, int target_SeqNum_, Object body_)
 		{
 			dataSize = dataSize_ ;
 			snr = snr_;
@@ -97,16 +102,12 @@ public class SensorAppAgentContract extends Contract
 		    dataSize = that_.dataSize;
 		    snr = that_.snr;
 		    target_nid = that_.target_nid ;
-		    target_X = that_.target_X ;
-		    target_Y = that_.target_Y ;
-		    target_Z = that_.target_Z ;
-		    target_SeqNum = that_.target_SeqNum ;
 		}
 		*/
 	
 		public Object clone()
 		{ 
-			return new Message(dataSize, snr, target_nid, target_X, target_Y, target_Z, target_SeqNum, body); 
+			return new Message(dataSize, snr, target_nid); 
 		}
 
 		public Contract getContract()

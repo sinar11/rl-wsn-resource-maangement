@@ -29,7 +29,6 @@
 package drcl.inet.mac;
 
 import drcl.net.*;
-import drcl.inet.InetPacketInterface;
 
 
 /**
@@ -38,21 +37,29 @@ import drcl.inet.InetPacketInterface;
  * @see LL
  * @see ARP
  * @see Mac_802_11
+ * @see LLMacContract
  * @author Ye Ge
  */
-public class LLPacket extends Packet implements InetPacketInterface
-{
+public class LLPacket extends Packet {
     
     /**
      * destination mac address.
      */
     long dst_macaddr;
-    
+
+    /**
+     * added by NICHOLAS
+     * destination location (approximate) for LEACH project
+     */
+    double[] dst_loc = new double[3];;
+    public int      code;//Added by NICHOLAS: Used to Spread Spectrum for LEACH
+
     /**
      *source mac address.
      */
     long src_macaddr;
-    
+
+
     public String getName()  { return "LL Packet"; }
     
     /** 
@@ -67,7 +74,33 @@ public class LLPacket extends Packet implements InetPacketInterface
         dst_macaddr = dst_macaddr_;
         src_macaddr = src_macaddr_;
     }
-   /* 
+
+    /** ADDED BY NICHOLAS FOR LEACH PROJECT
+     * Construct LL Packet
+     * @param dst_macaddr_ - destination MAC address
+     * @param src_macaddr_ - source MAC address
+     * @param bsize_ - size of packet body
+     * @param body_ - packet body
+     */
+    public LLPacket(long dst_macaddr_, long src_macaddr_, double[] dst_loc_, int bsize_, Object body_) {
+        super(0, bsize_, body_);
+
+        dst_loc = dst_loc_;
+       /* if (dst_macaddr_ != -1){
+            System.out.println("LLPacket.java: THE Packet Dest is: "+dst_loc[0] +", "+ dst_loc[1]+ "," + dst_loc[2]);
+        }*/
+        dst_macaddr = dst_macaddr_;
+        src_macaddr = src_macaddr_;
+    }
+
+
+    public double[] getDst_loc() { return dst_loc; }
+    public double getDst_Xcoord() { return dst_loc[0]; }
+    public double getDst_Ycoord() { return dst_loc[1]; }
+    public double getDst_Zcoord() { return dst_loc[2]; }
+    public int getCode() { return code; }
+    
+   /*
     public void duplicate(Object source_) {
         super.duplicate(source_);
         
@@ -77,15 +110,6 @@ public class LLPacket extends Packet implements InetPacketInterface
     }
 	*/
     
-	// InetPacketInterface
-	public long getToS()
-	{
-		if (body instanceof InetPacketInterface)
-			return ((InetPacketInterface)body).getToS();
-		else
-			return 0;
-	}
-
     /**
      * Sets destination MAC address.
      */
@@ -107,7 +131,11 @@ public class LLPacket extends Packet implements InetPacketInterface
     public long getSrcMacAddr() { return src_macaddr; }
 
     public Object clone() {
-        return new LLPacket(dst_macaddr, src_macaddr, size - headerSize, body instanceof drcl.ObjectCloneable? ((drcl.ObjectCloneable)body).clone(): body);
+        if (dst_macaddr == -1){
+            return new LLPacket(dst_macaddr, src_macaddr, size - headerSize, body instanceof drcl.ObjectCloneable? ((drcl.ObjectCloneable)body).clone(): body);
+        }else {
+            return new LLPacket(dst_macaddr, src_macaddr, this.getDst_loc(), size - headerSize, body instanceof drcl.ObjectCloneable? ((drcl.ObjectCloneable)body).clone(): body);
+        }
     }
     
     public String _toString(String separator_)  {

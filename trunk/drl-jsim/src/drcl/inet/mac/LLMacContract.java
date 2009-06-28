@@ -28,15 +28,11 @@
 
 package drcl.inet.mac;
 
-import drcl.data.*;
-import drcl.net.*;
 import drcl.comp.*;
 import drcl.inet.*;
-import drcl.util.ObjectUtil;
-import drcl.util.StringUtil;
 
 /**
- * Defines soem convenient methods which are used by the <code>LL</code> 
+ * Defines some convenient methods which are used by the <code>LL</code> 
  * components and the <code>MAC</code> components.
  *
  * @author Ye Ge

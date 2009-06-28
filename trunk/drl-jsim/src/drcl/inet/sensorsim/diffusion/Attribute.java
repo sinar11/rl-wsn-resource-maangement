@@ -28,15 +28,6 @@
 
 package drcl.inet.sensorsim.diffusion ;
 
-import drcl.data.*;
-import drcl.comp.*;
-import drcl.net.*;
-import drcl.inet.*;
-import drcl.inet.contract.*;
-import java.util.*;
-import drcl.comp.Port;
-import drcl.comp.Contract;
-
 /** This class implements the attribute used in naming interests AND data in directed diffusion.
 *
 * @author Ahmed Sobeih

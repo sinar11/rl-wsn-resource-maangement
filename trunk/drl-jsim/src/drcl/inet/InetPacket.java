@@ -37,7 +37,7 @@ import drcl.util.ObjectUtil;
 Defines the packet structure for the INET framework.
 @version 1.1, 08/2002
  */
-public class InetPacket extends Packet implements InetPacketInterface
+public class InetPacket extends Packet
 {
 	/** Name of the InetPacket.*/
 	public static final String NAME    = "INET";
@@ -72,7 +72,41 @@ public class InetPacket extends Packet implements InetPacketInterface
 	int ttl, hops, ulp, id, flag, fragmentOffset;
 	boolean routerAlert;
 	Object extension;
-					
+
+    /*****************************************************************/
+    //******NICHOLAS: So that the lower levels know approximately where the the destined
+    //      node is located (used for LEACH and other resource adaptive routing protocols
+    double[] dest_loc;
+    public double getDst_Xcoord() { return dest_loc[0]; }
+    public double getDst_Ycoord() { return dest_loc[1]; }
+    public double getDst_Zcoord() { return dest_loc[2]; }
+
+    public double[] getDest_loc() {
+        return dest_loc;
+    }
+
+    //Nicholas: new constructor for LEACH PROJECT
+    public InetPacket(long src_, long des_, double[] dest_loc_, int ulp_, int ttl_, int hops_,
+		boolean ra_, long tos_, int id_, int flag_, int fragment_, Object pkt_,
+		int pktsize_)
+	{
+		super(20/*header size*/, pktsize_, pkt_);
+
+		src = src_;
+		dest = des_;
+		ulp = ulp_;
+		ttl = ttl_;
+		hops = hops_;
+		tos = tos_;
+		routerAlert = ra_;
+		id = id_;
+		flag = flag_;
+		fragmentOffset = fragment_;
+        this.dest_loc = new double[3];   //NICHOLAS (for obtaining the destinations position)
+        dest_loc = dest_loc_;
+	}
+    /*****************************************************************/
+
 	public InetPacket()
 	{ this(0, 0, 0, 0, 0, false, 0, 0, 0, 0, null, 0); }
 	
@@ -173,9 +207,6 @@ public class InetPacket extends Packet implements InetPacketInterface
 	{ tos = tos_; }
 	
 	public long getTOS()
-	{ return tos; }
-
-	public long getToS()
 	{ return tos; }
 	
 	public void setID(int no_)

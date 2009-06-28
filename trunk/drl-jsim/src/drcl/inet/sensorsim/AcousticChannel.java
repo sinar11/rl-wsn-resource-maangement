@@ -29,12 +29,8 @@
 package drcl.inet.sensorsim;
 
 import drcl.comp.*;
-import drcl.net.*;
-import drcl.inet.*; 
-import drcl.inet.contract.*;
-import java.util.*;
 import drcl.comp.Port;
-import drcl.comp.Contract;
+
 
 /** This class implements the acoustic channel in a wireless sensor network.
 *
@@ -111,18 +107,18 @@ public class AcousticChannel extends SensorChannel
 
         int i;
         long[] nodeList;
-	SensorLocationInformation[] neighborsLocation ;	
+	    SensorLocationInformation[] neighborsLocation ;
         
         SensorNodeChannelContract.Message msg = (SensorNodeChannelContract.Message) data_;
        
         double X, Y, Z;
         long   nid;
-	  double Radius ;
+	    double Radius ;
         X = msg.getX();
         Y = msg.getY();
         Z = msg.getZ();
-        nid = msg.getNid();
-	  Radius = msg.getRadius();
+        nid = msg.getSenderNid();
+	    Radius = msg.getRadius();
         
         SensorNeighborQueryContract.Message msg2 = (SensorNeighborQueryContract.Message) trackerPort.sendReceive(new SensorNeighborQueryContract.Message(nid, X, Y, Z, Radius, true));
         

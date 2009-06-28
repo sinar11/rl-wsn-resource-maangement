@@ -1,5 +1,5 @@
-// @(#)SensorChannel.java   10/2004
-// Copyright (c) 1998-2004, Distributed Real-time Computing Lab (DRCL) 
+// @(#)SensorChannel.java   12/2003
+// Copyright (c) 1998-2003, Distributed Real-time Computing Lab (DRCL) 
 // All rights reserved.
 // 
 // Redistribution and use in source and binary forms, with or without
@@ -29,17 +29,13 @@
 package drcl.inet.sensorsim;
 
 import drcl.comp.*;
-import drcl.net.*;
-import drcl.inet.*; 
-import drcl.inet.contract.*;
 import java.util.*;
 import drcl.comp.Port;
-import drcl.comp.Contract;
 
 /** This class implements the sensor channel in a wireless sensor network.
 *
 * @author Ahmed Sobeih
-* @version 1.1, 10/19/2004
+* @version 1.0, 12/19/2003
 */
 public class SensorChannel extends drcl.net.Module 
 {
@@ -47,15 +43,16 @@ public class SensorChannel extends drcl.net.Module
     public static final String CONFIG_PORT_ID  = ".config";
     public static final String TRACKER_PORT_ID = ".tracker";       // connect to the tracker component
     
-    protected Port nodePort = addPort(NODE_PORT_ID, false);
-    protected Port configPort = addPort(CONFIG_PORT_ID, false); 
-    protected Port trackerPort = addPort(TRACKER_PORT_ID, false);
+    protected Port nodePort     = addPort(NODE_PORT_ID, false);
+    protected Port configPort   = addPort(CONFIG_PORT_ID, false);
+    protected Port trackerPort  = addPort(TRACKER_PORT_ID, false);
 
     long nPort;
     
     {
         removeDefaultUpPort();
         removeDefaultDownPort();
+        removeTimerPort();
     }    
         
     protected Vector vp = new Vector();         // list of ports
@@ -67,7 +64,7 @@ public class SensorChannel extends drcl.net.Module
     
     public SensorChannel() {
         super();
-	propDelay = 0.0;
+		propDelay = 0.0;
     }
 
 	/** Sets the propagation delay of the sensor channel  */
@@ -128,12 +125,12 @@ public class SensorChannel extends drcl.net.Module
        
         double X, Y, Z;
         long   nid;
-	  double Radius ;
+	    double Radius ;
         X = msg.getX();
         Y = msg.getY();
         Z = msg.getZ();
-        nid = msg.getNid();
-	  Radius = msg.getRadius();
+        nid = msg.getSenderNid();  //what target node generated this signal
+	    Radius = msg.getRadius();
         
         SensorNeighborQueryContract.Message msg2 = (SensorNeighborQueryContract.Message) trackerPort.sendReceive(new SensorNeighborQueryContract.Message(nid, X, Y, Z, Radius));
         
@@ -143,11 +140,10 @@ public class SensorChannel extends drcl.net.Module
             Port p_;
             if ( nid != nodeList[i] && vp_flag[(int) nodeList[i]] == true ) {
                 p_ = (Port) vp.elementAt((int) nodeList[i]);
-
-		send(p_, msg.clone(), getPropDelay());  
-		/* to send immediately, comment out above line and add the following one
-		// p_.doSending(msg.clone());  
-		*/
+                sendAt(p_, msg.clone(), propDelay);
+                /* to send immediately, comment out above line and add the following one
+                // p_.doSending(msg.clone());
+                */
             }
         }
     }

@@ -52,8 +52,8 @@ public class WirelessDiffAgent extends drcl.inet.sensorsim.WirelessAgent
 		switch ( type_ )
 		{
 			case DiffApp.INTEREST_PKT :
-				InterestPacket interestPkt = (InterestPacket)sensorPkt.getBody() ;
-				long source = interestPkt.source ;
+				//InterestPacket interestPkt = (InterestPacket)sensorPkt.getBody() ;
+				//long source = interestPkt.source ;
 				broadcast(sensorPkt, drcl.net.Address.NULL_ADDR, drcl.net.Address.ANY_ADDR, true, 1, 0);
 				break ;
 			case DiffApp.DATA_PKT :
@@ -68,7 +68,8 @@ public class WirelessDiffAgent extends drcl.inet.sensorsim.WirelessAgent
 		}
 	}
 
-	/** Handles data arriving at the UP port */
+	/** Handles data arriving at the UP port--> meaning info being sent down from DiffApp
+     *  is received at this port. */
 	protected synchronized void dataArriveAtUpPort(Object data_, Port upPort_)
 	{
 		SensorAppWirelessAgentContract.Message msg = (SensorAppWirelessAgentContract.Message)data_ ;

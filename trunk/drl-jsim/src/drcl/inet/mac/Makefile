@@ -49,8 +49,11 @@ SOURCE  = \
 		TworayGroundModel.java \
 		TxTimer.java \
 		WirelessPhy.java \
+        Mac.java \
+        EnergyContract.java \
 
-RMI_SOURCE  = 
+
+RMI_SOURCE  =
 
 MAIN        = 
 

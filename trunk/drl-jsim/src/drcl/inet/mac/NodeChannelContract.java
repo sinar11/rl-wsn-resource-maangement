@@ -63,7 +63,6 @@ public class NodeChannelContract extends Contract
      * and Channel components.
      */
     public static class Message extends drcl.comp.Message
-					implements drcl.data.Countable
 	{
         /** The sender's node id  */
         public  long   nid;         
@@ -116,15 +115,6 @@ public class NodeChannelContract extends Contract
 		public double getPt()  { return Pt; }
 		/** Gets the packet */
         public Object getPkt() { return pkt; }
-
-		public int getSize()
-		{ return ((Packet)pkt).getSize(); }
-
-		public int getNumberCount()
-		{ return ((Packet)pkt).getNumberCount(); }
-
-		public long getSizeCount()
-		{ return ((Packet)pkt).getSizeCount(); }
 
 		public Object clone()
 		{

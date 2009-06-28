@@ -1,18 +1,13 @@
 PACKAGE = drcl.inet.sensorsim
 
 SOURCE  = \
-		AcousticChannel.java \
-		AcousticProp.java \
+        AcousticChannel.java \
+        AcousticProp.java \
+		AliveSensors.java \
 		BatteryBase.java \
-		BatteryCoinCell.java \
 		BatteryContract.java \
-		BatteryLiNR.java \
-		BatterySimple.java \
-		BatteryTable.java \
 		CPUAvr.java \
 		CPUBase.java \
-		RadioBase.java \
-		RadioSimple.java \
 		SeismicProp.java \
 		SensorAgent.java \
 		SensorAgentPhyContract.java \
@@ -20,7 +15,7 @@ SOURCE  = \
 		SensorAppAgentContract.java \
 		SensorAppWirelessAgentContract.java \
 		SensorChannel.java \
-		SensorLocationInformation.java \
+        SensorLocationInformation.java \
 		SensorMobilityModel.java \
 		SensorNeighborQueryContract.java \
 		SensorNodeChannelContract.java \
@@ -33,8 +28,6 @@ SOURCE  = \
 		TargetAgent.java \
 		TargetPacket.java \
 		WirelessAgent.java \
-		SensorLocApp.java \
-		ProbePacket.java
 
 RMI_SOURCE  = 
 

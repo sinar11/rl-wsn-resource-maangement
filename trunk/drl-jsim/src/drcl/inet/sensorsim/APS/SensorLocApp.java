@@ -26,17 +26,16 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 
-package drcl.inet.sensorsim;
+package drcl.inet.sensorsim.APS;
 
 import drcl.data.*;
 import drcl.comp.*;
-import drcl.net.*;
-import drcl.inet.*;
-import drcl.inet.contract.*;
+import drcl.inet.sensorsim.SensorApp;
+import drcl.inet.sensorsim.SensorPacket;
+import drcl.inet.sensorsim.SensorAppWirelessAgentContract;
+
 import java.util.*;
 import drcl.comp.Port;
-import drcl.comp.Contract;
-import drcl.inet.mac.MobilityModel;
 import drcl.inet.mac.PositionReportContract;
 
 /**
@@ -53,7 +52,7 @@ import drcl.inet.mac.PositionReportContract;
  *
  * @author Hyuk Lim
  * @version 1.0, 8/23/2004
- * @see drcl.inet.sensorsim.ProbePacket
+ * @see drcl.inet.sensorsim.APS.ProbePacket
  */
 public class SensorLocApp
     extends SensorApp
@@ -65,7 +64,7 @@ public class SensorLocApp
     public boolean isAnchor = false;
 
     /**
-     * An anchor node sends {@link drcl.inet.sensorsim.ProbePacket
+     * An anchor node sends {@link drcl.inet.sensorsim.APS.ProbePacket
      * probing packets} to its neighboring nodes
      * at every this time interval (default: 60 seconds).
      */
@@ -84,15 +83,15 @@ public class SensorLocApp
     protected Vector anchorList;
 
     /**
-     * The sequence number for {@link drcl.inet.sensorsim.ProbePacket
+     * The sequence number for {@link drcl.inet.sensorsim.APS.ProbePacket
      * drcl.inet.sensorsim.ProbePacket}.
      */
-    protected long pktSequence = 0;
+    public long pktSequence = 0;
 
     /**
      * The average distance per each hop.
      */
-    protected double hopDistance = -1;
+    public double hopDistance = -1;
 
     /**
      * The actual position of node. Only anchor node knows its position.
@@ -332,7 +331,7 @@ public class SensorLocApp
         }
     }
 
-    protected synchronized void processOther(Object data_, Port inPort_)
+    public synchronized void processOther(Object data_, Port inPort_)
     {
         String portid_ = inPort_.getID();
         if (portid_.equals(FROM_WIRELESS_AGENT_PORT_ID))
@@ -503,10 +502,7 @@ public class SensorLocApp
      */
     protected synchronized void sendProbePacket(ProbePacket pkt)
     {
-        SensorAppWirelessAgentContract.Message msg
-            = new SensorAppWirelessAgentContract.Message(
-            SensorAppWirelessAgentContract.BROADCAST_SENSOR_PACKET,
-            ProbePacket.PACKET_TYPE, -1, -1, pkt);
+        SensorAppWirelessAgentContract.Message msg= new SensorAppWirelessAgentContract.Message(SensorAppWirelessAgentContract.BROADCAST_SENSOR_PACKET,ProbePacket.PACKET_TYPE, -1, -1, pkt);
         downPort.doSending(msg);
     }
 

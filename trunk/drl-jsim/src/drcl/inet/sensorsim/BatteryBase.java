@@ -1,5 +1,5 @@
-// @(#)BatteryBase.java   12/2004
-// Copyright (c) 1998-2004, Distributed Real-time Computing Lab (DRCL) 
+// @(#)BatteryBase.java   12/2003
+// Copyright (c) 1998-2003, Distributed Real-time Computing Lab (DRCL) 
 // All rights reserved.
 // 
 // Redistribution and use in source and binary forms, with or without
@@ -33,7 +33,7 @@ import drcl.comp.*;
 /** Abstract base class for battery models.
 *
 * @author Ahmed Sobeih
-* @version 1.1, 12/19/2004
+* @version 1.0, 12/19/2003
 */
 public abstract class BatteryBase extends drcl.comp.Component
 {

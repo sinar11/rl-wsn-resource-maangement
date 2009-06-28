@@ -1,4 +1,4 @@
-// @(#)SensorNeighborQueryContract.java   10/2004
+// @(#)SensorNeighborQueryContract.java   1/2004
 // Copyright (c) 1998-2004, Distributed Real-time Computing Lab (DRCL) 
 // All rights reserved.
 // 
@@ -28,18 +28,13 @@
 
 package drcl.inet.sensorsim;
 
-import drcl.data.*;
-import drcl.net.*;
 import drcl.comp.*;
-import drcl.util.ObjectUtil;
-import drcl.util.StringUtil;
 
 /** This class implements the contract between the sensor channel and the node position tracker.
 *
 * @author Ahmed Sobeih
-* @version 1.1, 10/19/2004
+* @version 1.0, 12/19/2003
 */
-
 public class SensorNeighborQueryContract extends Contract
 {
 	public static final SensorNeighborQueryContract INSTANCE = new SensorNeighborQueryContract();
@@ -65,123 +60,140 @@ public class SensorNeighborQueryContract extends Contract
 	{ out_.doSending(new Message(nodeList_)); }
 
 	/** This class implements the underlying message of the contract. */	
-    	public static class Message extends drcl.comp.Message
+    public static class Message extends drcl.comp.Message
 	{
         long   nid;
         double X, Y, Z;
         long[] nodeList;
-	  double Radius ; // transmission range
-	boolean WithLocations ; /* if WithLocations is true, the message also contains the locations of the neighboring nodes */
-	SensorLocationInformation [] neighborsLocation ;
-        
+	    double Radius ; // transmission range
+
+        boolean WithLocations ; /* if WithLocations is true, the message also contains the locations of the neighboring nodes */
+	    SensorLocationInformation [] neighborsLocation ;
+
 		public Message ()	{ }
 
 		public Message (long nid_, double X_, double Y_, double Z_)
 		{
-			nid = nid_;
-			X = X_;  Y = Y_;  Z = Z_;
-			Radius = 0.0 ;
-			nodeList = null;
-			WithLocations = false ; 
+		    nid = nid_;
+            X = X_;  Y = Y_;  Z = Z_;
+		    Radius = 0.0 ;
+            nodeList = null;
+            WithLocations = false ;
 			neighborsLocation = null ;
 		}
 		
-		public Message (long nid_, double X_, double Y_, double Z_, double Radius_)
+		public Message (long nid_, double X_, double Y_, double Z_, double Radius_)	{
+		    nid = nid_;
+            X = X_;  Y = Y_;  Z = Z_;
+		    Radius = Radius_ ;
+            nodeList = null;
+            WithLocations = false ;
+			neighborsLocation = null ;
+		}
+
+
+        public Message (long nid_, double X_, double Y_, double Z_, double Radius_, boolean WithLocations_)
 		{
 			nid = nid_;
 			X = X_;  Y = Y_;  Z = Z_;
 			Radius = Radius_ ;
 			nodeList = null;
-			WithLocations = false ; 
-			neighborsLocation = null ;
-		}
-        
-		public Message (long nid_, double X_, double Y_, double Z_, double Radius_, boolean WithLocations_)
-		{
-			nid = nid_;
-			X = X_;  Y = Y_;  Z = Z_;
-			Radius = Radius_ ;
-			nodeList = null;
-			WithLocations = WithLocations_ ; 
+			WithLocations = WithLocations_ ;
 			neighborsLocation = null ;
 		}
 
-		public Message (long[] nodeList_) 
+        public Message (long[] nodeList_, SensorLocationInformation[] neighborsLocation_)
 		{
 			nid = -1;
 			X = 0; Y = 0; Z = 0;
 			Radius = 0.0;
-			if ( nodeList_ != null ) 
-			{
-				int n = nodeList_.length;
-				nodeList = new long[n];
-				for ( int i = 0; i < n; i ++ ) 
-					nodeList[i] = nodeList_[i];
-			}
-			else
-				nodeList = null;
-			WithLocations = false ; 
-			neighborsLocation = null ;
-		}
-
-		public Message (long[] nodeList_, SensorLocationInformation[] neighborsLocation_) 
-		{
-			nid = -1;
-			X = 0; Y = 0; Z = 0;
-			Radius = 0.0;
-			if ( (nodeList_ != null) && (neighborsLocation_ != null) ) 
+			if ( (nodeList_ != null) && (neighborsLocation_ != null) )
 			{
 				int n = nodeList_.length;
 				nodeList = new long[n];
 				neighborsLocation = new SensorLocationInformation[n] ;
 
-				for ( int i = 0; i < n; i ++ ) 
+				for ( int i = 0; i < n; i ++ )
 				{
 					nodeList[i] = nodeList_[i];
 					neighborsLocation[i] = new SensorLocationInformation(nodeList[i], neighborsLocation_[i].getX(), neighborsLocation_[i].getY(), neighborsLocation_[i].getZ()) ;
 				}
-				WithLocations = true ; 
+				WithLocations = true ;
 			}
 			else
 			{
 				nodeList = null;
 				neighborsLocation = null ;
-				WithLocations = false ; 
+				WithLocations = false ;
 			}
 		}
 
-		public Message (long nid_, double X_, double Y_, double Z_, double Radius_, long[] nodeList_)
-		{
-			nid = nid_;
-			X = X_;  Y = Y_;  Z = Z_;
-			Radius = Radius_;
-			if ( nodeList_ != null ) 
+	    public Message (long[] nodeList_) {
+           /* nid = -1;
+            X = 0; Y = 0; Z = 0;
+		    Radius = 0.0;
+            nodeList = nodeList_;*/
+            nid = -1;
+			X = 0; Y = 0; Z = 0;
+			Radius = 0.0;
+			if ( nodeList_ != null )
 			{
 				int n = nodeList_.length;
 				nodeList = new long[n];
-				for ( int i = 0; i < n; i ++ ) 
+				for ( int i = 0; i < n; i ++ )
 					nodeList[i] = nodeList_[i];
 			}
 			else
 				nodeList = null;
-			WithLocations = false ; 
+			WithLocations = false ;
+			neighborsLocation = null ;
+	    }
+
+		public Message (long nid_, double X_, double Y_, double Z_, double Radius_, long[] nodeList_)
+		{
+           	nid = nid_;
+			X = X_;  Y = Y_;  Z = Z_;
+			Radius = Radius_;
+			if ( nodeList_ != null )
+			{
+				int n = nodeList_.length;
+				nodeList = new long[n];
+				for ( int i = 0; i < n; i ++ )
+					nodeList[i] = nodeList_[i];
+			}
+			else
+				nodeList = null;
+
+            WithLocations = false ;
 			neighborsLocation = null ;
 		}
         
 		public Message (long nid_, double X_, double Y_, double Z_, long[] nodeList_)
 		{
-			nid = nid_;
+           /* nid = nid_;
+		    X = X_;  Y = Y_;  Z = Z_;
+		    Radius = 0.0 ;
+            if ( nodeList_ != null ) {
+                int n = nodeList_.length;
+                nodeList = new long[n];
+                for ( int i = 0; i < n; i ++ ) 
+                    nodeList[i] = nodeList_[i];
+            }
+            else 
+                nodeList = null; */
+            nid = nid_;
 			X = X_;  Y = Y_;  Z = Z_;
 			Radius = 0.0 ;
 			if ( nodeList_ != null ) {
 				int n = nodeList_.length;
 				nodeList = new long[n];
-				for ( int i = 0; i < n; i ++ ) 
+				for ( int i = 0; i < n; i ++ )
 					nodeList[i] = nodeList_[i];
 			}
-			else 
+			else
 				nodeList = null;
-			WithLocations = false ; 
+
+			WithLocations = false ;
 			neighborsLocation = null ;
 		}
         
@@ -190,14 +202,17 @@ public class SensorNeighborQueryContract extends Contract
 		public double getY()       { return Y; }
 		public double getZ()       { return Z; }
 		public double getRadius()	{ return Radius; }
-	public boolean getWithLocations() 	{ return WithLocations ; }
+        public boolean getWithLocations() 	{ return WithLocations ; }
 
-        public synchronized long[] getNodeList() 
-	{	return nodeList; }
+        public synchronized long[] getNodeList() {
+            return nodeList; 
+        }
 
         public synchronized SensorLocationInformation [] getNeighborsLocation()
-	{	return neighborsLocation ; }
-		
+	    {
+            return neighborsLocation ;
+        }
+
 		/*
         public void duplicate(Object source_)
 		{

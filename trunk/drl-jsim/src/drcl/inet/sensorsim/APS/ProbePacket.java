@@ -26,22 +26,21 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // 
 
-package drcl.inet.sensorsim;
+package drcl.inet.sensorsim.APS;
+
 
 /**
  * This class implements the probing packet sent by
- * {@link drcl.inet.sensorsim.SensorLocApp anchor nodes}
+ * {@link drcl.inet.sensorsim.APS.SensorLocApp anchor nodes}
  * in the Ad hoc Positioning System (APS).
  * This is encapsulated by a {@link drcl.inet.sensorsim.SensorPacket sensor packet}
  * and is delivered to other nodes.
  *
  * @author Hyuk Lim
  * @version 1.0, 8/23/2004
- * @see drcl.inet.sensorsim.SensorLocApp
+ * @see drcl.inet.sensorsim.APS.SensorLocApp
  */
-public class ProbePacket
-    extends Object
-    implements Cloneable
+public class ProbePacket extends Object implements Cloneable
 {
     /** The anchor node's ID */
     public long senderID;

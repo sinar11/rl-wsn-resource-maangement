@@ -28,15 +28,8 @@
 
 package drcl.inet.sensorsim.diffusion ;
 
-import drcl.inet.sensorsim.* ;
-import drcl.data.*;
-import drcl.comp.*;
-import drcl.net.*;
-import drcl.inet.*;
-import drcl.inet.contract.*;
 import java.util.*;
-import drcl.comp.Port;
-import drcl.comp.Contract;
+
 
 /** This class implements a cache entry denoting a previously seen interest.
 *

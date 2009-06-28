@@ -28,8 +28,6 @@
 
 package drcl.inet.mac;
 
-import drcl.net.*;
-
 
 // RTS Frame  
 /*
@@ -63,7 +61,7 @@ public class Mac_802_11_RTS_Frame extends Mac_802_11_Packet
 	//long                     fcs;       // 4 bytes
 	
 	/** Construct RTS frame 
-	  * @param hszie_ - header size
+	  * @param hsize_ - header size
 	  * @param fc_ - MAC frame control
 	  * @param duration_ - duration
 	  * @param ra_ - address of intended recipient
@@ -84,7 +82,7 @@ public class Mac_802_11_RTS_Frame extends Mac_802_11_Packet
 	}	
 
 	/** Construct RTS frame 
-	  * @param hszie_ - header size
+	  * @param hsize_ - header size
 	  * @param fc_ - MAC frame control
 	  * @param duration_ - duration
 	  * @param ra_ - address of intended recipient

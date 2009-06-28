@@ -1,5 +1,5 @@
-// @(#)SeismicProp.java   10/2004
-// Copyright (c) 1998-2004, Distributed Real-time Computing Lab (DRCL) 
+// @(#)SeismicProp.java   12/2003
+// Copyright (c) 1998-2003, Distributed Real-time Computing Lab (DRCL) 
 // All rights reserved.
 // 
 // Redistribution and use in source and binary forms, with or without
@@ -28,13 +28,10 @@
 
 package drcl.inet.sensorsim;
 
-import drcl.comp.Port;
-import drcl.comp.Contract;
-
 /** This class implements the seismic propagation model.
 *
 * @author Ahmed Sobeih
-* @version 1.1, 10/19/2004
+* @version 1.0, 12/19/2003
 */
 public class SeismicProp extends SensorRadioPropagationModel
 {
@@ -73,15 +70,15 @@ public class SeismicProp extends SensorRadioPropagationModel
         SensorRadioPropagationQueryContract.Message msg = (SensorRadioPropagationQueryContract.Message) data_;
 
         double Pt; // power with which the packet was sent
-		   // Pt is included in the request (i.e., query)
-	double Xs, Ys, Zs; // location of sender
-	double Xr, Yr, Zr; // location of receiver
+		// Pt is included in the request (i.e., query)
+	    double Xs, Ys, Zs; // location of sender
+	    double Xr, Yr, Zr; // location of receiver
         double Pr; // power with which the packet was received
-		   // Pr is included in the reply
+		// Pr is included in the reply
 
-	double d;			// distance between sender and receiver
+	    double d;			// distance between sender and receiver
 
-	Xs = msg.getXs(); 
+	    Xs = msg.getXs();
         Ys = msg.getYs(); 
         Zs = msg.getZs(); 
         Xr = msg.getXr();
@@ -89,16 +86,15 @@ public class SeismicProp extends SensorRadioPropagationModel
         Zr = msg.getZr();
         Pt = msg.getPt();
   
-	d = Math.sqrt((Xs - Xr) * (Xs - Xr)  
+	    d = Math.sqrt((Xs - Xr) * (Xs - Xr)
 	   + (Ys - Yr) * (Ys - Yr) 
 	   + (Zs - Zr) * (Zs - Zr)); 
  
-	d = Math.max(d, d0);
+	    d = Math.max(d, d0);
 
-	Pr = Pt/ (Math.pow(d, atnFactor));
-	return Pr;        
+	    Pr = Pt/ (Math.pow(d, atnFactor));
+	    return Pr;
     }
-       	public String info() { 
-        return "SeismicProp" + "\n"; 
-    }
+
+    public String info() { return "SeismicProp" + "\n";  }
 }

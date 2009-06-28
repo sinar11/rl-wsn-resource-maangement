@@ -1,4 +1,4 @@
-// @(#)SensorAgentPhyContract.java   10/2004
+// @(#)SensorAgentPhyContract.java   1/2004
 // Copyright (c) 1998-2004, Distributed Real-time Computing Lab (DRCL) 
 // All rights reserved.
 // 
@@ -28,16 +28,12 @@
 
 package drcl.inet.sensorsim;
 
-import drcl.data.*;
-import drcl.net.*;
 import drcl.comp.*;
-import drcl.util.ObjectUtil;
-import drcl.util.StringUtil;
 
 /** This class implements the contract between the sensor layer and the sensor physical layer.
 *
 * @author Ahmed Sobeih
-* @version 1.1, 10/19/2004
+* @version 1.0, 12/19/2003
 */
 public class SensorAgentPhyContract extends Contract
 {
@@ -56,62 +52,74 @@ public class SensorAgentPhyContract extends Contract
 	{ return null; }
 	
 	/** This class implements the underlying message of the contract. */
-	public static class Message extends drcl.comp.Message
-		{
-		double lastNoisePower;	    // last noise power calculated at the sensor physical layer
-        
-        	Object pkt;         // the packet
+	public static class Message extends drcl.comp.Message {
+	    double lastNoisePower;	    // last noise power calculated at the sensor physical layer
+        Object pkt;         // the packet
+        long target_nid; // the ID of the target node generating this packet
 
-		long target_nid; // the ID of the target node generating this packet
-		double XTarget ;
+        double XTarget ;
 		double YTarget ;
 		double ZTarget ;
-        
-        	public Message ()	{ }
 
-		public Message (double lastNoisePower_, Object pkt_, long target_nid_, double XTarget_, double YTarget_, double ZTarget_)
+        public Message ()	{ }
+
+		public Message (double lastNoisePower_, Object pkt_, long target_nid_) {
+			lastNoisePower = lastNoisePower_;
+			target_nid = target_nid_;
+			pkt = pkt_;
+		}
+
+        /**
+         * Constructor used for directed diffusion
+         * @param lastNoisePower_
+         * @param pkt_
+         * @param target_nid_
+         * @param XTarget_
+         * @param YTarget_
+         * @param ZTarget_
+         */
+        public Message (double lastNoisePower_, Object pkt_, long target_nid_, double XTarget_, double YTarget_, double ZTarget_)
 		{
 			lastNoisePower = lastNoisePower_;
 			target_nid = target_nid_;
 			pkt = pkt_;
-			XTarget = XTarget_; 
-			YTarget = YTarget_; 
+			XTarget = XTarget_;
+			YTarget = YTarget_;
 			ZTarget = ZTarget_;
 		}
 
  		public double getlastNoisePower() { return lastNoisePower; }
-        	public Object getPkt() { return pkt; }
+        public Object getPkt() { return pkt; }
 		public long getTargetNid() {return target_nid; }
-		public double getXTarget() { return XTarget ; }
+        public double getXTarget() { return XTarget ; }
 		public double getYTarget() { return YTarget ; }
 		public double getZTarget() { return ZTarget ; }
-		
 		/*
         public void duplicate(Object source_)
 		{
-			Message that_ = (Message)source_;
-			lastNoisePower = that_.lastNoisePower;
-			target_nid = that_.target_nid;
+		    Message that_ = (Message)source_;
+		    lastNoisePower = that_.lastNoisePower;
+		    target_nid = that_.target_nid;
 			pkt = that_.pkt;
-			XTarget = that_.XTarget ;
-			YTarget = that_.YTarget ;
-			ZTarget = that_.ZTarget ;
 		}
 		*/
-	
-		public Object clone()
-		{ 
+	   /* public Object clone() {
 			// the contract is between two components; don't clone pkt
-			return new Message(lastNoisePower, pkt, target_nid, XTarget, YTarget, ZTarget); 
+			return new Message(lastNoisePower, pkt, target_nid);
+		}   */
+
+        public Object clone()
+		{
+			// the contract is between two components; don't clone pkt
+			return new Message(lastNoisePower, pkt, target_nid, XTarget, YTarget, ZTarget);
 		}
 
 		public Contract getContract()
 		{ return INSTANCE; }
 
-		public String toString(String separator_)
-		{
-	            String str;
-        	    str = "Sensor-Agent-Phy Message:" + separator_ + "lastNoisePower=" + lastNoisePower + separator_ + "Pkt=" + pkt.toString() + separator_ + "target_nid=" + separator_ + target_nid; 
+		public String toString(String separator_) {
+	        String str;
+        	str = "Sensor-Agent-Phy Message:" + separator_ + "lastNoisePower=" + lastNoisePower + separator_ + "Pkt=" + pkt.toString() + separator_ + "target_nid=" + separator_ + target_nid;
 		    return str;
 		}
 	}

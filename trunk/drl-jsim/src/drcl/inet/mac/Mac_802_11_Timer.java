@@ -28,9 +28,6 @@
 
 package drcl.inet.mac;
 
-import java.math.*; 
-import drcl.inet.*;
-import drcl.net.*;
 import drcl.comp.*;
 
 /**
@@ -100,7 +97,6 @@ public class Mac_802_11_Timer {
 	    stime = host_.getTime();
 		rtime = time;
         _assert("Mac_802_11_Timer start()", "rtime >= 0.0", (rtime >= 0.0));
-		
 		timer_ = host_.setTimeout(o_, rtime);
 	}
 	

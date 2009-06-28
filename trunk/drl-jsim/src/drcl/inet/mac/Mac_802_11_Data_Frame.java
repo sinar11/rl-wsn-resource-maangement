@@ -28,7 +28,6 @@
 
 package drcl.inet.mac;
 
-import drcl.net.*;
 
 // data frame 
 /*
@@ -70,7 +69,7 @@ public class Mac_802_11_Data_Frame extends Mac_802_11_Packet
 	  * @param sa_ - source MAC address
 	  * @param bssid_ - id of basic service set
 	  * @param fcs_ - frame check sequence
-	  * @param hszie_ - header size
+	  * @param hsize_ - header size
       * @param bsize_ - body size
       * @param body_ - packet body
 	  */
@@ -89,7 +88,7 @@ public class Mac_802_11_Data_Frame extends Mac_802_11_Packet
 	  * @param bssid_ - id of basic service set
 	  * @param fcs_ - frame check sequence
       * @param ferror_ - indicating if the packet is corrupted
-	  * @param hszie_ - header size
+	  * @param hsize_ - header size
       * @param bsize_ - body size
       * @param body_ - packet body
 	  */
@@ -107,7 +106,7 @@ public class Mac_802_11_Data_Frame extends Mac_802_11_Packet
 	  * @param sa_ - source MAC address
 	  * @param bssid_ - id of basic service set
       * @param ferror_ - indicating if the packet is corrupted
-	  * @param hszie_ - header size
+	  * @param hsize_ - header size
       * @param bsize_ - body size
       * @param body_ - packet body
 	  * @param fcs_ - frame check sequence

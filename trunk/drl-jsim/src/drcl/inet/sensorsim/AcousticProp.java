@@ -28,8 +28,6 @@
 
 package drcl.inet.sensorsim;
 
-import drcl.comp.Port;
-import drcl.comp.Contract;
 import drcl.util.random.* ;
 
 /** This class implements the seismic propagation model.

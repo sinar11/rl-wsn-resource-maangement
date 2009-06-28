@@ -1,5 +1,5 @@
-// @(#)SensorPacket.java   10/2004
-// Copyright (c) 1998-2004, Distributed Real-time Computing Lab (DRCL) 
+// @(#)SensorPacket.java   12/2003
+// Copyright (c) 1998-2003, Distributed Real-time Computing Lab (DRCL) 
 // All rights reserved.
 // 
 // Redistribution and use in source and binary forms, with or without
@@ -32,86 +32,216 @@ import drcl.net.Packet;
 /** This class implements the packet that a sensor node sends/forwards to the sink node.
 *
 * @author Ahmed Sobeih
-* @version 1.1, 10/19/2004
+* @version 1.0, 12/19/2003
 */
-public class SensorPacket extends Packet
-{
+public class SensorPacket extends Packet {
+
 	public int pktType ;
-	public int dataSize ;
+    public int dataSize ;
 	public double maxSNR ;
-	public int eventID ;
-	public long target_nid; /* target to which this information pertains */
-	public double target_X ;
+	protected int eventID ;
+	protected long target_nid; // what target NID generated this signal originally
+	public int maxProp ;
+    protected long src_nid;
+    protected long dst_nid;
+    protected double[] dst_loc;
+
+    public double target_X ;
 	public double target_Y ;
 	public double target_Z ;
-	public int maxProp ;
 	public int target_SeqNum ;
 
-	/** Gets the data size.  */
+    public SensorPacket(){ }
+
+
+    /**
+     * This constructor is for broadcast packets which defines the
+     * packet size.
+     * @param pktType_
+     * @param src_nid_
+     * @param eventID_
+     * @param body_
+     * @param size_
+    */
+    public SensorPacket(int pktType_, long src_nid_, int eventID_, Object body_, int size_)
+    {
+		pktType = pktType_ ;
+        src_nid = src_nid_;
+        eventID = eventID_;
+		body = body_ ;
+        size = size_;
+	}
+
+
+    /**
+     * This constructor is for broadcast packets which does not
+     * defines the packet size.
+     * @param pktType_
+     * @param src_nid_
+     * @param eventID_
+     * @param body_
+    */
+    public SensorPacket(int pktType_, long src_nid_, int eventID_, Object body_)
+    {
+		pktType = pktType_ ;
+        src_nid = src_nid_;
+        eventID = eventID_;
+		body = body_ ;
+	}
+
+
+	/**
+     * This constructor is for unicast packets.
+     * @param pktType_
+     * @param dst_nid_
+     * @param src_nid_
+     * @param dataSize_
+     * @param eventID_
+     * @param target_nid_
+     * @param body_
+     */
+    public SensorPacket(int pktType_, long dst_nid_, long src_nid_, int dataSize_,int eventID_, long target_nid_, Object body_)
+    {
+		pktType = pktType_ ;
+        src_nid = src_nid_;
+        dst_nid = dst_nid_;
+		size = dataSize_ ;
+		eventID = eventID_ ;
+		target_nid = target_nid_ ;
+        body = body_ ;
+	}
+
+    //NICHOLAS:
+    //this constructor is for unicast packets.
+	public SensorPacket(int pktType_, long dst_nid_, long src_nid_, int dataSize_,double [] dst_loc_,int eventID_, long target_nid_, Object body_)
+    {
+        //NICHOLAS:
+        this.dst_loc = new double[2];
+        this.dst_loc = dst_loc_;
+
+		pktType = pktType_ ;
+        src_nid = src_nid_;
+        dst_nid = dst_nid_;
+		size = dataSize_ ;
+		eventID = eventID_ ;
+		target_nid = target_nid_ ;
+        body = body_ ;
+	}
+
+    /**
+     * Used for directed diffusion
+     * @param pktType_
+     * @param body_
+     */
+    public SensorPacket(int pktType_, Object body_)
+	{
+		pktType = pktType_ ;
+		body = body_ ;
+	}
+
+    //for directed diffusion package
+    public SensorPacket(int pktType_, int dataSize_, double maxSNR_, int eventID_, int maxProp_, long target_nid_, double target_X_, double target_Y_, double target_Z_, int target_SeqNum_, Object body_)
+    {
+            pktType = pktType_ ;
+            size = dataSize_ ;
+            maxSNR = maxSNR_ ;
+            eventID = eventID_ ;
+            maxProp = maxProp_ ;
+            target_nid = target_nid_ ;
+            target_X = target_X_ ;
+            target_Y = target_Y_ ;
+            target_Z = target_Z_ ;
+            target_SeqNum = target_SeqNum_ ;
+            body = body_ ;
+    }
+
+    public long getTargetNid() {return target_nid;}
+    public double getTargetX() {return target_X ; }
+	public double getTargetY() {return target_Y ; }
+	public double getTargetZ() {return target_Z ; }
+	public int getTargetSeqNum() { return target_SeqNum ; }
+
+    	/** Gets the data size.  */
 	public int getDataSize()   {return dataSize;}
 
 	/** Gets the MaxSNR.  */
 	public double getMaxSnr()  {return maxSNR;}
 
-	/** Gets the ID of the target node to which the enclosed information pertains.  */
-	public long getTargetNid() {return target_nid;}
-	public double getTargetX() {return target_X ; }
-	public double getTargetY() {return target_Y ; }
-	public double getTargetZ() {return target_Z ; }
-	public int getTargetSeqNum() { return target_SeqNum ; }
+    public double[] getDst_loc()
+    {
+        return dst_loc;
+    }
 
-	public String getName()
-	{ return "Sensor Packet"; }
+    public double getDst_Xcoord()
+    {
+        return dst_loc[0];
+    }
 
-	public SensorPacket(int pktType_, Object body_)
-	{
-		pktType = pktType_ ;
-		body = body_ ;
-	}
+    public double getDst_Ycoord()
+    {
+        return dst_loc[1];
+    }
 
-	public SensorPacket(int pktType_, int dataSize_, double maxSNR_, int eventID_, int maxProp_, long target_nid_, double target_X_, double target_Y_, double target_Z_, int target_SeqNum_, Object body_)
-	{
-		pktType = pktType_ ;
-		dataSize = dataSize_ ;
-		maxSNR = maxSNR_ ;
-		eventID = eventID_ ;
-		maxProp = maxProp_ ;
-		target_nid = target_nid_ ;
-		target_X = target_X_ ;
-		target_Y = target_Y_ ;
-		target_Z = target_Z_ ;
-		target_SeqNum = target_SeqNum_ ;
-		body = body_ ;
-	}
+    public double getDst_Zcoord()
+    {
+        return dst_loc[2];
+    }
 
-	/*
-        public void duplicate(Object source_)
-	{
+    public int getPktType()
+    {
+        return pktType;
+    }
+
+    public int getEventID()
+    {
+        return eventID;
+    }
+
+    /**
+     * Gets the ID of the target node to which the enclosed information pertains.
+     * @return
+     */
+    public long getTarget_nid()
+    {
+        return target_nid;
+    }
+
+    public long getSrc_nid()
+    {
+        return src_nid;
+    }
+
+    public long getDst_nid()
+    {
+        return dst_nid;
+    }
+
+    public String getName()
+    {
+        return "SensorPacket";
+    }
+
+
+    public void duplicate(Object source_)
+    {
 		SensorPacket that_ = (SensorPacket)source_;
 		pktType = that_.pktType ;
-		dataSize = that_.dataSize ;
-		maxSNR = that_.maxSNR ;
+		size = that_.size ;
+        //maxSNR = that_.maxSNR ;
 		eventID = that_.eventID ;
-		maxProp = that_.maxProp ;
+        //maxProp = that_.maxProp ;
 		target_nid = that_.target_nid ;
-		target_X = that_.target_X ;
-		target_Y = that_.target_Y ;
-		target_Z = that_.target_Z ;
-		target_SeqNum = that_.target_SeqNum ;
-		body = that_.body instanceof Cloneable?
-			((Cloneable)that_.body).clone(): that_.body;
 	}
-	*/
 	
 	public Object clone()
-	{ 
-		return new SensorPacket(pktType, dataSize, maxSNR, eventID, maxProp, target_nid, target_X, target_Y, target_Z, target_SeqNum, body); 
+    {
+		return new SensorPacket(pktType, dst_nid, src_nid, size, /*maxSNR,*/ eventID, /*maxProp,*/ target_nid, body);
 	}
 
 	public String toString(String separator_)
-	{
+    {
 		String str;
-        	str = "Sensor Packet dataSize =" + separator_ + dataSize + separator_ + "maxSNR=" + maxSNR + separator_ + "target_nid=" + target_nid ; 
+        str = "Sensor Packet dataSize =" + separator_ + size + separator_ +/* "maxSNR=" + maxSNR +*/ separator_ + "target_nid=" + target_nid ;
 		return str;
 	}
 }
