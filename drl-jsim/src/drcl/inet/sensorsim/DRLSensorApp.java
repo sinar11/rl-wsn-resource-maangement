@@ -465,7 +465,7 @@ public class DRLSensorApp extends SensorApp implements drcl.comp.ActiveComponent
                 totalTrackingPkts++;
                 int TargetIndex = (int) (spkt.getTargetNid() - first_target_nid);
                 TrackingEvent tevent=(TrackingEvent)spkt.getBody();
-               // log("Tracking event with pkt:"+spkt.getTargetSeqNum()+" is:"+tevent);
+                log("Tracking event with pkt:"+spkt.getTargetSeqNum()+" is:"+tevent);
                 GlobalRewardManager.dataArrived(totalExecutions, tevent);
                 if (targets_LastSeqNum[TargetIndex] < spkt
                           .getTargetSeqNum()) {
@@ -477,6 +477,7 @@ public class DRLSensorApp extends SensorApp implements drcl.comp.ActiveComponent
                             target_location[1] = round_digit(spkt.getTargetY()
                                     - Y_shift, 4);
                             double[] curr=CurrentTargetPositionTracker.getInstance().getTargetPosition(spkt.getTargetNid());
+                            
                             double currX= round_digit(curr[0],4);
                             double currY= round_digit(curr[1], 4);
                             /*log(("At sink:X-"+target_location[0]+" Y-"+target_location[1]));

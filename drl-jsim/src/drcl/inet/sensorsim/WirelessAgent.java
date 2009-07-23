@@ -132,10 +132,11 @@ public class WirelessAgent extends drcl.inet.Protocol {
 		SensorAppWirelessAgentContract.Message msg = (SensorAppWirelessAgentContract.Message)data_ ;
 		
 		if (msg.getFlag() == SensorAppWirelessAgentContract.UNICAST_SENSOR_PACKET){
-			sendPkt(msg.getDst(), msg.getSrc(), msg.getDst_loc(), msg.getSize(), msg.getType(), msg.getEventID(), msg.getTargetNid(), msg.getBody()) ;
+			sendPkt(msg.getDst(),msg.getSize(), msg.getType(),msg.getSNR(), msg.getEventID(), msg.getTargetNid(),msg.getTargetX(),msg.getTargetY(),msg.getTargetZ(),msg.getTargetSeqNum(),msg.getBody());
+//			sendPkt(msg.getDst(), msg.getSrc(), msg.getDst_loc(), msg.getSize(), msg.getType(), msg.getEventID(), msg.getTargetNid(), msg.getBody()) ;
         }
         else if (msg.getFlag() == SensorAppWirelessAgentContract.BROADCAST_SENSOR_PACKET) {
-			sendBcastPkt(msg.getType(), msg.getSrc(), msg.getEventID(), msg.getBody(),msg.getSize());
+			sendBcastPkt(msg.getType(), msg.getSrc(), msg.getEventID(), msg.getBody(),msg.getSize());			
         }
 	}
 
@@ -151,6 +152,7 @@ public class WirelessAgent extends drcl.inet.Protocol {
 
         //after getting the data from the packet dispatcher break it apart and store the appropriate
         //parts in a SensorPacket which is then forwarded up to SensorApp for processing
-		toSensorAppPort.doSending(new SensorPacket(pkt_.getPktType(), pkt_.getDst_nid(), pkt_.getSrc_nid(),pkt_.getPacketSize(), pkt_.getEventID(), pkt_.getTarget_nid(), pkt_.getBody()));
-	}
+		//toSensorAppPort.doSending(new SensorPacket(pkt_.getPktType(), pkt_.getDst_nid(), pkt_.getSrc_nid(),pkt_.getPacketSize(), pkt_.getEventID(), pkt_.getTarget_nid(), pkt_.getBody()));
+		toSensorAppPort.doSending(pkt_);
+    }
 }

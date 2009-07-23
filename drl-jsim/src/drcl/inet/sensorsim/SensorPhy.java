@@ -173,7 +173,7 @@ public class SensorPhy extends drcl.net.Module {
         
 // System.out.println("Target " + nid + ": generating signal at time " + getTime() + " loc: " + Xc + ", " + Yc + ", " + Zc);
 	
-	    downPort.doSending(new SensorNodeChannelContract.Message(nid, Xc, Yc, Zc, Pt, Radius,new TargetPacket(((TargetPacket)data_).size, ((TargetPacket)data_).data))) ;
+	    downPort.doSending(new SensorNodeChannelContract.Message(nid, Xc, Yc, Zc, Pt, Radius,data_)) ;
     }
     
 	/**
@@ -226,8 +226,8 @@ public class SensorPhy extends drcl.net.Module {
         }
         else {
             double af = Pr ; // attenuation factor
-            int size = ((TargetPacket)msg2.getPkt()).size ;
-            TargetPacket sensorPkt = new TargetPacket(size, ((TargetPacket)msg2.getPkt()).data);
+            TargetPacket sensorPkt =((TargetPacket)msg2.getPkt()) ;
+             //new TargetPacket(size, ((TargetPacket)msg2.getPkt()).data);
             lastNoisePower = 0.0 ;
             double rd ;
             for ( int k = 0 ; k < sensorPkt.size; k++) {
@@ -238,10 +238,10 @@ public class SensorPhy extends drcl.net.Module {
                 lastNoisePower = lastNoisePower + (noise * noise);
             } // end for
 
-            lastNoisePower = lastNoisePower / ((double)size);
+            lastNoisePower = lastNoisePower / ((double)sensorPkt.size);
 
             // Forward the data packet up to the sensor agent
-            toAgentPort.doSending(new SensorAgentPhyContract.Message(lastNoisePower, new TargetPacket(size, sensorPkt.data), target_nid)) ;
+            toAgentPort.doSending(new SensorAgentPhyContract.Message(lastNoisePower, sensorPkt, target_nid, Xs, Ys, Zs)) ;
         } // end else
     } // end dataArriveAtChannelPort
     

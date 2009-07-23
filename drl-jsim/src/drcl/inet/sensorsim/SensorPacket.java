@@ -220,22 +220,11 @@ public class SensorPacket extends Packet {
     {
         return "SensorPacket";
     }
-
-
-    public void duplicate(Object source_)
-    {
-		SensorPacket that_ = (SensorPacket)source_;
-		pktType = that_.pktType ;
-		size = that_.size ;
-        //maxSNR = that_.maxSNR ;
-		eventID = that_.eventID ;
-        //maxProp = that_.maxProp ;
-		target_nid = that_.target_nid ;
-	}
 	
 	public Object clone()
     {
-		return new SensorPacket(pktType, dst_nid, src_nid, size, /*maxSNR,*/ eventID, /*maxProp,*/ target_nid, body);
+		return new SensorPacket(pktType, dataSize,maxSNR,eventID,maxProp,target_nid,target_X,target_Y,target_Z,target_SeqNum,body);
+		//SensorPacket(pktType, dst_nid, src_nid, size, /*maxSNR,*/ eventID, /*maxProp,*/ target_nid, body);
 	}
 
 	public String toString(String separator_)

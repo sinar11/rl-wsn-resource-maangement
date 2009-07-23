@@ -67,13 +67,6 @@ public class SensorAppAgentContract extends Contract
 
         public Message ()	{ }
 
-		public Message (int dataSize_, double snr_, long target_nid_)
-		{
-			dataSize = dataSize_ ;
-			snr = snr_;
-			target_nid = target_nid_;
-		}
-
         public Message (int dataSize_, double snr_, long target_nid_, double target_X_, double target_Y_, double target_Z_, int target_SeqNum_, Object body_)
 		{
 			dataSize = dataSize_ ;
@@ -107,7 +100,7 @@ public class SensorAppAgentContract extends Contract
 	
 		public Object clone()
 		{ 
-			return new Message(dataSize, snr, target_nid); 
+			return new Message(dataSize, snr, target_nid, target_X, target_Y, target_Z, target_SeqNum, body); 
 		}
 
 		public Contract getContract()

@@ -97,7 +97,7 @@ public class SensorAppWirelessAgentContract extends Contract
 
  		/**
           * Constructor for unicast packets
-        */
+        **/
 		public Message (int UniBcast_flag_, long dst_, long src_, int size_, int type_, int eventID_, long target_nid_, Object body_)	{
 	        UniBcast_flag = UniBcast_flag_ ;
             src = src_;
@@ -193,7 +193,9 @@ public class SensorAppWirelessAgentContract extends Contract
 	
 		public Object clone()
 		{ 
-			return new Message(UniBcast_flag, dst, src, size, type, /*snr,*/ eventID, target_nid, body);
+			Message msg= new Message(UniBcast_flag, dst, size, type,snr,eventID,target_nid, target_X, target_Y, target_Z,target_SeqNum, body);
+			msg.src=this.src;
+			return msg;
 		}
 
 		public Contract getContract()

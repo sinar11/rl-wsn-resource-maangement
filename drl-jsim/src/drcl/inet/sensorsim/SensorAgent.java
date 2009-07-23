@@ -174,7 +174,8 @@ public class SensorAgent extends drcl.net.Module {
             //noisePower = 0.0 ;
             sigPower = 0.0 ;
 
-            TargetPacket sensorPkt = new TargetPacket(size, ((TargetPacket)msg.getPkt()).seqNum, ((TargetPacket)msg.getPkt()).data, ((TargetPacket)msg.getPkt()).getBody());
+            TargetPacket sensorPkt = ((TargetPacket)msg.getPkt());
+            //new TargetPacket(size, ((TargetPacket)msg.getPkt()).seqNum, ((TargetPacket)msg.getPkt()).data, ((TargetPacket)msg.getPkt()).getBody());
 
             for ( int i = 0 ; i < size ; i++ )
             {
