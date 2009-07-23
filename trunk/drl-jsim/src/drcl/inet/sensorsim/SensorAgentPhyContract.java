@@ -63,11 +63,11 @@ public class SensorAgentPhyContract extends Contract
 
         public Message ()	{ }
 
-		public Message (double lastNoisePower_, Object pkt_, long target_nid_) {
+		/*public Message (double lastNoisePower_, Object pkt_, long target_nid_) {
 			lastNoisePower = lastNoisePower_;
 			target_nid = target_nid_;
 			pkt = pkt_;
-		}
+		}*/
 
         /**
          * Constructor used for directed diffusion

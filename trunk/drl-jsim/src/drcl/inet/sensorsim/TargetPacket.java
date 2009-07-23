@@ -35,6 +35,7 @@ package drcl.inet.sensorsim;
 */
 public class TargetPacket extends Object
 {
+	static int currSeqNum=0;
 	/** size of the data array */
 	int size ;
 
@@ -42,7 +43,7 @@ public class TargetPacket extends Object
 	double data [] ;
 
     /** Sequence number used to suppress duplicates at the sink node */
-	int seqNum ;
+	int seqNum;
 
 	/** Encapsulated data */
 	public Object body ;
@@ -55,6 +56,7 @@ public class TargetPacket extends Object
 		{
 			data[i] = data_[i] ;
 		}
+		seqNum=++currSeqNum ;
 	}
 
     TargetPacket(int size_, int seqNum_, double [] data_, Object body_)
