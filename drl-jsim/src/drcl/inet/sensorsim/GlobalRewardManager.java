@@ -45,7 +45,7 @@ public class GlobalRewardManager {
 			}
 			stream.addPkt(event.pktId);
 			stream.addCost(event.cost);
-			stream.addReward(REWARD_PER_TRACK+(event.snr-100)*0.0005-event.cost);
+			stream.addReward(REWARD_PER_TRACK+(event.snr%100)*0.0005-event.cost);
 			stream.addPktsReward(event.reward);
 		}
 		Stream bestStream=null;

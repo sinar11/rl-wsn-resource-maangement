@@ -73,7 +73,8 @@ public class DRLSensorApp extends SensorApp implements drcl.comp.ActiveComponent
     double totalReward=0;
     double totalCost=0;
     String[] tasks;
-   
+    //List<Double> globalRewards= new ArrayList<Double>(500);
+    
 	private long currStream=-1;
 
 	private static boolean globalLogged=false;
@@ -301,7 +302,7 @@ public class DRLSensorApp extends SensorApp implements drcl.comp.ActiveComponent
     }
 
     private void exportvalues(){
-        /*String executions="";
+        String executions="";
         for (Integer i : taskList.keySet()) {
             SensorTask element = (SensorTask) taskList.get(i);
             //Port port=getPort(QPortId+i);
@@ -313,10 +314,11 @@ public class DRLSensorApp extends SensorApp implements drcl.comp.ActiveComponent
         }
         CSVLogger.log("executions-"+nid,executions,false);
         double avgRew=(totalReward/totalExecutions);
-        synchronized(DRLSensorApp.class){
-            globalRewards[totalExecutions]+=avgRew;
-        }
-        CSVLogger.log("reward-"+nid,new Double(avgRew).toString(),false);*/
+        /*synchronized(DRLSensorApp.class){
+        	double avgRew=
+            globalRewards.[totalExecutions]+=avgRew;
+        }*/
+        CSVLogger.log("reward-"+nid,new Double(avgRew).toString(),false);
     }
     
     class TrackingEvent{
