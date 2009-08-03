@@ -70,6 +70,10 @@ public class TargetPacket extends Object
 		}
 		body = body_ ;
 	}
+    
+    public TargetPacket clone(){
+    	return new TargetPacket(size,seqNum,data,body);
+    }
     /**
      * Returns the encapsulated object
     */

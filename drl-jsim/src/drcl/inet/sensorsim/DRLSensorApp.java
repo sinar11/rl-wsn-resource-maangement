@@ -12,6 +12,7 @@ import drcl.comp.ACATimer;
 import drcl.comp.Port;
 import drcl.data.DoubleObj;
 import drcl.inet.sensorsim.GlobalRewardManager.WLReward;
+import drcl.inet.sensorsim.MultiHop.MH_Packet;
 import drcl.util.random.UniformDistribution;
 
 
@@ -336,10 +337,13 @@ public class DRLSensorApp extends SensorApp implements drcl.comp.ActiveComponent
         public String toString(){
         	return "R="+reward+",C="+cost+",N="+nodes+",sId="+streamId+",SNR="+snr;
         }
+        public int getSize(){
+        	return toString().length();
+        }
     }
     
     private synchronized void prepareTaskList() {
-        taskList.put(1, new SensorTask(1,ROUTE,0.01) {
+        taskList.put(1, new SensorTask(1,ROUTE,0.1) {
             public synchronized void execute() {
                 
             }
@@ -355,7 +359,7 @@ public class DRLSensorApp extends SensorApp implements drcl.comp.ActiveComponent
             }
         });
         
-        taskList.put(2, new SensorTask(2,SAMPLE, 0.01) {
+        taskList.put(2, new SensorTask(2,SAMPLE, 0.05) {
             public void execute() {
                 setCPUMode(CPUBase.CPU_ACTIVE);
                 //setRadioMode(RadioBase.RADIO_OFF);
@@ -372,7 +376,7 @@ public class DRLSensorApp extends SensorApp implements drcl.comp.ActiveComponent
                 return true;  
             }
         });
-        taskList.put(3, new SensorTask(3,SLEEP,0) {
+        taskList.put(3, new SensorTask(3,SLEEP,0.001) {
             public void execute() {
                 noOfRx=0; noOfSensedEvents=0;
                 setCPUMode(CPUBase.CPU_OFF);
@@ -414,7 +418,7 @@ public class DRLSensorApp extends SensorApp implements drcl.comp.ActiveComponent
         int target_SeqNum = msg.getTargetSeqNum() ;
         
         noOfSensedEvents++;
-      //  log("Received sensed event:"+noOfSensedEvents+" SNR:"+lastSeenSNR);
+        log("Received sensed event:"+noOfSensedEvents+" SNR:"+lastSeenSNR);
         if ( nid == sink_nid )
         {
             Port snrPort = (Port) getPort(SNR_PORT_ID + (int)(target_nid - first_target_nid));
@@ -443,67 +447,81 @@ public class DRLSensorApp extends SensorApp implements drcl.comp.ActiveComponent
 
 
     // receive over wireless channel
-    protected synchronized void recvSensorPacket(Object data_) {
-        totalPkts++;
-        if((nid!=sink_nid) && (currentTask==null || !currentTask.getTaskId().equals(ROUTE))){
-            //log("Dropped pkt..,currently executing:"+currentTask.getTaskId());
-            noOfPktsDropped++;
-            return;
-        }
-        SensorPacket spkt = (SensorPacket) data_;
-        noOfRx++;
-        //log("Received sensor packet no:"+noOfRx+" data:"+spkt);
-        if ((spkt.pktType == COHERENT) || (spkt.pktType == NON_COHERENT)) {
-            if (nid != sink_nid) {
-            	outboundMsgs.add(new SensorAppWirelessAgentContract.Message(SensorAppWirelessAgentContract.UNICAST_SENSOR_PACKET, 
-                        destId, spkt.getDataSize(),spkt.pktType, spkt.getMaxSnr(), eID, 
-                        spkt.getTargetNid(),spkt.getTargetX(),spkt.getTargetY(),spkt.getTargetZ(),
-                        spkt.getTargetSeqNum(),spkt.getBody())) ;
-                eID++;
-            } else {
-                Port snrPort = (Port) getPort(SNR_PORT_ID + (int)(spkt.getTargetNid() - first_target_nid));
-                lastSeenSNR = spkt.getMaxSnr();
-                lastSeenDataSize = spkt.getDataSize();
-                totalTrackingPkts++;
-                int TargetIndex = (int) (spkt.getTargetNid() - first_target_nid);
-                TrackingEvent tevent=(TrackingEvent)spkt.getBody();
-                log("Tracking event with pkt:"+spkt.getTargetSeqNum()+" is:"+tevent);
-                GlobalRewardManager.dataArrived(totalExecutions, tevent);
-                if (targets_LastSeqNum[TargetIndex] < spkt
-                          .getTargetSeqNum()) {
-                    double target_location[];
-                            target_location = new double[2];
-                            
-                            target_location[0] = round_digit(spkt.getTargetX()
-                                    - X_shift, 4);
-                            target_location[1] = round_digit(spkt.getTargetY()
-                                    - Y_shift, 4);
-                            double[] curr=CurrentTargetPositionTracker.getInstance().getTargetPosition(spkt.getTargetNid());
-                            
-                            double currX= round_digit(curr[0],4);
-                            double currY= round_digit(curr[1], 4);
-                            /*log(("At sink:X-"+target_location[0]+" Y-"+target_location[1]));
-                            if(curr!=null)
-                                log(("Actual X-"+curr[0]+" Y-"+curr[1]));
-                            else
-                                log("Actual not found");
-                            */
-                            snrPort.exportEvent(SNR_EVENT, target_location, null);
-                            double dist= Math.sqrt(Math.pow(Math.abs(target_location[0]-currX),2)+
-                                            Math.pow(Math.abs(target_location[1]-currY),2));
-                            CSVLogger.log("target",getTime()+","+spkt.getMaxSnr()+","+target_location[0]+","+target_location[1]
-                                               +","+currX+","+currY+","+dist,false);
-/*                            snrPort.exportEvent(SNR_EVENT, target_location,
-                                    null); // uncomment this line if you want to display the location of the target node. 
-*/
-                            //snrPort.exportEvent(SNR_EVENT, new DoubleObj((double)spkt.getMaxSnr()), null);
-                            targets_LastSeqNum[TargetIndex] = spkt
-                                    .getTargetSeqNum();
-                        }
-               }
-        }
+	protected synchronized void recvSensorPacket(Object data_) {
+		totalPkts++;
+		if ((nid != sink_nid)
+				&& (currentTask == null || !currentTask.getTaskId().equals(
+						ROUTE))) {
+			log("Dropped pkt..,currently executing:" + currentTask);
+			noOfPktsDropped++;
+			return;
+		}
+		SensorPacket spkt = (SensorPacket) ((SensorPacket) data_).clone();
+		noOfRx++;
+		TrackingEvent tevent = (TrackingEvent) spkt.getBody();
+		//log("Received sensor packet data:" + tevent);
 
-    }
+		if (nid != sink_nid) {
+			
+			 /*outboundMsgs.add(new SensorAppWirelessAgentContract.Message(SensorAppWirelessAgentContract.UNICAST_SENSOR_PACKET, 
+					 destId, spkt.getDataSize(),spkt.pktType,spkt.getMaxSnr(), eID, spkt.getTargetNid(),spkt.getTargetX(),
+					 spkt.getTargetY(),spkt.getTargetZ(),spkt.getTargetSeqNum(),spkt.getBody())) ;*/
+			 SensorAppWirelessAgentContract.Message sawaMsg=new SensorAppWirelessAgentContract.Message(
+						SensorAppWirelessAgentContract.UNICAST_SENSOR_PACKET,
+						destId, spkt.getSrc_nid(), null, tevent.getSize(),
+						UNICAST_UPDATE, spkt.getEventID(), this.nid, tevent);
+			 sawaMsg.target_nid=spkt.getTarget_nid();
+			 sawaMsg.target_X=spkt.getTargetX();
+			 sawaMsg.target_Y=spkt.getTargetY();
+			 sawaMsg.target_Z=spkt.getTargetZ();
+			 sawaMsg.target_SeqNum=spkt.getTargetSeqNum();
+			outboundMsgs.add(sawaMsg);
+		} else {
+			Port snrPort = (Port) getPort(SNR_PORT_ID
+					+ (int) (spkt.getTargetNid() - first_target_nid));
+			lastSeenSNR = spkt.getMaxSnr();
+			lastSeenDataSize = spkt.getDataSize();
+			totalTrackingPkts++;
+			int TargetIndex = (int) (spkt.getTargetNid() - first_target_nid);
+			log("Tracking event with pkt:" + spkt.getTargetSeqNum() + " is:"
+					+ tevent);
+			GlobalRewardManager.dataArrived(totalExecutions, tevent);
+			if (targets_LastSeqNum[TargetIndex] < spkt.getTargetSeqNum()) {
+				double target_location[];
+				target_location = new double[2];
+
+				target_location[0] = round_digit(spkt.getTargetX() - X_shift, 4);
+				target_location[1] = round_digit(spkt.getTargetY() - Y_shift, 4);
+				double[] curr = CurrentTargetPositionTracker.getInstance()
+						.getTargetPosition(spkt.getTargetNid());
+
+				double currX = round_digit(curr[0], 4);
+				double currY = round_digit(curr[1], 4);
+				/*
+				 * log(("At sink:X-"+target_location[0]+" Y-"+target_location[1])
+				 * ); if(curr!=null) log(("Actual X-"+curr[0]+" Y-"+curr[1]));
+				 * else log("Actual not found");
+				 */
+				snrPort.exportEvent(SNR_EVENT, target_location, null);
+				double dist = Math.sqrt(Math.pow(Math.abs(target_location[0]
+						- currX), 2)
+						+ Math.pow(Math.abs(target_location[1] - currY), 2));
+				CSVLogger.log("target", getTime() + "," + spkt.getMaxSnr()
+						+ "," + target_location[0] + "," + target_location[1]
+						+ "," + currX + "," + currY + "," + dist, false);
+				/*
+				 * snrPort.exportEvent(SNR_EVENT, target_location, null); //
+				 * uncomment this line if you want to display the location of
+				 * the target node.
+				 */
+				// snrPort.exportEvent(SNR_EVENT, new
+				// DoubleObj((double)spkt.getMaxSnr()), null);
+				targets_LastSeqNum[TargetIndex] = spkt.getTargetSeqNum();
+			}
+
+		}
+
+	}
 
 
     public String info() {

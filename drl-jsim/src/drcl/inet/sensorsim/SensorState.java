@@ -46,7 +46,7 @@ public class SensorState {
         if(s.successInRecentRX!=this.successInRecentRX) dist+=1;
         if(s.successInRecentSampling!=this.successInRecentSampling) dist+=1;
         //if(s.streamId!=this.streamId) dist+=1;
-        //dist+= SNR_WEIGHT*Math.abs(s.snr-this.snr);
+        dist+= SNR_WEIGHT*Math.abs(s.snr-this.snr);
         return dist;
     }
 
