@@ -315,7 +315,7 @@ if { $target_node_num == 0 } {
 		mkdir drcl.inet.sensorsim.SensorPhy phy 
 		! phy setRxThresh 0.0
 		! phy setNid $i 
-		! phy setRadius 250.0
+		! phy setRadius 150.0
 
 		# create mobility models
 		mkdir drcl.inet.sensorsim.SensorMobilityModel mobility
@@ -388,17 +388,7 @@ for {set i 0} {$i < $target_node_num} {incr i} {
 ! n3/mobility setPosition 0.0 300.0 300.0 0.0
 ! n3/app setDestId 1
 
-# Creates the NamTrace component and connects it to a FileComponent
-set outfile "result.nam"
-set nam [mkdir -q drcl.inet.tool.NamTrace .nam]
-set file [mkdir drcl.comp.io.FileComponent .file]
-connect -c $nam/output@ -to $file/in@
-$file open $outfile
-$nam addColors [_to_string_array "red blue yellow green black orange"]
-$nam addNode 0 UP square green sink
-$nam addNode 1 UP circle blue sensor
-$nam addNode 2 UP square blue sensor
-$nam addNode 3 UP square red target
+
 
 puts "simulation begins..."
 set sim [attach_simulator .]
