@@ -226,7 +226,7 @@ public class SensorPhy extends drcl.net.Module {
         }
         else {
             double af = Pr ; // attenuation factor
-            TargetPacket sensorPkt =((TargetPacket)msg2.getPkt()) ;
+            TargetPacket sensorPkt =(((TargetPacket)msg2.getPkt()).clone()) ;
              //new TargetPacket(size, ((TargetPacket)msg2.getPkt()).data);
             lastNoisePower = 0.0 ;
             double rd ;

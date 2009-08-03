@@ -48,7 +48,7 @@ public class TargetAgent extends drcl.net.Module implements drcl.comp.ActiveComp
 	public static final double BCAST_RATE	= 0.1 ;  	// every 0.01 secs
 	public static final double SAMPLE_RATE	= 400.0 ; 	// at 400 Hz sampling rate
 	public static final double MEAN		= 0.1 ; 		// gaussian mean
-	public static final double VAR		= 0.5 ; 		// gaussian standard deviation
+	public static final double VAR		= 0.0 ; 		// gaussian standard deviation
 	public static final double SIN_FREQ	= 40.0 ; 		// 40 Hz
 
 	public static final double M_PI 	= Math.PI ; /* = 3.14159265358979323846 */
@@ -150,7 +150,7 @@ public class TargetAgent extends drcl.net.Module implements drcl.comp.ActiveComp
 		for ( int i=0; i< sampleSize; i++){
 		    switch ( targetType ) {
 			case TARGET_GAUSSIAN:
-			      payload[i] = gen.nextDouble();
+			      payload[i] = 0.1;//gen.nextDouble();
 			      break;
 			case TARGET_SINUSOIDAL:
 			      waveFreq = 2*M_PI*sinFreq/sampleRate;
