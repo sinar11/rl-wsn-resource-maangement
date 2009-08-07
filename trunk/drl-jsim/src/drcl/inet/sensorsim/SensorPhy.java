@@ -29,7 +29,6 @@
 package drcl.inet.sensorsim;
 
 import drcl.comp.*;
-import drcl.comp.Port;
 import drcl.util.random.*;
 
 /** This class implements the sensor physical layer.
@@ -167,7 +166,7 @@ public class SensorPhy extends drcl.net.Module {
         double Xc = msg.getX();
         double Yc = msg.getY();
         double Zc = msg.getZ();
-
+        CurrentTargetPositionTracker.getInstance().setTargetPosition(nid, new double[]{Xc,Yc,Zc});
 		/* Forward the packet received from the TargetAgent to the channel
 		so that other neighboring sensors can receive it */
         
@@ -215,6 +214,9 @@ public class SensorPhy extends drcl.net.Module {
 
         //get the NID of the target that generated this packet
 	    long target_nid = msg2.getSenderNid();
+        
+	    ////Kunal register the location of target to our central tracker for simulation purposes
+        CurrentTargetPositionTracker.getInstance().setTargetPosition(target_nid, new double[]{Xs,Ys,Zs});
         
 	    // make up a SensorRadioPropagationContract to ask the
 	    // propagation model to reply with the received signal strength

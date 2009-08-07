@@ -277,7 +277,7 @@ public class SensorNodePositionTracker extends drcl.net.Module {
                 }
 
                 if ( found == false ) {
-                        g[i][j].insertElementAt(new SensorLocationInformation(id, X, Y, Z), 0);                       
+                        g[i][j].insertElementAt(new SensorLocationInformation(id, X, Y, Z), 0);  
                 }                
             } else {
                 i = aligngrid((int)X - (int)minX, dim_x_);
@@ -302,7 +302,6 @@ public class SensorNodePositionTracker extends drcl.net.Module {
                     g[i][j].insertElementAt(new SensorLocationInformation(id, X, Y, Z), 0);
                 }
             }
-            CurrentTargetPositionTracker.getInstance().setTargetPosition(id, new double[]{X,Y,Z});
     }
 
     /** Handles query and replies with a list of neighbors  */    

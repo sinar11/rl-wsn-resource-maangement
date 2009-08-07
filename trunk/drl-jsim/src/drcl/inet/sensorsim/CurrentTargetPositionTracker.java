@@ -22,7 +22,6 @@ public class CurrentTargetPositionTracker {
     }
     
     public void setTargetPosition(long nodeId, double[] loc){
-   //     System.out.println("Target:"+loc[0]+"--"+loc[1]);
         targetPositions.put(new Long(nodeId),loc);
     }
     
