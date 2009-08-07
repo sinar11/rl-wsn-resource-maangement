@@ -412,7 +412,7 @@ script {run n9} -at 8.0 -on $sim
 # set the position of target nodes
 # Max. speed is the first argument of setPosition.
 # In order to make the target nodes mobile with max. speed (e.g., 30) m/sec., 
-! n9/mobility setPosition 0.1 200.0  300.0 0.0
+! n9/mobility setPosition 0.1 200.0  300.0 5.0
 #script {! n9/mobility setPosition 5.0 100.0  500.0 0.0} -at 10.0 -on $sim
 
 #script {! n9/mobility setPosition 0.0 100.0  475.0 0.0} -at 10.0 -on $sim
