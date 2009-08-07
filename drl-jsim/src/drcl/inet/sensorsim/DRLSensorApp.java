@@ -43,8 +43,8 @@ public class DRLSensorApp extends SensorApp implements drcl.comp.ActiveComponent
     
     //public static String algorithm="RANDOM";
     //public static String algorithm="STATIC";
-    public static String algorithm="DIRL";
-    //public static String algorithm="COIN";
+    //public static String algorithm="DIRL";
+    public static String algorithm="COIN";
     //public static String algorithm="FIXED";
     //public static String algorithm="SORA";
     protected List<SensorAppWirelessAgentContract.Message> outboundMsgs= new LinkedList<SensorAppWirelessAgentContract.Message>();
@@ -167,10 +167,10 @@ public class DRLSensorApp extends SensorApp implements drcl.comp.ActiveComponent
 															// choosen
 				currentTask = getRandomTaskToExecute();
 			} else {
-				//if(algorithm.equals("TEAM"))
+				if(algorithm.equals("TEAM"))
 					currentTask= getBestTeamGameBasedTask();
-				/*else	
-					currentTask = determineBestTaskToExecute();*/
+				else	
+					currentTask = determineBestTaskToExecute();
 			}
 
 			exportvalues();
@@ -256,22 +256,23 @@ public class DRLSensorApp extends SensorApp implements drcl.comp.ActiveComponent
         return null;
     }
     private SensorTask getRandomTaskToExecute(){
-        for (int i = 0; i < taskList.size(); i++) {
+    	SensorTask task=null;
+    	do{
             int index = uniformDist.nextInt();
             if (index < taskList.size()) {
-                SensorTask task = (SensorTask) taskList.get(index);
+                task = (SensorTask) taskList.get(index);
                 if (task != null && task.isAvailable()) {
                     //log("using exploration:" + task);
                     return (SensorTask) taskList.get(index);
                 }
             }
-        }
+        }while(task!=null);
         return null;
     }
     
     private SensorTask determineBestTaskToExecute() {
         double maxQ=Double.NEGATIVE_INFINITY;
-        SensorTask bestTask=null;
+        List<SensorTask> bestTasks=new ArrayList<SensorTask>();
         
         for(Iterator it=taskList.values().iterator();it.hasNext();){
             SensorTask task= (SensorTask)it.next();
@@ -279,11 +280,16 @@ public class DRLSensorApp extends SensorApp implements drcl.comp.ActiveComponent
             if(task.isAvailable()){
                 if(utility>maxQ){
                     maxQ=utility;
-                    bestTask=task;
+                    bestTasks.clear();
+                    bestTasks.add(task);
+                }else if(utility==maxQ){
+                	bestTasks.add(task);
                 }
             }
         }
-        return bestTask;        
+        if(bestTasks.size()==1) return bestTasks.get(0);
+        int taskId= (int) (Math.random()*bestTasks.size());
+        return bestTasks.get(taskId);        
     }
 
     private double calcExplorationFactor() {
@@ -345,7 +351,7 @@ public class DRLSensorApp extends SensorApp implements drcl.comp.ActiveComponent
     private synchronized void prepareTaskList() {
         taskList.put(1, new SensorTask(1,ROUTE,0.1) {
             public synchronized void execute() {
-                
+                noOfRx=0;
             }
             public synchronized double computeCost(double energySpent) {
             	return ((2.45*0.001) + (5.97*0.001)); //RX +TX
@@ -359,7 +365,7 @@ public class DRLSensorApp extends SensorApp implements drcl.comp.ActiveComponent
             }
         });
         
-        taskList.put(2, new SensorTask(2,SAMPLE, 0.05) {
+        taskList.put(2, new SensorTask(2,SAMPLE, 0.02) {
             public void execute() {
                 setCPUMode(CPUBase.CPU_ACTIVE);
                 //setRadioMode(RadioBase.RADIO_OFF);
@@ -376,7 +382,7 @@ public class DRLSensorApp extends SensorApp implements drcl.comp.ActiveComponent
                 return true;  
             }
         });
-        taskList.put(3, new SensorTask(3,SLEEP,0.001) {
+        taskList.put(3, new SensorTask(3,SLEEP,0.00) {
             public void execute() {
                 noOfRx=0; noOfSensedEvents=0;
                 setCPUMode(CPUBase.CPU_OFF);
@@ -408,6 +414,8 @@ public class DRLSensorApp extends SensorApp implements drcl.comp.ActiveComponent
         totalEvents++;
         if((nid!=sink_nid) && (currentTask==null || !currentTask.getTaskId().equals(SAMPLE))){
             noOfEventsMissed++;
+            //if(currentTask!=null)
+           // log("Sensor event missed, executing task:"+currentTask);
             return;
         }
         lastSeenDataSize = msg.getDataSize();
@@ -418,7 +426,7 @@ public class DRLSensorApp extends SensorApp implements drcl.comp.ActiveComponent
         int target_SeqNum = msg.getTargetSeqNum() ;
         
         noOfSensedEvents++;
-        log("Received sensed event:"+noOfSensedEvents+" SNR:"+lastSeenSNR);
+        //log("Received sensed event:"+noOfSensedEvents+" SNR:"+lastSeenSNR);
         if ( nid == sink_nid )
         {
             Port snrPort = (Port) getPort(SNR_PORT_ID + (int)(target_nid - first_target_nid));
@@ -452,7 +460,7 @@ public class DRLSensorApp extends SensorApp implements drcl.comp.ActiveComponent
 		if ((nid != sink_nid)
 				&& (currentTask == null || !currentTask.getTaskId().equals(
 						ROUTE))) {
-			log("Dropped pkt..,currently executing:" + currentTask);
+			//log("Dropped pkt..,currently executing:" + currentTask);
 			noOfPktsDropped++;
 			return;
 		}
@@ -483,8 +491,8 @@ public class DRLSensorApp extends SensorApp implements drcl.comp.ActiveComponent
 			lastSeenDataSize = spkt.getDataSize();
 			totalTrackingPkts++;
 			int TargetIndex = (int) (spkt.getTargetNid() - first_target_nid);
-			log("Tracking event with pkt:" + spkt.getTargetSeqNum() + " is:"
-					+ tevent);
+			//log("Tracking event with pkt:" + spkt.getTargetSeqNum() + " is:"
+				//	+ tevent);
 			GlobalRewardManager.dataArrived(totalExecutions, tevent);
 			if (targets_LastSeqNum[TargetIndex] < spkt.getTargetSeqNum()) {
 				double target_location[];
@@ -508,7 +516,7 @@ public class DRLSensorApp extends SensorApp implements drcl.comp.ActiveComponent
 						+ Math.pow(Math.abs(target_location[1] - currY), 2));
 				CSVLogger.log("target", getTime() + "," + spkt.getMaxSnr()
 						+ "," + target_location[0] + "," + target_location[1]
-						+ "," + currX + "," + currY + "," + dist, false);
+						+ "," + currX + "," + currY + "," + dist, true);
 				/*
 				 * snrPort.exportEvent(SNR_EVENT, target_location, null); //
 				 * uncomment this line if you want to display the location of

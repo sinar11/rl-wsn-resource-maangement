@@ -67,7 +67,7 @@ public class GlobalRewardManager {
 				if (stream.streamId == bestStream.streamId) {
 					addToPendingRwds(stream, glReward);
 				} else {
-					addToPendingRwds(stream, (stream.cost - totalCost));
+					addToPendingRwds(stream, -glReward);
 				}
 			} else if (DRLSensorApp.algorithm.equals("TEAM")) {
 				addToPendingRwds(stream, glReward*0.1);
@@ -76,10 +76,15 @@ public class GlobalRewardManager {
 		pendingData.remove(timestep);
 	}
 	
+	//private static double GlobalReward()
+	
 	private static void addToPendingRwds(Stream stream, double d) {
 		if(Math.abs(d)<0.001) return;   //not significant change
 		else rewardUpdates++;
 		if(d>0) positiveUpdates++;
+		else{
+			System.out.println("-ve reward");
+		}
 	
 		for(long nid : stream.nodes){
 			List<WLReward> rwds= pendingRwdsForNodes.get(nid);
