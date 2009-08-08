@@ -1,7 +1,7 @@
 /* Copyright 2003 SensorLogic, Inc. All rights reserved.
  * SENSORLOGIC PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
-package drcl.inet.sensorsim;
+package drcl.inet.sensorsim.drl;
 
 import java.util.List;
 
