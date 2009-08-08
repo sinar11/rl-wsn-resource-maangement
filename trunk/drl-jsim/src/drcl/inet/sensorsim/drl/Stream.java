@@ -1,4 +1,4 @@
-package drcl.inet.sensorsim;
+package drcl.inet.sensorsim.drl;
 
 import java.util.ArrayList;
 import java.util.List;

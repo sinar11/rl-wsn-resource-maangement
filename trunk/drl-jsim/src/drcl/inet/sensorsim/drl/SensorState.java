@@ -1,7 +1,7 @@
 /* Copyright 2003 SensorLogic, Inc. All rights reserved.
  * SENSORLOGIC PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
-package drcl.inet.sensorsim;
+package drcl.inet.sensorsim.drl;
 
 /*
  * @author Kunal
@@ -9,7 +9,7 @@ package drcl.inet.sensorsim;
 
 public class SensorState {
     public static final double THRESHOLD_HAMMING = 1;
-    public static final double SNR_WEIGHT = 0.1;
+    public static final double SNR_WEIGHT = 0.05;
     
     public static final int MAX_STATES = 8;
     

@@ -84,10 +84,10 @@ public class SensorApp extends drcl.net.Module {
     //localization/directed diffusion related
     public static final int NUM_TARGET_NODES = 2 ;
 
-    double X_shift =  0;
-    double Y_shift =  0;
+    protected double X_shift =  0;
+    protected double Y_shift =  0;
 
-    int targets_LastSeqNum [] ;
+    protected int targets_LastSeqNum [] ;
     //////////////////////////
 
 	/*if we are running in microAMPS mode where the application layer

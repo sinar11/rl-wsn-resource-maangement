@@ -13,10 +13,9 @@ import drcl.inet.sensorsim.SensorAppWirelessAgentContract.Message;
 import drcl.util.random.UniformDistribution;
 
 
-
+*//**
  * @author Kunal
- 
-
+ *//*
 public class DIRLSensorApp extends SensorApp implements drcl.comp.ActiveComponent{
 
     private static final long serialVersionUID = 1933018614040188069L;
@@ -208,7 +207,7 @@ public class DIRLSensorApp extends SensorApp implements drcl.comp.ActiveComponen
     }
 
     public SensorState getMatchingState(double lastSeenSNR, boolean hasNeighbours, boolean successfulRx, boolean successfulSample) {
-        SensorState state= new SensorState(lastSeenSNR,hasNeighbours,successfulSample,successfulRx);
+        SensorState state= new SensorState(lastSeenSNR,hasNeighbours,successfulSample,successfulRx, nid);
         for (Iterator iter = states.iterator(); iter.hasNext();) {
             SensorState existingState = (SensorState) iter.next();
             if(existingState!=null && state.equals(existingState))

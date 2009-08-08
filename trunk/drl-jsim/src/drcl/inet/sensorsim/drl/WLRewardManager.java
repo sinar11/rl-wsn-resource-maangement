@@ -1,12 +1,12 @@
-package drcl.inet.sensorsim;
+package drcl.inet.sensorsim.drl;
 
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
 
-import drcl.inet.sensorsim.DRLSensorApp.TrackingEvent;
+import drcl.inet.sensorsim.drl.DRLSensorApp.TrackingEvent;
 
-public class GlobalRewardManager {
+public class WLRewardManager implements GlobalRewardManager {
 	static final double REWARD_PER_TRACK=0.05;
 	static Hashtable<Long,List<WLReward>> pendingRwdsForNodes= new Hashtable<Long,List<WLReward>>();
 	static Hashtable<Long,List<TrackingEvent>> pendingData= new Hashtable<Long,List<TrackingEvent>>();
@@ -16,14 +16,38 @@ public class GlobalRewardManager {
 	static double totalReward=0;
 	static double effectiveCost=0;
 	
-	public  synchronized static void dataArrived(long timestep, TrackingEvent trEvent){
+	public Hashtable<Long, List<WLReward>> getPendingRwdsForNodes() {
+		return pendingRwdsForNodes;
+	}
+
+	public int getRewardUpdates() {
+		return rewardUpdates;
+	}
+
+	public int getPositiveUpdates() {
+		return positiveUpdates;
+	}
+
+	public List<Double> getGlobalRewards() {
+		return globalRewards;
+	}
+
+	public static double getTotalReward() {
+		return totalReward;
+	}
+
+	public double getEffectiveCost() {
+		return effectiveCost;
+	}
+
+	public  synchronized void dataArrived(long timestep, TrackingEvent trEvent){
 		List<TrackingEvent> events=pendingData.get(timestep);
 		if(events==null) events= new ArrayList<TrackingEvent>();
 		events.add(trEvent);
 		pendingData.put(timestep, events);
 	}
 	
-	public synchronized static void manage(long timestep){
+	public synchronized void manage(long timestep){
 		List<TrackingEvent> events=pendingData.get(timestep);
 		if(events==null || events.size()==0){
 			globalRewards.add(totalReward);
@@ -96,22 +120,15 @@ public class GlobalRewardManager {
 		
 	}
 
-	public synchronized static List<WLReward> getPendingRewards(long nid){
+	public synchronized List<WLReward> getPendingRewards(long nid){
 		List<WLReward> rwds= pendingRwdsForNodes.get(nid);
 		pendingRwdsForNodes.remove(nid);
 		return rwds;
 	}
 	
-	public static String stats(){
+	public String stats(){
 		return "RewardUpdates="+rewardUpdates+",positiveUpdates="+positiveUpdates
 			+",effectiveCost="+effectiveCost+",globalReward="+totalReward;
 	}
-	static class WLReward{
-		long pktId;
-		double reward;
-		WLReward(long pkt, double rwd){
-			this.pktId=pkt;
-			this.reward=rwd;
-		}
-	}
+
 }
