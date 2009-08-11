@@ -26,4 +26,8 @@ public interface GlobalRewardManager {
 	public List<WLReward> getPendingRewards(long nid);
 
 	public void manage(long totalExecutions);
+	
+	public double getTotalCost();
+	
+	public void addToTotalCost(double cost);
 }

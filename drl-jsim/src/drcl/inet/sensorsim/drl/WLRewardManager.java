@@ -15,6 +15,7 @@ public class WLRewardManager implements GlobalRewardManager {
 	static List<Double> globalRewards=new ArrayList<Double>(1000);
 	static double totalReward=0;
 	static double effectiveCost=0;
+	static double totalCost=0;
 	
 	public Hashtable<Long, List<WLReward>> getPendingRwdsForNodes() {
 		return pendingRwdsForNodes;
@@ -28,6 +29,13 @@ public class WLRewardManager implements GlobalRewardManager {
 		return positiveUpdates;
 	}
 
+	public double getTotalCost(){
+		return totalCost;
+	}
+	
+	public void addToTotalCost(double cost){
+		totalCost+=cost;
+	}
 	public List<Double> getGlobalRewards() {
 		return globalRewards;
 	}
