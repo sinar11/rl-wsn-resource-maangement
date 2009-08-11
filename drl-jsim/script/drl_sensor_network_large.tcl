@@ -54,7 +54,7 @@ for {set i 0} {$i < [expr $sink_id + 1]} {incr i} {
 	
 	cd n$i
 
-	mkdir drcl.inet.sensorsim.DRLSensorApp app
+	mkdir drcl.inet.sensorsim.drl.DRLSensorApp app
 	! app setNid $i
 	! app setSinkNid $sink_id
 	! app setCoherentThreshold 1000.0
@@ -156,7 +156,7 @@ for {set i [expr $sink_id + 1]} {$i < [expr $node_num - $target_node_num]} {incr
 	
 	cd n$i
 
-	mkdir drcl.inet.sensorsim.DRLSensorApp app
+	mkdir drcl.inet.sensorsim.drl.DRLSensorApp app
 	! app setNid $i
 	! app setSinkNid $sink_id
 	! app setCoherentThreshold 1000.0
@@ -172,7 +172,7 @@ for {set i [expr $sink_id + 1]} {$i < [expr $node_num - $target_node_num]} {incr
 	mkdir drcl.inet.sensorsim.SensorMobilityModel mobility
 
 	! phy setNid $i 
-	! phy setRadius 300.0
+	! phy setRadius 500.0
 
 	# connect phyiscal layers to sensor agents so that nodes can receive
 	connect phy/.toAgent@ -to agent/.fromPhy@
@@ -363,14 +363,16 @@ for {set i [expr $sink_id + 1]} {$i < [expr $node_num - $target_node_num]} {incr
 	}
 }
 set position_ [mkdir drcl.comp.tool.Plotter .position]
-for {set i 0} {$i < $target_node_num} {incr i} {
-	connect -c n$sink_id/app/.snr$i@ -to $position_/$i@$i
-	if { $testflag } {
-		attach -c $testfile/in@ -to n$sink_id/app/.snr$i@
-	}
-}
+connect -c n$sink_id/app/.track@ -to $position_/track@
+connect -c n$sink_id/app/.actual@ -to $position_/actual@
+#for {set i 0} {$i < $target_node_num} {incr i} {
+	#connect -c n$sink_id/app/.snr$i@ -to $position_/$i@$i
+#	if { $testflag } {
+#		attach -c $testfile/in@ -to n$sink_id/app/.snr$i@
+#	}
+#}
 # set the position of sink nodes
-! n0/mobility setPosition 0.0 250.0 125.0 0.0
+! n0/mobility setPosition 0.0 250.0 150.0 0.0
 
 # set the first argument of setPosition to 30.0 
 # set the position of sensor nodes
@@ -379,18 +381,18 @@ for {set i 0} {$i < $target_node_num} {incr i} {
 ! n1/app setDestId 0
 ! n2/mobility setPosition 0.0 290.0 200.0 0.0
 ! n2/app setDestId 0
-! n3/mobility setPosition 0.0 150.0 250.0 0.0
-! n3/app setDestId 1
+! n3/mobility setPosition 0.0 150.0 210.0 0.0
+! n3/app setDestId 0
 ! n4/mobility setPosition 0.0 210.0 250.0 0.0
-! n4/app setDestId 2
+! n4/app setDestId 1
 ! n5/mobility setPosition 0.0 300.0 240.0 0.0
 ! n5/app setDestId 2
-! n6/mobility setPosition 0.0 100.0 310.0 0.0
+! n6/mobility setPosition 0.0 130.0 240.0 0.0
 ! n6/app setDestId 3
-! n7/mobility setPosition 0.0 220.0 300.0 0.0
-! n7/app setDestId 4
-! n8/mobility setPosition 0.0 310.0 290.0 0.0
-! n8/app setDestId 5
+! n7/mobility setPosition 0.0 160.0 260.0 0.0
+! n7/app setDestId 3
+! n8/mobility setPosition 0.0 280.0 260.0 0.0
+! n8/app setDestId 2
 
 puts "simulation begins..."
 set sim [attach_simulator .]
@@ -412,7 +414,7 @@ script {run n9} -at 8.0 -on $sim
 # set the position of target nodes
 # Max. speed is the first argument of setPosition.
 # In order to make the target nodes mobile with max. speed (e.g., 30) m/sec., 
-! n9/mobility setPosition 0.1 200.0  300.0 5.0
+! n9/mobility setPosition 0.1 200.0  300.0 0.0
 #script {! n9/mobility setPosition 5.0 100.0  500.0 0.0} -at 10.0 -on $sim
 
 #script {! n9/mobility setPosition 0.0 100.0  475.0 0.0} -at 10.0 -on $sim
