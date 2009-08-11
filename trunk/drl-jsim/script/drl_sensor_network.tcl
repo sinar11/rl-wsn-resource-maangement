@@ -51,7 +51,7 @@ for {set i 0} {$i < [expr $sink_id + 1]} {incr i} {
 	
 	cd n$i
 
-	mkdir drcl.inet.sensorsim.DRLSensorApp app
+	mkdir drcl.inet.sensorsim.drl.DRLSensorApp app
 	! app setNid $i
 	! app setSinkNid $sink_id
 	! app setCoherentThreshold 1000.0
@@ -153,7 +153,7 @@ for {set i [expr $sink_id + 1]} {$i < [expr $node_num - $target_node_num]} {incr
 	
 	cd n$i
 
-	mkdir drcl.inet.sensorsim.DRLSensorApp app
+	mkdir drcl.inet.sensorsim.drl.DRLSensorApp app
 	! app setNid $i
 	! app setSinkNid $sink_id
 	! app setCoherentThreshold 1000.0
