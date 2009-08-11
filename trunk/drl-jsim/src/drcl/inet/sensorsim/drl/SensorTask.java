@@ -17,7 +17,7 @@ public abstract class SensorTask {
     int id;
     protected double[] Qvalues= new double[SensorState.MAX_STATES]; // value of Q-learning parameter Q for different states
     double expectedPrice;
-    double[] expectedPrices= new double[SensorState.MAX_STATES]; //expected price obtained for performing this action in different states
+    //double[] expectedPrices= new double[SensorState.MAX_STATES]; //expected price obtained for performing this action in different states
     double lastReward; // immediate reward of last time action was taken
     double lastCost; //cost of last time action was taken
     int noOfExecutions=0;
@@ -25,9 +25,9 @@ public abstract class SensorTask {
     protected SensorTask(int id, String taskId, double price){
         this.id=id;
         this.taskId=taskId;
-        for(int i=0;i<expectedPrices.length;i++){
+        /*for(int i=0;i<expectedPrices.length;i++){
         	this.expectedPrices[i]=price;
-        }
+        }*/
         this.expectedPrice=price;
     }
     
@@ -41,13 +41,13 @@ public abstract class SensorTask {
     }
     protected abstract void execute();
 
-    public void computeReward(double energySpent){
-    	this.lastCost=computeCost(energySpent);
+    public void computeReward(){
+    	this.lastCost=computeCost();
     	this.lastReward=computePrice()-lastCost;
     }
     
     public abstract double computePrice();
-    public abstract double computeCost(double energySpent);
+    public abstract double computeCost();
     public abstract boolean isAvailable();
     
     public String toString(){
@@ -77,10 +77,7 @@ public abstract class SensorTask {
         return taskId;
     }
 
-    public double getExpectedPrice(SensorState s) {
-        return expectedPrices[s.getStateId()];
-    }
-
+   
     public double getExpectedPrice() {
         return expectedPrice;
     }
