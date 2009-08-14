@@ -9,6 +9,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.HashMap;
 
+import drcl.inet.sensorsim.drl.algorithms.AbstractAlgorithm.Algorithm;
+
 /*
  * @author Kunal
  */
@@ -20,9 +22,9 @@ public class CSVLogger {
     static HashMap loggers= new HashMap();
     static String currentRun=System.currentTimeMillis()+"";
     
-    public CSVLogger(String filename){
+    public CSVLogger(String filename, Algorithm algorithm){
         this.filename=filename;
-        String dir="results"+File.separator+DRLSensorApp.algorithm+File.separator+currentRun;
+        String dir="results"+File.separator+algorithm+File.separator+currentRun;
         
         new File(dir).mkdirs();
         
@@ -47,13 +49,13 @@ public class CSVLogger {
         }
     }
     
-    public static void log(String type, String log){
-        log(type,log,true);
+    public static void log(String type, String log, Algorithm algorithm){
+        log(type,log,true,algorithm);
     }
-    public static synchronized void log(String type, String log, boolean printOut){
+    public static synchronized void log(String type, String log, boolean printOut, Algorithm algorithm){
         CSVLogger logger=(CSVLogger) loggers.get(type);
         if(logger==null){
-            logger= new CSVLogger(type);
+            logger= new CSVLogger(type, algorithm);
         }
         logger.log(log,printOut);
     }

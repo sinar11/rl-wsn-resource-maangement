@@ -3,6 +3,7 @@ package drcl.inet.sensorsim.drl;
 import java.util.List;
 
 import drcl.inet.sensorsim.drl.DRLSensorApp.TrackingEvent;
+import drcl.inet.sensorsim.drl.algorithms.AbstractAlgorithm.Algorithm;
 
 public interface GlobalRewardManager {
 
@@ -25,7 +26,7 @@ public interface GlobalRewardManager {
 
 	public List<WLReward> getPendingRewards(long nid);
 
-	public void manage(long totalExecutions);
+	public void manage(long totalExecutions, Algorithm algorithm);
 	
 	public double getTotalCost();
 	

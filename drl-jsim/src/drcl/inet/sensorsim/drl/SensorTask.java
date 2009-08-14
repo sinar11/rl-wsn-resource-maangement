@@ -31,7 +31,7 @@ public abstract class SensorTask {
         this.expectedPrice=price;
     }
     
-    protected void updateQValue(SensorState lastState, double QforBestAction){
+    public void updateQValue(SensorState lastState, double QforBestAction){
         Qvalues[lastState.getStateId()]= (1-ALPHA)*Qvalues[lastState.getStateId()]+ ALPHA*(lastReward + GAMMA * QforBestAction);
     }
     
