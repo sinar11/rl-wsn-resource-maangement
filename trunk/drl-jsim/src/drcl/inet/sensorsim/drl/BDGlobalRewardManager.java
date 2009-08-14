@@ -5,19 +5,20 @@ import java.util.Hashtable;
 import java.util.List;
 
 import drcl.inet.sensorsim.drl.DRLSensorApp.TrackingEvent;
+import drcl.inet.sensorsim.drl.algorithms.AbstractAlgorithm.Algorithm;
 
 public class BDGlobalRewardManager implements GlobalRewardManager{
 	static final double REWARD_PER_TRACK=0.0005;
 	private static final double SNR_WEIGHT = 0.001;
-	static Hashtable<Long,List<WLReward>> pendingRwdsForNodes= new Hashtable<Long,List<WLReward>>();
-	static Hashtable<Long,List<TrackingEvent>> pendingData= new Hashtable<Long,List<TrackingEvent>>();
-	static int rewardUpdates=0;
+	Hashtable<Long,List<WLReward>> pendingRwdsForNodes= new Hashtable<Long,List<WLReward>>();
+	Hashtable<Long,List<TrackingEvent>> pendingData= new Hashtable<Long,List<TrackingEvent>>();
+	int rewardUpdates=0;
 	private static int positiveUpdates=0;
-	static List<Double> globalRewards=new ArrayList<Double>(1000);
-	static double totalReward=0;
-	static double effectiveCost=0;
-	static double totalCost=0;
-	
+	List<Double> globalRewards=new ArrayList<Double>(1000);
+	double totalReward=0;
+	double effectiveCost=0;
+	double totalCost=0;
+
 	public Hashtable<Long, List<WLReward>> getPendingRwdsForNodes() {
 		return pendingRwdsForNodes;
 	}
@@ -34,7 +35,7 @@ public class BDGlobalRewardManager implements GlobalRewardManager{
 		return globalRewards;
 	}
 
-	public static double getTotalReward() {
+	public double getTotalReward() {
 		return totalReward;
 	}
 
@@ -57,7 +58,7 @@ public class BDGlobalRewardManager implements GlobalRewardManager{
 		pendingData.put(timestep, events);
 	}
 	
-	public synchronized void manage(long timestep){
+	public synchronized void manage(long timestep, Algorithm algorithm){
 		List<TrackingEvent> events=pendingData.get(timestep);
 		if(events==null || events.size()==0){
 			globalRewards.add(totalReward);
@@ -99,13 +100,13 @@ public class BDGlobalRewardManager implements GlobalRewardManager{
 		effectiveCost+=bestStream.cost;
 		//calc WL based on best stream 
 		for (Stream stream : allStreams) {
-			if (DRLSensorApp.algorithm.equals("COIN")) {
+			if (algorithm.equals(Algorithm.COIN)) {
 				if (stream.streamId == bestStream.streamId) {
 					addToPendingRwds(stream, glReward);
 				} else {
-					addToPendingRwds(stream, -glReward);
+					addToPendingRwds(stream, -stream.cost/totalCost);
 				}
-			} else if (DRLSensorApp.algorithm.equals("TEAM")) {
+			} else if (algorithm.equals(Algorithm.TEAM)) {
 				addToPendingRwds(stream, glReward);
 			}
 		}
@@ -114,7 +115,7 @@ public class BDGlobalRewardManager implements GlobalRewardManager{
 	
 	//private static double GlobalReward()
 	
-	private static void addToPendingRwds(Stream stream, double d) {
+	private void addToPendingRwds(Stream stream, double d) {
 		if(Math.abs(d)<0.0001) return;   //not significant change
 		else rewardUpdates++;
 		if(d>0) positiveUpdates++;
