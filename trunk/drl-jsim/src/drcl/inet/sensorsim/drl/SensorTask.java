@@ -19,7 +19,19 @@ public abstract class SensorTask {
     double expectedPrice;
     //double[] expectedPrices= new double[SensorState.MAX_STATES]; //expected price obtained for performing this action in different states
     double lastReward; // immediate reward of last time action was taken
-    double lastCost; //cost of last time action was taken
+    public double[] getQvalues() {
+		return Qvalues;
+	}
+
+	public double getLastReward() {
+		return lastReward;
+	}
+
+	public double getLastCost() {
+		return lastCost;
+	}
+
+	double lastCost; //cost of last time action was taken
     int noOfExecutions=0;
     
     protected SensorTask(int id, String taskId, double price){
