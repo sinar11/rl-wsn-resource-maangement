@@ -7,7 +7,7 @@ source "script/test/include.tcl"
 cd [mkdir -q drcl.comp.Component /aodvtest]
 
 # TOTAL number of nodes (sensor nodes + target nodes)
-set node_num 10
+set node_num 15
 
 # Number of TARGET nodes ONLY
 set target_node_num 1

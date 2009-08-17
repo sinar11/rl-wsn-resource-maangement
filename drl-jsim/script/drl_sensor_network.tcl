@@ -352,7 +352,7 @@ set plot_ [mkdir drcl.comp.tool.Plotter .plot]
 for {set i [expr $sink_id + 1]} {$i < [expr $node_num - $target_node_num]} {incr i} {
 	foreach task "0 1 2" {
 		#connect -c n$i/app/.Qval$task@ -to $plot_/$task@$i
-		connect -c n$i/app/.executions$task@ -to $plot_/$task@$i
+		#connect -c n$i/app/.executions$task@ -to $plot_/$task@$i
 	}
 	#connect -c n$i/app/.energy@ -to $plot_/6@$i
 	if { $testflag } {
@@ -373,18 +373,18 @@ for {set i 0} {$i < $target_node_num} {incr i} {
 # Max. speed is the first argument of setPosition.
 # In order to make the target nodes mobile with max. speed (e.g., 30) m/sec., 
 # set the first argument of setPosition to 30.0 
-#! n4/mobility setPosition 0.0 100.0 500.0 0.0
+#! n4/mobility setPosition 0.0 250.0 350.0 0.0
 set np 10; # number of points
 set t [java::new {double[][]} $np]
 $t set 0 [java::new {double[]} 4 "0 150.0 325.0 0"]
 $t set 1 [java::new {double[]} 4 "1000 175.0 320.0 0"]
-$t set 2 [java::new {double[]} 4 "2000 200.0 340.0 0"]
-$t set 3 [java::new {double[]} 4 "3000 225.0 355.0 0"]
-$t set 4 [java::new {double[]} 4 "4000 250.0 360.0 0"]
-$t set 5 [java::new {double[]} 4 "5000 275.0 390.0 0"]
-$t set 6 [java::new {double[]} 4 "6000 300.0 370.0 0"]
-$t set 7 [java::new {double[]} 4 "7000 325.0 365.0 0"]
-$t set 8 [java::new {double[]} 4 "8000 350.0 350.0 0"]
+$t set 2 [java::new {double[]} 4 "2000 175.0 320.0 0"]
+$t set 3 [java::new {double[]} 4 "3000 225.0 275.0 0"]
+$t set 4 [java::new {double[]} 4 "4000 225.0 275.0 0"]
+$t set 5 [java::new {double[]} 4 "5000 275.0 300.0 0"]
+$t set 6 [java::new {double[]} 4 "6000 275.0 300.0 0"]
+$t set 7 [java::new {double[]} 4 "7000 325.0 325.0 0"]
+$t set 8 [java::new {double[]} 4 "8000 325.0 325.0 0"]
 $t set 9 [java::new {double[]} 4 "9000 370.0 340.0 0"]
 ! n4/mobility installTrajectory $t
 
