@@ -55,7 +55,7 @@ public abstract class AbstractAlgorithm {
 	 }
 	
 	 public static AbstractAlgorithm createInstance(Hashtable<Integer,SensorTask> taskList, DRLSensorApp app){
-		 Algorithm algo=Algorithm.valueOf(System.getProperty("algorithm", Algorithm.DIRL.toString()));
+		 Algorithm algo=Algorithm.valueOf(System.getProperty("algorithm", Algorithm.TEAM.toString()));
 	       
 		 if(algo.equals(Algorithm.DIRL)){
 			 return new DIRLAlgorithm(taskList, app);
