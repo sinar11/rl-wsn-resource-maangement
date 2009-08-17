@@ -27,7 +27,7 @@ mkdir drcl.inet.sensorsim.SeismicProp seismic_Prop
 
 # create the sensor node position tracker
 mkdir drcl.inet.sensorsim.SensorNodePositionTracker nodetracker
-! nodetracker setGrid 600.0 100.0 500.0 100.0
+! nodetracker setGrid 350.0 100.0 300.0 100.0
 
 # connect the sensor channel to the sensor node position tracker
 connect chan/.tracker@ -and nodetracker/.channel@
@@ -42,7 +42,7 @@ mkdir drcl.inet.mac.Channel channel
 # create the node position tracker
 mkdir drcl.inet.mac.NodePositionTracker tracker
 #                 maxX  minX maxY minY  dX   dY
-! tracker setGrid 600.0 100.0 500.0 100.0 60.0 60.0
+! tracker setGrid 350.0 100.0 300.0 100.0 60.0 60.0
 
 connect channel/.tracker@ -and tracker/.channel@
 
@@ -318,7 +318,7 @@ if { $target_node_num == 0 } {
 		mkdir drcl.inet.sensorsim.SensorPhy phy 
 		! phy setRxThresh 0.0
 		! phy setNid $i 
-		! phy setRadius 250.0
+		! phy setRadius 100.0
 
 		# create mobility models
 		mkdir drcl.inet.sensorsim.SensorMobilityModel mobility
@@ -353,9 +353,9 @@ for {set i [expr $sink_id + 1]} {$i < $node_num} {incr i} {
 set plot_ [mkdir drcl.comp.tool.Plotter .plot]
 #for {set i 0} {$i < $target_node_num} {incr i} {
 for {set i [expr $sink_id + 1]} {$i < [expr $node_num - $target_node_num]} {incr i} {
-	foreach task "0 1 2 3 4 5" {
+	foreach task "Route Sample Sleep" {
 		#connect -c n$i/app/.Qval$task@ -to $plot_/$task@$i
-		connect -c n$i/app/.executions$task@ -to $plot_/$task@$i
+		connect -c n$i/app/$task@ -to $plot_/$task@$i
 	}
 	#connect -c n$i/app/.energy@ -to $plot_/6@$i
 	if { $testflag } {
@@ -372,27 +372,27 @@ connect -c n$sink_id/app/.actual@ -to $position_/actual@
 #	}
 #}
 # set the position of sink nodes
-! n0/mobility setPosition 0.0 250.0 150.0 0.0
+! n0/mobility setPosition 0.0 250.0 100.0 0.0
 
 # set the first argument of setPosition to 30.0 
 # set the position of sensor nodes
 # should be made to read from a scenario file
-! n1/mobility setPosition 0.0 200.0 190.0 0.0
+! n1/mobility setPosition 0.0 225.0 125.0 0.0
 ! n1/app setDestId 0
-! n2/mobility setPosition 0.0 290.0 200.0 0.0
+! n2/mobility setPosition 0.0 250.0 125.0 0.0
 ! n2/app setDestId 0
-! n3/mobility setPosition 0.0 150.0 210.0 0.0
+! n3/mobility setPosition 0.0 275.0 120.0 0.0
 ! n3/app setDestId 0
-! n4/mobility setPosition 0.0 210.0 250.0 0.0
+! n4/mobility setPosition 0.0 200.0 150.0 0.0
 ! n4/app setDestId 1
-! n5/mobility setPosition 0.0 300.0 240.0 0.0
+! n5/mobility setPosition 0.0 250.0 150.0 0.0
 ! n5/app setDestId 2
-! n6/mobility setPosition 0.0 130.0 240.0 0.0
+! n6/mobility setPosition 0.0 300.0 150.0 0.0
 ! n6/app setDestId 3
-! n7/mobility setPosition 0.0 160.0 260.0 0.0
-! n7/app setDestId 3
-! n8/mobility setPosition 0.0 280.0 260.0 0.0
-! n8/app setDestId 2
+! n7/mobility setPosition 0.0 175.0 175.0 0.0
+! n7/app setDestId 4
+! n8/mobility setPosition 0.0 270.0 175.0 0.0
+! n8/app setDestId 5
 
 puts "simulation begins..."
 set sim [attach_simulator .]
@@ -414,8 +414,19 @@ script {run n9} -at 8.0 -on $sim
 # set the position of target nodes
 # Max. speed is the first argument of setPosition.
 # In order to make the target nodes mobile with max. speed (e.g., 30) m/sec., 
-! n9/mobility setPosition 0.1 200.0  300.0 0.0
-#script {! n9/mobility setPosition 5.0 100.0  500.0 0.0} -at 10.0 -on $sim
+! n9/mobility setPosition 0.0 250.0  250.0 0.0
+set np 7; # number of points
+set t [java::new {double[][]} $np]
+$t set 0 [java::new {double[]} 4 "0 150.0 225.0 0"]
+$t set 1 [java::new {double[]} 4 "2000 175.0 150.0 0"]
+$t set 2 [java::new {double[]} 4 "4000 200.0 240.0 0"]
+$t set 3 [java::new {double[]} 4 "6000 225.0 185.0 0"]
+$t set 4 [java::new {double[]} 4 "8000 250.0 250.0 0"]
+$t set 5 [java::new {double[]} 4 "10000 275.0 160.0 0"]
+$t set 6 [java::new {double[]} 4 "12000 300.0 250.0 0"]
+! n9/mobility installTrajectory $t
+
+#script {! n9/mobility setPosition 0.1 250.0  250.0 0.0} -at 10.0 -on $sim
 
 #script {! n9/mobility setPosition 0.0 100.0  475.0 0.0} -at 10.0 -on $sim
 #script {! n9/mobility setPosition 0.0 150.0  500.0 0.0} -at 1000.0 -on $sim
@@ -427,7 +438,7 @@ script {run n9} -at 8.0 -on $sim
 #script {! n2/app setDestId -1} -at 1500.0 -on $sim
 #script {! n2/app setDestId 1} -at 3000.0 -on $sim
 # collect statistics at the end
-set end 7000.0
+set end 12000.0
 script {! n0/app collectStats} -at $end -on $sim
 script {! n1/app collectStats} -at $end -on $sim
 script {! n2/app collectStats} -at $end -on $sim
