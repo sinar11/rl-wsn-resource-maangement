@@ -321,7 +321,7 @@ public class DRLSensorApp extends SensorApp implements drcl.comp.ActiveComponent
     }
     
     private synchronized void prepareTaskList() {
-        taskList.put(0, new SensorTask(0,ROUTE,0.001) {
+        taskList.put(0, new SensorTask(0,ROUTE,10*ENERGY_ROUTE) {
             public synchronized void execute() {
             //	WakeUp();
                 noOfRx=0;
@@ -340,7 +340,7 @@ public class DRLSensorApp extends SensorApp implements drcl.comp.ActiveComponent
             }
         });
         
-        taskList.put(1, new SensorTask(1,SAMPLE, 0.001) {
+        taskList.put(1, new SensorTask(1,SAMPLE, 10*ENERGY_SAMPLE) {
             public void execute() {
               //  setCPUMode(CPUBase.CPU_ACTIVE);
             	noOfRx=0;

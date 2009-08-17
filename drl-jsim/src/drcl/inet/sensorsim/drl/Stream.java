@@ -38,7 +38,8 @@ class Stream{
 	public void addReward(double reward) {
 		this.reward+=reward;
 	}
-	public void addPktsReward(double reward) {
-		this.pktsReward+=reward;
+	public void addPktsReward(double reward2) {
+		this.pktsReward+=reward2;		
 	}
+	
 }
