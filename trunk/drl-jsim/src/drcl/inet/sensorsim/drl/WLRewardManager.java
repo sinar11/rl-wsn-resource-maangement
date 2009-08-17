@@ -1,22 +1,28 @@
-/*package drcl.inet.sensorsim.drl;
+package drcl.inet.sensorsim.drl;
 
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
 
 import drcl.inet.sensorsim.drl.DRLSensorApp.TrackingEvent;
+import drcl.inet.sensorsim.drl.algorithms.AbstractAlgorithm.Algorithm;
 
 public class WLRewardManager implements GlobalRewardManager {
-	static final double REWARD_PER_TRACK=0.05;
-	static Hashtable<Long,List<WLReward>> pendingRwdsForNodes= new Hashtable<Long,List<WLReward>>();
-	static Hashtable<Long,List<TrackingEvent>> pendingData= new Hashtable<Long,List<TrackingEvent>>();
-	static int rewardUpdates=0;
-	private static int positiveUpdates=0;
-	static List<Double> globalRewards=new ArrayList<Double>(1000);
-	static double totalReward=0;
-	static double effectiveCost=0;
-	static double totalCost=0;
+	static final double REWARD_PER_TRACK=0.01;
+	private static final double SNR_WEIGHT = 0.01;
+	private static final double MAX_SNR = 100;
+	private static final double MIN_REWARD = 0.25;
 	
+	Hashtable<Long,List<WLReward>> pendingRwdsForNodes= new Hashtable<Long,List<WLReward>>();
+	List<TrackingEvent> pendingData= new ArrayList<TrackingEvent>();
+	int rewardUpdates=0;
+	private static int positiveUpdates=0;
+	List<Double> globalRewards=new ArrayList<Double>(1000);
+	double totalReward=0;
+	double effectiveCost=0;
+	double totalCost=0;
+	private long noOfTracks=0;
+
 	public Hashtable<Long, List<WLReward>> getPendingRwdsForNodes() {
 		return pendingRwdsForNodes;
 	}
@@ -29,18 +35,11 @@ public class WLRewardManager implements GlobalRewardManager {
 		return positiveUpdates;
 	}
 
-	public double getTotalCost(){
-		return totalCost;
-	}
-	
-	public void addToTotalCost(double cost){
-		totalCost+=cost;
-	}
 	public List<Double> getGlobalRewards() {
 		return globalRewards;
 	}
 
-	public static double getTotalReward() {
+	public double getTotalReward() {
 		return totalReward;
 	}
 
@@ -48,16 +47,20 @@ public class WLRewardManager implements GlobalRewardManager {
 		return effectiveCost;
 	}
 
-	public  synchronized void dataArrived(long timestep, TrackingEvent trEvent){
-		List<TrackingEvent> events=pendingData.get(timestep);
-		if(events==null) events= new ArrayList<TrackingEvent>();
-		events.add(trEvent);
-		pendingData.put(timestep, events);
+	public double getTotalCost(){
+		return totalCost;
 	}
 	
-	public synchronized void manage(long timestep){
-		List<TrackingEvent> events=pendingData.get(timestep);
-		if(events==null || events.size()==0){
+	public void addToTotalCost(double cost){
+		totalCost+=cost;
+	}
+	
+	public  synchronized void dataArrived(long timestep, TrackingEvent trEvent){
+		pendingData.add(trEvent);
+	}
+	
+	public synchronized void manage(long timestep, Algorithm algorithm){
+		if(pendingData==null || pendingData.size()==0){
 			globalRewards.add(totalReward);
 			return;
 		}
@@ -66,7 +69,8 @@ public class WLRewardManager implements GlobalRewardManager {
 		//only encouraging one with least cost
 		double totalCost=0;
 		ArrayList<Stream> allStreams= new ArrayList<Stream>();
-		for(TrackingEvent event : events){
+		for(TrackingEvent event : pendingData){
+			noOfTracks++;
 			totalCost+=event.cost;
 			Stream stream=new Stream(event.streamId,event.nodes);
 			int index=allStreams.indexOf(stream);
@@ -77,7 +81,8 @@ public class WLRewardManager implements GlobalRewardManager {
 			}
 			stream.addPkt(event.pktId);
 			stream.addCost(event.cost);
-			stream.addReward(REWARD_PER_TRACK+(event.snr%100)*0.0005-event.cost);
+			if(event.snr>MAX_SNR) event.snr= MAX_SNR; 
+			stream.addReward((REWARD_PER_TRACK+event.snr*SNR_WEIGHT-event.cost)/(REWARD_PER_TRACK+MAX_SNR*SNR_WEIGHT));
 			stream.addPktsReward(event.reward);
 		}
 		Stream bestStream=null;
@@ -89,33 +94,41 @@ public class WLRewardManager implements GlobalRewardManager {
 			}
 		}
 		//global reward is reward_per_track-totalCost into no of pkts and SNR value of the event
-		double glReward=bestStrReward-totalCost+bestStream.cost;
+		//double glReward=bestStrReward-totalCost+bestStream.cost;
+		double glReward=(bestStrReward*bestStream.cost)/totalCost;
+		
 		totalReward+=glReward;
-		globalRewards.add(totalReward);
+		globalRewards.add(totalReward/this.totalCost);
 		effectiveCost+=bestStream.cost;
 		//calc WL based on best stream 
 		for (Stream stream : allStreams) {
-			if (DRLSensorApp.algorithm.equals("COIN")) {
+			if (algorithm.equals(Algorithm.COIN)) {
 				if (stream.streamId == bestStream.streamId) {
-					addToPendingRwds(stream, glReward);
+					
+					addToPendingRwds(stream, (glReward-stream.pktsReward)/stream.nodes.size());
 				} else {
-					addToPendingRwds(stream, -glReward);
+					addToPendingRwds(stream, -stream.cost/totalCost);
 				}
-			} else if (DRLSensorApp.algorithm.equals("TEAM")) {
-				addToPendingRwds(stream, glReward*0.1);
+			} else if (algorithm.equals(Algorithm.TEAM)) {
+				addToPendingRwds(stream, (glReward-stream.pktsReward)/stream.nodes.size());
 			}
+			stream.pktIds.clear();
+			stream.pktsReward=0;
+			stream.cost=0;
+			stream.reward=0;
 		}
-		pendingData.remove(timestep);
+		pendingData.clear();
 	}
 	
 	//private static double GlobalReward()
 	
-	private static void addToPendingRwds(Stream stream, double d) {
-		if(Math.abs(d)<0.001) return;   //not significant change
+	private void addToPendingRwds(Stream stream, double d) {
+		if(Math.abs(d)<MIN_REWARD) return;   //not significant change
 		else rewardUpdates++;
+		DRLSensorApp.log.info("Reward:"+d+" to stream:"+stream.nodes);
 		if(d>0) positiveUpdates++;
 		else{
-			System.out.println("-ve reward");
+			System.out.println("-ve reward:"+d+" to stream:"+stream.nodes);
 		}
 	
 		for(long nid : stream.nodes){
@@ -136,8 +149,7 @@ public class WLRewardManager implements GlobalRewardManager {
 	
 	public String stats(){
 		return "RewardUpdates="+rewardUpdates+",positiveUpdates="+positiveUpdates
-			+",effectiveCost="+effectiveCost+",globalReward="+totalReward;
+			+",effectiveCost="+effectiveCost+",totalCost="+totalCost+",globalReward="+totalReward/totalCost+", noOfTracks="+noOfTracks;
 	}
 
 }
-*/

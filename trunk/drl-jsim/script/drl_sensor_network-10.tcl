@@ -414,29 +414,30 @@ script {run n9} -at 8.0 -on $sim
 # set the position of target nodes
 # Max. speed is the first argument of setPosition.
 # In order to make the target nodes mobile with max. speed (e.g., 30) m/sec., 
-! n9/mobility setPosition 0.0 250.0  250.0 0.0
-set np 7; # number of points
+#! n9/mobility setPosition 0.0 250.0  250.0 0.0
+set np 13; # number of points
 set t [java::new {double[][]} $np]
 $t set 0 [java::new {double[]} 4 "0 150.0 225.0 0"]
-$t set 1 [java::new {double[]} 4 "2000 175.0 150.0 0"]
-$t set 2 [java::new {double[]} 4 "4000 200.0 240.0 0"]
-$t set 3 [java::new {double[]} 4 "6000 225.0 185.0 0"]
-$t set 4 [java::new {double[]} 4 "8000 250.0 250.0 0"]
-$t set 5 [java::new {double[]} 4 "10000 275.0 160.0 0"]
-$t set 6 [java::new {double[]} 4 "12000 300.0 250.0 0"]
+$t set 1 [java::new {double[]} 4 "1000 175.0 150.0 0"]
+$t set 2 [java::new {double[]} 4 "2000 175.0 150.0 0"]
+$t set 3 [java::new {double[]} 4 "3000 200.0 240.0 0"]
+$t set 4 [java::new {double[]} 4 "4000 200.0 240.0 0"]
+$t set 5 [java::new {double[]} 4 "5000 225.0 185.0 0"]
+$t set 6 [java::new {double[]} 4 "6000 225.0 185.0 0"]
+$t set 7 [java::new {double[]} 4 "7000 250.0 250.0 0"]
+$t set 8 [java::new {double[]} 4 "8000 250.0 250.0 0"]
+$t set 9 [java::new {double[]} 4 "9000 275.0 160.0 0"]
+$t set 10 [java::new {double[]} 4 "10000 275.0 160.0 0"]
+$t set 11 [java::new {double[]} 4 "11000 300.0 250.0 0"]
+$t set 12 [java::new {double[]} 4 "12000 300.0 250.0 0"]
 ! n9/mobility installTrajectory $t
 
 #script {! n9/mobility setPosition 0.1 250.0  250.0 0.0} -at 10.0 -on $sim
 
 #script {! n9/mobility setPosition 0.0 100.0  475.0 0.0} -at 10.0 -on $sim
-#script {! n9/mobility setPosition 0.0 150.0  500.0 0.0} -at 1000.0 -on $sim
-#script {! n9/mobility setPosition 0.0 200.0  550.0 0.0} -at 2000.0 -on $sim
-#script {! n9/mobility setPosition 0.0 250.0  575.0 0.0} -at 3000.0 -on $sim
-#script {! n9/mobility setPosition 0.0 300.0  550.0 0.0} -at 4000.0 -on $sim
-#script {! n9/mobility setPosition 0.0 350.0  500.0 0.0} -at 5000.0 -on $sim
-#script {! n9/mobility setPosition 0.0 400.0 475.0 0.0} -at 6000.0 -on $sim
 #script {! n2/app setDestId -1} -at 1500.0 -on $sim
 #script {! n2/app setDestId 1} -at 3000.0 -on $sim
+
 # collect statistics at the end
 set end 12000.0
 script {! n0/app collectStats} -at $end -on $sim

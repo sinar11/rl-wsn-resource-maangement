@@ -21,6 +21,7 @@ public class BDGlobalRewardManager implements GlobalRewardManager{
 	double totalReward=0;
 	double effectiveCost=0;
 	double totalCost=0;
+	private long noOfTracks=0;
 
 	public Hashtable<Long, List<WLReward>> getPendingRwdsForNodes() {
 		return pendingRwdsForNodes;
@@ -94,7 +95,7 @@ public class BDGlobalRewardManager implements GlobalRewardManager{
 		//global reward is reward_per_track-totalCost into no of pkts and SNR value of the event
 		//double glReward=bestStrReward-totalCost+bestStream.cost;
 		double glReward=(bestStrReward*bestStream.cost)/totalCost;
-		
+		noOfTracks+=bestStream.pktIds.size();
 		totalReward+=glReward;
 		globalRewards.add(totalReward/this.totalCost);
 		effectiveCost+=bestStream.cost;
@@ -146,7 +147,7 @@ public class BDGlobalRewardManager implements GlobalRewardManager{
 	
 	public String stats(){
 		return "RewardUpdates="+rewardUpdates+",positiveUpdates="+positiveUpdates
-			+",effectiveCost="+effectiveCost+",totalCost="+totalCost+",globalReward="+totalReward/totalCost;
+			+",effectiveCost="+effectiveCost+",totalCost="+totalCost+",globalReward="+totalReward/totalCost+", noOfTracks="+noOfTracks;
 	}
 
 }

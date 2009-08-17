@@ -263,9 +263,9 @@ public class DRLSensorApp extends SensorApp implements drcl.comp.ActiveComponent
 		
     }
     
-    /**
+  /*  *//**
      *Sets both the CPU and Radio Components to sleep.
-    */
+    *//*
     public void GoToSleep()
     {
         //set the CPU to sleep
@@ -281,11 +281,11 @@ public class DRLSensorApp extends SensorApp implements drcl.comp.ActiveComponent
         return;
     }
 
-    /**
+    *//**
      * Set both Radio components in IDLE
      * so that they are ready for either receiving, sending, and/or
      * processing.
-    */
+    *//*
     public void WakeUp()
     {
         //set the CPU to ACTIVE
@@ -299,7 +299,7 @@ public class DRLSensorApp extends SensorApp implements drcl.comp.ActiveComponent
             System.out.println("Unable to turn radio back on to Idle mode. Its mode is: " + temp.getRadioMode());
         }
         return;
-    }
+    }*/
     class TrackingEvent{
         long streamId;
         List<Long> nodes= new ArrayList<Long>();   
