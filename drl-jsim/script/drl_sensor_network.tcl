@@ -315,7 +315,7 @@ if { $target_node_num == 0 } {
 		mkdir drcl.inet.sensorsim.SensorPhy phy 
 		! phy setRxThresh 0.0
 		! phy setNid $i 
-		! phy setRadius 250.0
+		! phy setRadius 80.0
 
 		# create mobility models
 		mkdir drcl.inet.sensorsim.SensorMobilityModel mobility
@@ -350,7 +350,7 @@ for {set i [expr $sink_id + 1]} {$i < $node_num} {incr i} {
 set plot_ [mkdir drcl.comp.tool.Plotter .plot]
 #for {set i 0} {$i < $target_node_num} {incr i} {
 for {set i [expr $sink_id + 1]} {$i < [expr $node_num - $target_node_num]} {incr i} {
-	foreach task "0 1 2 3 4 5" {
+	foreach task "0 1 2" {
 		#connect -c n$i/app/.Qval$task@ -to $plot_/$task@$i
 		connect -c n$i/app/.executions$task@ -to $plot_/$task@$i
 	}
@@ -373,7 +373,20 @@ for {set i 0} {$i < $target_node_num} {incr i} {
 # Max. speed is the first argument of setPosition.
 # In order to make the target nodes mobile with max. speed (e.g., 30) m/sec., 
 # set the first argument of setPosition to 30.0 
-! n4/mobility setPosition 5.0 100.0  500.0 0.0
+#! n4/mobility setPosition 0.0 100.0 500.0 0.0
+set np 10; # number of points
+set t [java::new {double[][]} $np]
+$t set 0 [java::new {double[]} 4 "0 150.0 325.0 0"]
+$t set 1 [java::new {double[]} 4 "1000 175.0 320.0 0"]
+$t set 2 [java::new {double[]} 4 "2000 200.0 340.0 0"]
+$t set 3 [java::new {double[]} 4 "3000 225.0 355.0 0"]
+$t set 4 [java::new {double[]} 4 "4000 250.0 360.0 0"]
+$t set 5 [java::new {double[]} 4 "5000 275.0 390.0 0"]
+$t set 6 [java::new {double[]} 4 "6000 300.0 370.0 0"]
+$t set 7 [java::new {double[]} 4 "7000 325.0 365.0 0"]
+$t set 8 [java::new {double[]} 4 "8000 350.0 350.0 0"]
+$t set 9 [java::new {double[]} 4 "9000 370.0 340.0 0"]
+! n4/mobility installTrajectory $t
 
 #! n4/mobility setPosition 0.0 400.0 450.0 0.0
 #! n5/mobility setPosition 30.0 550.0 250.0 0.0
@@ -381,7 +394,7 @@ for {set i 0} {$i < $target_node_num} {incr i} {
 
 # set the position of sensor nodes
 # should be made to read from a scenario file
-! n1/mobility setPosition 0.0 250.0 250.0 0.0
+! n1/mobility setPosition 0.0 250.0 275.0 0.0
 ! n1/app setDestId 0
 ! n2/mobility setPosition 0.0 200.0 300.0 0.0
 ! n2/app setDestId 1
@@ -402,18 +415,18 @@ script {run n2} -at 0.5 -on $sim
 script {run n3} -at 0.5 -on $sim
 script {run n4} -at 0.8 -on $sim
 
-script {! n4/mobility setPosition 0.0 100.0  475.0 0.0} -at 10.0 -on $sim
-script {! n4/mobility setPosition 0.0 150.0  500.0 0.0} -at 1000.0 -on $sim
-script {! n4/mobility setPosition 0.0 200.0  550.0 0.0} -at 2000.0 -on $sim
-script {! n4/mobility setPosition 0.0 250.0  575.0 0.0} -at 3000.0 -on $sim
-script {! n4/mobility setPosition 0.0 300.0  250.0 0.0} -at 4000.0 -on $sim
-script {! n4/mobility setPosition 0.0 200.0  200.0 0.0} -at 5000.0 -on $sim
-script {! n4/mobility setPosition 0.0 150.0  100.0 0.0} -at 6000.0 -on $sim
+#script {! n4/mobility setPosition 0.0 100.0  475.0 0.0} -at 10.0 -on $sim
+#script {! n4/mobility setPosition 0.0 150.0  500.0 0.0} -at 1000.0 -on $sim
+#script {! n4/mobility setPosition 0.0 200.0  550.0 0.0} -at 2000.0 -on $sim
+#script {! n4/mobility setPosition 0.0 250.0  575.0 0.0} -at 3000.0 -on $sim
+#script {! n4/mobility setPosition 0.0 300.0  250.0 0.0} -at 4000.0 -on $sim
+#script {! n4/mobility setPosition 0.0 200.0  200.0 0.0} -at 5000.0 -on $sim
+#script {! n4/mobility setPosition 0.0 150.0  100.0 0.0} -at 6000.0 -on $sim
 
 #script {! n2/app setDestId -1} -at 1500.0 -on $sim
 #script {! n2/app setDestId 1} -at 3000.0 -on $sim
 # collect statistics at the end
-set end 8000.0
+set end 10000.0
 script {! n0/app collectStats} -at $end -on $sim
 script {! n1/app collectStats} -at $end -on $sim
 script {! n2/app collectStats} -at $end -on $sim
