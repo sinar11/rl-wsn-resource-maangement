@@ -966,7 +966,7 @@ public class Mac_802_11 extends drcl.inet.mac.Mac implements ActiveComponent {
         while(e != null && e.hasMoreElements()) {
             this_entry = (BUFFER_ENTRY)e.nextElement();
 
-            if (psm_buffer.size() > 20 && this_entry.age_ >= 2 && !(this_entry.get_addr() == MAC_BROADCAST && tx_bcast_atim_ > 0)) {
+            if (psm_buffer.size() > 1000 && this_entry.age_ >= 2 && !(this_entry.get_addr() == MAC_BROADCAST && tx_bcast_atim_ > 0)) {
             	psm_buffer.remove(this_entry);
 
                 if(this_entry.packet_ != null){

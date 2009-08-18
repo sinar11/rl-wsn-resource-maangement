@@ -102,8 +102,10 @@ public class BDGlobalRewardManager implements GlobalRewardManager{
 		//calc WL based on best stream 
 		for (Stream stream : allStreams) {
 			if (algorithm.equals(Algorithm.COIN)) {
+				double stReward=(glReward-stream.pktsReward)/stream.nodes.size();
+				if(stReward<0) stReward=0;
 				if (stream.streamId == bestStream.streamId) {
-					addToPendingRwds(stream, (glReward-stream.pktsReward)/stream.nodes.size());
+					addToPendingRwds(stream, stReward);
 				} else {
 					addToPendingRwds(stream, -stream.cost/totalCost);
 				}
