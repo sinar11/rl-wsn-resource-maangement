@@ -10,8 +10,8 @@ import drcl.inet.sensorsim.drl.algorithms.AbstractAlgorithm.Algorithm;
 public class WLRewardManager implements GlobalRewardManager {
 	static final double REWARD_PER_TRACK=0.01;
 	private static final double SNR_WEIGHT = 0.01;
-	private static final double MAX_SNR = 100;
-	private static final double MIN_REWARD = 0.25;
+	private static final double MAX_SNR = 250;
+	private static final double MIN_REWARD = 0.5;
 	
 	Hashtable<Long,List<WLReward>> pendingRwdsForNodes= new Hashtable<Long,List<WLReward>>();
 	List<TrackingEvent> pendingData= new ArrayList<TrackingEvent>();
@@ -104,10 +104,9 @@ public class WLRewardManager implements GlobalRewardManager {
 		for (Stream stream : allStreams) {
 			if (algorithm.equals(Algorithm.COIN)) {
 				if (stream.streamId == bestStream.streamId) {
-					
 					addToPendingRwds(stream, (glReward-stream.pktsReward)/stream.nodes.size());
 				} else {
-					addToPendingRwds(stream, -stream.cost/totalCost);
+					addToPendingRwds(stream, 0);
 				}
 			} else if (algorithm.equals(Algorithm.TEAM)) {
 				addToPendingRwds(stream, (glReward-stream.pktsReward)/stream.nodes.size());
