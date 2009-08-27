@@ -377,52 +377,52 @@ connect -c n$sink_id/app/.actual@ -to $position_/actual@
 # set the first argument of setPosition to 30.0 
 # set the position of sensor nodes
 # should be made to read from a scenario file
-! n1/mobility setPosition 0.0 180.0 125.0 0.0
+! n1/mobility setPosition 0.0 200.0 125.0 0.0
 ! n1/app setDestId 0
 ! n2/mobility setPosition 0.0 220.0 125.0 0.0
 ! n2/app setDestId 0
-! n3/mobility setPosition 0.0 250.0 125.0 0.0
+! n3/mobility setPosition 0.0 240.0 125.0 0.0
 ! n3/app setDestId 0
-! n4/mobility setPosition 0.0 275.0 120.0 0.0
+! n4/mobility setPosition 0.0 265.0 125.0 0.0
 ! n4/app setDestId 0
-! n5/mobility setPosition 0.0 300.0 125.0 0.0
+! n5/mobility setPosition 0.0 280.0 125.0 0.0
 ! n5/app setDestId 0
-! n6/mobility setPosition 0.0 325.0 125.0 0.0
+! n6/mobility setPosition 0.0 300.0 125.0 0.0
 ! n6/app setDestId 0
-! n7/mobility setPosition 0.0 150.0 140.0 0.0
+! n7/mobility setPosition 0.0 200.0 160.0 0.0
 ! n7/app setDestId 1
-! n8/mobility setPosition 0.0 180.0 160.0 0.0
+! n8/mobility setPosition 0.0 210.0 140.0 0.0
 ! n8/app setDestId 1
-! n9/mobility setPosition 0.0 200.0 160.0 0.0
+! n9/mobility setPosition 0.0 220.0 160.0 0.0
 ! n9/app setDestId 2
-! n10/mobility setPosition 0.0 230.0 170.0 0.0
+! n10/mobility setPosition 0.0 230.0 140.0 0.0
 ! n10/app setDestId 2
-! n11/mobility setPosition 0.0 250.0 175.0 0.0
+! n11/mobility setPosition 0.0 240.0 160.0 0.0
 ! n11/app setDestId 3
-! n12/mobility setPosition 0.0 260.0 150.0 0.0
+! n12/mobility setPosition 0.0 250.0 140.0 0.0
 ! n12/app setDestId 3
-! n13/mobility setPosition 0.0 275.0 175.0 0.0
+! n13/mobility setPosition 0.0 260.0 160.0 0.0
 ! n13/app setDestId 4
-! n14/mobility setPosition 0.0 290.0 150.0 0.0
+! n14/mobility setPosition 0.0 270.0 140.0 0.0
 ! n14/app setDestId 4
-! n15/mobility setPosition 0.0 300.0 175.0 0.0
+! n15/mobility setPosition 0.0 280.0 160.0 0.0
 ! n15/app setDestId 5
-! n16/mobility setPosition 0.0 320.0 155.0 0.0
+! n16/mobility setPosition 0.0 290.0 140.0 0.0
 ! n16/app setDestId 5
-! n17/mobility setPosition 0.0 330.0 170.0 0.0
+! n17/mobility setPosition 0.0 300.0 160.0 0.0
 ! n17/app setDestId 6
-! n18/mobility setPosition 0.0 350.0 150.0 0.0
+! n18/mobility setPosition 0.0 300.0 140.0 0.0
 ! n18/app setDestId 6
-! n19/mobility setPosition 0.0 125.0 170.0 0.0
+! n19/mobility setPosition 0.0 200.0 175.0 0.0
 ! n19/app setDestId 7
-! n20/mobility setPosition 0.0 275.0 225.0 0.0
-! n20/app setDestId 13
-! n21/mobility setPosition 0.0 300.0 225.0 0.0
-! n21/app setDestId 15
-! n22/mobility setPosition 0.0 330.0 225.0 0.0
-! n22/app setDestId 17
+! n20/mobility setPosition 0.0 220.0 175.0 0.0
+! n20/app setDestId 9
+! n21/mobility setPosition 0.0 240.0 175.0 0.0
+! n21/app setDestId 11
+! n22/mobility setPosition 0.0 260.0 175.0 0.0
+! n22/app setDestId 13
 ! n23/mobility setPosition 0.0 375.0 175.0 0.0
-! n23/app setDestId 18
+! n23/app setDestId 15
 
 puts "simulation begins..."
 set sim [attach_simulator .]
@@ -462,23 +462,23 @@ script {run n24} -at 8.0 -on $sim
 #! n24/mobility setPosition 0.0 250.0  250.0 0.0
 set np 13; # number of points
 set t [java::new {double[][]} $np]
-$t set 0 [java::new {double[]} 4 "0 125.0 220.0 0"]
-$t set 1 [java::new {double[]} 4 "1000 175.0 260.0 0"]
-$t set 2 [java::new {double[]} 4 "2000 175.0 260.0 0"]
-$t set 3 [java::new {double[]} 4 "3000 200.0 200.0 0"]
-$t set 4 [java::new {double[]} 4 "4000 200.0 200.0 0"]
-$t set 5 [java::new {double[]} 4 "5000 250.0 285.0 0"]
-$t set 6 [java::new {double[]} 4 "6000 250.0 285.0 0"]
-$t set 7 [java::new {double[]} 4 "7000 275.0 200.0 0"]
-$t set 8 [java::new {double[]} 4 "8000 275.0 200.0 0"]
-$t set 9 [java::new {double[]} 4 "9000 325.0 270.0 0"]
-$t set 10 [java::new {double[]} 4 "10000 325.0 270.0 0"]
-$t set 11 [java::new {double[]} 4 "11000 375.0 220.0 0"]
-$t set 12 [java::new {double[]} 4 "12000 375.0 220.0 0"]
+$t set 0 [java::new {double[]} 4 "0 150.0 225.0 0"]
+$t set 1 [java::new {double[]} 4 "1000 175.0 150.0 0"]
+$t set 2 [java::new {double[]} 4 "2000 175.0 150.0 0"]
+$t set 3 [java::new {double[]} 4 "3000 200.0 240.0 0"]
+$t set 4 [java::new {double[]} 4 "4000 200.0 240.0 0"]
+$t set 5 [java::new {double[]} 4 "5000 225.0 185.0 0"]
+$t set 6 [java::new {double[]} 4 "6000 225.0 185.0 0"]
+$t set 7 [java::new {double[]} 4 "7000 250.0 250.0 0"]
+$t set 8 [java::new {double[]} 4 "8000 250.0 250.0 0"]
+$t set 9 [java::new {double[]} 4 "9000 275.0 160.0 0"]
+$t set 10 [java::new {double[]} 4 "10000 275.0 160.0 0"]
+$t set 11 [java::new {double[]} 4 "11000 300.0 250.0 0"]
+$t set 12 [java::new {double[]} 4 "12000 300.0 250.0 0"]
 ! n24/mobility installTrajectory $t
 
 # collect statistics at the end
-set end 12000.0
+set end 6000.0
 script {! n0/app collectStats} -at $end -on $sim
 script {! n1/app collectStats} -at $end -on $sim
 script {! n2/app collectStats} -at $end -on $sim
