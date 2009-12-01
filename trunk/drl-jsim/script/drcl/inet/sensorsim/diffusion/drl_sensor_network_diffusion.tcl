@@ -55,7 +55,7 @@ for {set i 0} {$i < [expr $sink_id + 1]} {incr i} {
 	
 	cd n$i
 
-	mkdir drcl.inet.sensorsim.diffusion.DiffApp app
+	mkdir drcl.inet.sensorsim.drl.diffext.DRLDiffApp app
 	! app setNid $i
 	! app setSinkNid $sink_id
 	! app setCoherentThreshold 1000.0
@@ -63,7 +63,7 @@ for {set i 0} {$i < [expr $sink_id + 1]} {incr i} {
 	! app setTargetName "Wheeled Vehicle"
 
 	# create wireless agent layers
-	mkdir drcl.inet.sensorsim.diffusion.WirelessDiffAgent wireless_agent
+	mkdir drcl.inet.sensorsim.drl.diffext.WirelessDiffAgent wireless_agent
 
 	! wireless_agent setDebugEnabled 0
 
@@ -84,7 +84,7 @@ for {set i 0} {$i < [expr $sink_id + 1]} {incr i} {
 	mkdir drcl.inet.mac.Mac_802_11 mac
 
 	# added 09-04-04
-	! mac disable_PSM
+	#! mac disable_PSM
 
 	mkdir drcl.inet.mac.WirelessPhy wphy
 	! wphy setRxThresh 0.0
@@ -100,10 +100,17 @@ for {set i 0} {$i < [expr $sink_id + 1]} {incr i} {
         set RT [mkdir drcl.inet.core.RT                 rt]
         set ID [mkdir drcl.inet.core.Identity           id]
  
-	! pktdispatcher setRouteBackEnabled 1
+	#! pktdispatcher setRouteBackEnabled 1
 
         $PD bind $RT
         $PD bind $ID	
+
+	mkdir drcl.inet.protocol.aodv.AODV  aodv
+	connect -c aodv/down@ -and pktdispatcher/103@up
+	connect aodv/.service_rt@ -and rt/.service_rt@
+	connect aodv/.service_id@ -and id/.service_id@
+	connect aodv/.ucastquery@ -and pktdispatcher/.ucastquery@
+	connect mac/.linkbroken@ -and aodv/.linkbroken@
 
 	# present if using 802.11 power-saving mode
 	connect mac/.energy@ -and wphy/.energy@ 
@@ -161,7 +168,7 @@ for {set i [expr $sink_id + 1]} {$i < [expr $node_num - $target_node_num]} {incr
 	
 	cd n$i
 
-	mkdir drcl.inet.sensorsim.diffusion.DiffApp app
+	mkdir drcl.inet.sensorsim.drl.diffext.DRLDiffApp app
 	! app setNid $i
 	! app setSinkNid $sink_id
 	! app setCoherentThreshold 1000.0
@@ -203,7 +210,7 @@ for {set i [expr $sink_id + 1]} {$i < [expr $node_num - $target_node_num]} {incr
 	! mobility setNid $i
 
 	# create wireless agent layers
-	mkdir drcl.inet.sensorsim.diffusion.WirelessDiffAgent wireless_agent
+	mkdir drcl.inet.sensorsim.drl.diffext.WirelessDiffAgent wireless_agent
 
 	! wireless_agent setDebugEnabled 0
 
@@ -224,7 +231,7 @@ for {set i [expr $sink_id + 1]} {$i < [expr $node_num - $target_node_num]} {incr
 	mkdir drcl.inet.mac.Mac_802_11 mac
 
 	# added 09-04-04
-	! mac disable_PSM
+	#! mac disable_PSM
 
 	mkdir drcl.inet.mac.WirelessPhy wphy
 	! wphy setRxThresh 0.0
@@ -236,10 +243,17 @@ for {set i [expr $sink_id + 1]} {$i < [expr $node_num - $target_node_num]} {incr
         set RT [mkdir drcl.inet.core.RT                 rt]
         set ID [mkdir drcl.inet.core.Identity           id]
 
-	! pktdispatcher setRouteBackEnabled 1
+	#! pktdispatcher setRouteBackEnabled 1
  
         $PD bind $RT
         $PD bind $ID	
+
+	mkdir drcl.inet.protocol.aodv.AODV  aodv
+	connect -c aodv/down@ -and pktdispatcher/103@up
+	connect aodv/.service_rt@ -and rt/.service_rt@
+	connect aodv/.service_id@ -and id/.service_id@
+	connect aodv/.ucastquery@ -and pktdispatcher/.ucastquery@
+	connect mac/.linkbroken@ -and aodv/.linkbroken@
 
 	# present if using 802.11 power-saving mode
 	connect mac/.energy@ -and wphy/.energy@ 
@@ -382,7 +396,7 @@ for {set i 0} {$i < $target_node_num} {incr i} {
 # Max. speed is the first argument of setPosition.
 # In order to make the target nodes mobile with max. speed (e.g., 30) m/sec., 
 # set the first argument of setPosition to 30.0 
-! n7/mobility setPosition 0.0 101.0 350.0 0.0
+! n7/mobility setPosition 0.0 251.0 200.0 0.0
 
 # set the position of sensor nodes
 # should be made to read from a scenario file
@@ -408,21 +422,29 @@ script {run n5} -at 0.8 -on $sim
 script {run n6} -at 0.9 -on $sim
 script {run n7} -at 1.0 -on $sim
 
-script {! n1/app getEnergy} -at 1.4 -on $sim
-script {! n2/app getEnergy} -at 1.4 -on $sim
-script {! n3/app getEnergy} -at 1.4 -on $sim
-script {! n4/app getEnergy} -at 1.4 -on $sim
-script {! n5/app getEnergy} -at 1.4 -on $sim
+script {! n1/app getRemainingEnergy} -at 1.4 -on $sim
+script {! n2/app getRemainingEnergy} -at 1.4 -on $sim
+script {! n3/app getRemainingEnergy} -at 1.4 -on $sim
+script {! n4/app getRemainingEnergy} -at 1.4 -on $sim
+script {! n5/app getRemainingEnergy} -at 1.4 -on $sim
 
 # Sinks subscribing to interests
-#                          longMin longMax latMin latMax duration interval data_interval refreshPeriod)
-script {! n0/app subscribe 100.0 200.0 200.0 400.0 922.0 53.0 5.0 10.0} -at 1.5 -on $sim
+#                         taskId longMin longMax latMin latMax duration interval data_interval refreshPeriod payment)
+script {! n0/app subscribe 10 100.0 300.0 200.0 400.0 100000.0 53.0 5.0 2000.0 5} -at 1.5 -on $sim
 
+#script {! n7/mobility setPosition 0.0 101.0 320.0 0.0} -at 500.0 -on $sim
+#script {! n7/mobility setPosition 0.0 251.0 200.0 0.0} -at 1000.0 -on $sim
+#script {! n7/mobility setPosition 0.0 111.0 310.0 0.0} -at 1500.0 -on $sim
 
-script {! n1/app getEnergy} -at 1000.0 -on $sim
-script {! n2/app getEnergy} -at 1000.0 -on $sim
-script {! n3/app getEnergy} -at 1000.0 -on $sim
-script {! n4/app getEnergy} -at 1000.0 -on $sim
-script {! n5/app getEnergy} -at 1000.0 -on $sim
+set end 2000.0
+script {! n0/app collectStats} -at $end -on $sim
+script {! n1/app collectStats} -at $end -on $sim
+script {! n2/app collectStats} -at $end -on $sim
+script {! n3/app collectStats} -at $end -on $sim
+script {! n4/app collectStats} -at $end -on $sim
+script {! n5/app collectStats} -at $end -on $sim
+script {! n6/app collectStats} -at $end -on $sim
+#script {! n7/app collectStats} -at $end -on $sim
+#script {! n8/app collectStats} -at $end -on $sim
 
-$sim resumeTo 1000.0
+$sim resumeTo $end
