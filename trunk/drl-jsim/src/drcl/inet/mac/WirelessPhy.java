@@ -1065,7 +1065,9 @@ public class WirelessPhy extends drcl.net.Module implements ActiveComponent {
     public void setRxThresh(double RXThresh_) {RXThresh = RXThresh_;  }
     public void setCSThresh(double CSThresh_) { CSThresh = CSThresh_; }
     public void setCPThresh(double CPThresh_) { CPThresh = CPThresh_; }
-
+    public void setInitialEnergy(double energy){
+    	em.setEnergy(energy);
+    }
     /*Getters*/
     public int getRadioMode() { return radioMode; }
     public long getNid(long nid_) { return nid; }

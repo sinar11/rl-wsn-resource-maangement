@@ -91,7 +91,7 @@ public class WirelessAgent extends drcl.inet.Protocol {
         while ( bytesLeft > 0 ) {
             bytesSent = (bytesLeft>=SLOT_SIZE)?SLOT_SIZE:bytesLeft;
             SensorPacket sensorPkt = new SensorPacket(type_, bytesSent, snr_, eventID_, 0, target_nid_, target_X_, target_Y_, target_Z_, target_SeqNum_, body_);
-            forward(sensorPkt, drcl.net.Address.NULL_ADDR, dst_, false, 255, 0);
+            forward(sensorPkt, drcl.net.Address.NULL_ADDR, dst_, true, 10, 0);
             bytesLeft -= bytesSent;
         } // end while
     }

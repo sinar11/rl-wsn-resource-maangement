@@ -243,7 +243,9 @@ public class SensorPhy extends drcl.net.Module {
             lastNoisePower = lastNoisePower / ((double)sensorPkt.size);
 
             // Forward the data packet up to the sensor agent
-            toAgentPort.doSending(new SensorAgentPhyContract.Message(lastNoisePower, sensorPkt, target_nid, Xs, Ys, Zs)) ;
+            //toAgentPort.doSending(new SensorAgentPhyContract.Message(lastNoisePower, sensorPkt, target_nid, Xs, Ys, Zs)) ;
+            //TODO workaround for SNR.. just using Power as signal strength..
+            toAgentPort.doSending(new SensorAgentPhyContract.Message(Pr, sensorPkt, target_nid, Xs, Ys, Zs)) ;
         } // end else
     } // end dataArriveAtChannelPort
     

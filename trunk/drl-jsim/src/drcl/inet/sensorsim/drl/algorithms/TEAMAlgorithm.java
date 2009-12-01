@@ -3,14 +3,15 @@ package drcl.inet.sensorsim.drl.algorithms;
 import java.util.Hashtable;
 import java.util.Iterator;
 
-import drcl.inet.sensorsim.drl.DRLSensorApp;
+import drcl.inet.sensorsim.drl.SensorState;
+import drcl.inet.sensorsim.drl.IDRLSensorApp;
 import drcl.inet.sensorsim.drl.SensorState;
 import drcl.inet.sensorsim.drl.SensorTask;
 
 public class TEAMAlgorithm extends AbstractAlgorithm{
 	
 	protected TEAMAlgorithm(Hashtable<Integer, SensorTask> taskList,
-			DRLSensorApp app) {
+			IDRLSensorApp app) {
 		super(taskList, app);
 	}
 	 

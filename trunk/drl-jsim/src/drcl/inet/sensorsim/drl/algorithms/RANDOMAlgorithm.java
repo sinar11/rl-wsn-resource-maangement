@@ -1,18 +1,15 @@
 package drcl.inet.sensorsim.drl.algorithms;
 
-import java.util.ArrayList;
 import java.util.Hashtable;
-import java.util.Iterator;
-import java.util.List;
 
-import drcl.inet.sensorsim.drl.DRLSensorApp;
+import drcl.inet.sensorsim.drl.IDRLSensorApp;
 import drcl.inet.sensorsim.drl.SensorState;
 import drcl.inet.sensorsim.drl.SensorTask;
 
 public class RANDOMAlgorithm extends AbstractAlgorithm{
 	
 	protected RANDOMAlgorithm(Hashtable<Integer, SensorTask> taskList,
-			DRLSensorApp app) {
+			IDRLSensorApp app) {
 		super(taskList, app);
 	}
 

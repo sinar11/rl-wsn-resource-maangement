@@ -134,6 +134,19 @@ public class SensorAppWirelessAgentContract extends Contract
             body = body_ ;             //NICHOLAS: added
 		}
 
+		/**
+		 * Kunal Shah
+         * Constructor for unicast packets
+       **/
+		public Message (int UniBcast_flag_, long dst_, long src_, int size_, int type_, Object body_)	{
+	        UniBcast_flag = UniBcast_flag_ ;
+           src = src_;
+			dst = dst_ ;
+			size = size_ ;
+			type = type_ ;
+	        body = body_ ;   
+		}
+		
         /** Constructor for broadcast packets */
 		public Message (int UniBcast_flag_, int type_, double snr_, int eventID_, Object body_)
 		{

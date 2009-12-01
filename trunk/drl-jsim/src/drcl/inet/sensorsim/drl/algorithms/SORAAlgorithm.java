@@ -1,26 +1,24 @@
 package drcl.inet.sensorsim.drl.algorithms;
 
-import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.Iterator;
-import java.util.List;
 
-import drcl.inet.sensorsim.drl.DRLSensorApp;
+import drcl.inet.sensorsim.drl.SensorState;
+import drcl.inet.sensorsim.drl.IDRLSensorApp;
 import drcl.inet.sensorsim.drl.SensorState;
 import drcl.inet.sensorsim.drl.SensorTask;
-import drcl.inet.sensorsim.drl.algorithms.AbstractAlgorithm.Algorithm;
 
 public class SORAAlgorithm extends AbstractAlgorithm{
 	double[] betaValues= new double[5];     // for SORA
     
 	protected SORAAlgorithm(Hashtable<Integer, SensorTask> taskList,
-			DRLSensorApp app) {
+			IDRLSensorApp app) {
 		super(taskList, app);
 	}
 	 
 	public SensorTask getNextTaskToExecute(SensorState currentState) {
 		SensorTask nextTask=null;
-		 if (Math.random() <= 0.05) { //exploration choosen
+		 if (Math.random() <= 0.1) { //exploration choosen
 			 nextTask = getRandomTaskToExecute();
          } else {
         	 nextTask=getBestSORATaskToExecute();
@@ -44,12 +42,7 @@ public class SORAAlgorithm extends AbstractAlgorithm{
 	        return bestTask;
 	        
 	    }
-	 
-	protected double calcExplorationFactor() {
-        double e=MIN_EPSILON+MAX_EPSILON*(SensorState.MAX_STATES-app.getNoOfStates())/SensorState.MAX_STATES;
-        return (e<MAX_EPSILON)?e:MAX_EPSILON;
-    }
-
+	
 	@Override
 	public Algorithm getAlgorithm() {
 		return Algorithm.SORA;

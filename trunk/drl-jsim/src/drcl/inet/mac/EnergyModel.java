@@ -37,7 +37,7 @@ package drcl.inet.mac;
 public class EnergyModel extends drcl.DrclObj {
 
     private final double VOLTAGE = 1.0;
-    double energy = 10.00;      //total energy in joules
+    double energy = 25.00;      //total energy in joules
 
     long nid;   //for debugging purposes.
 

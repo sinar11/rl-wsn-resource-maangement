@@ -28,6 +28,7 @@
 
 package drcl.inet.sensorsim.diffusion ;
 
+import drcl.inet.mac.EnergyContract;
 import drcl.inet.sensorsim.* ;
 import drcl.comp.*;
 import java.util.*;
@@ -95,6 +96,13 @@ public class DiffApp extends drcl.inet.sensorsim.SensorApp
 		activeTasksList = new Vector () ;
 		interestCache_purgeTimer = null ;
 		dataCache_purgeTimer = null ;
+	}
+
+	public double getEnergy(){
+	// Contract type: ENERGY_QUERY =0
+    double energy = ((EnergyContract.Message)wirelessPhyPort.sendReceive(new EnergyContract.Message(0, -1.0,-1))).getEnergyLevel();
+    System.out.println("Node:"+nid+" Energy:"+energy);
+    return energy;
 	}
 
 	public String getName() { return "DiffApp"; }
@@ -412,7 +420,6 @@ public class DiffApp extends drcl.inet.sensorsim.SensorApp
 		if ( PstvReinforcementPkt.getDestination() == nid )
 		{
 			AttributeVector interest = PstvReinforcementPkt.getInterest() ;
-
 			InterestCacheEntry intrstEntry = interestCache_lookup(interest) ;
 			if ( intrstEntry != null )	/* if there is a matching interest. */
 			{
@@ -854,6 +861,7 @@ public class DiffApp extends drcl.inet.sensorsim.SensorApp
 					}
 					break ;
 				case DiffTimer.TIMEOUT_SEND_DATA :
+					
 					DataPacket dataPkt = (DataPacket)(d.getObject()) ;
 					DataCacheEntry dataEntry = dataCache_lookup(dataPkt.getEvent(), dataPkt.getDataInterval()) ;
 					if ( dataEntry == null )
@@ -882,6 +890,7 @@ public class DiffApp extends drcl.inet.sensorsim.SensorApp
 					d = null ;
 					break ;
 				case DiffTimer.TIMEOUT_DELAY_BROADCAST :
+					
 					if ( d.getObject() instanceof AttributeVector )
 					{
 						sendPacket((AttributeVector)(d.getObject()), 0.0) ;
@@ -913,6 +922,7 @@ public class DiffApp extends drcl.inet.sensorsim.SensorApp
 					}
 					break ;
 				case DiffTimer.TIMEOUT_REFRESH_INTEREST :
+					
 					Integer I = (Integer)(d.getObject()) ;
 					int i = I.intValue() ;
 					ActiveTasksEntry a = (ActiveTasksEntry)(activeTasksList.get(i)) ;

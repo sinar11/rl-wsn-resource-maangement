@@ -10,15 +10,15 @@ package drcl.inet.sensorsim.drl;
 
 public abstract class SensorTask {
     
-    public final double ALPHA=0.5; // LEARNING RATE PARAMETER
+    public final double ALPHA=0.9; // LEARNING RATE PARAMETER
     public final double GAMMA=0.5; //DISCOUNT FACTOR 
     
-    String taskId;  // String id 
-    int id;
+    public String taskId;  // String id 
+    public int id;
     protected double[] Qvalues= new double[SensorState.MAX_STATES]; // value of Q-learning parameter Q for different states
-    double expectedPrice;
+    public double expectedPrice;
     //double[] expectedPrices= new double[SensorState.MAX_STATES]; //expected price obtained for performing this action in different states
-    double lastReward; // immediate reward of last time action was taken
+    public double lastReward; // immediate reward of last time action was taken
     public double[] getQvalues() {
 		return Qvalues;
 	}
