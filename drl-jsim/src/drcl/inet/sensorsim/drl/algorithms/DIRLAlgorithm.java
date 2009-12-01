@@ -5,20 +5,20 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 
-import drcl.inet.sensorsim.drl.DRLSensorApp;
+import drcl.inet.sensorsim.drl.IDRLSensorApp;
 import drcl.inet.sensorsim.drl.SensorState;
 import drcl.inet.sensorsim.drl.SensorTask;
 
 public class DIRLAlgorithm extends AbstractAlgorithm{
 	
 	protected DIRLAlgorithm(Hashtable<Integer, SensorTask> taskList,
-			DRLSensorApp app) {
+			IDRLSensorApp app) {
 		super(taskList, app);
 	}
 	 
 	public SensorTask getNextTaskToExecute(SensorState currentState) {
 		SensorTask nextTask=null;
-		if (Math.random() < calcExplorationFactor()) { // exploration choosen
+		if (Math.random() < calcExplorationFactor(currentState)) { // exploration choosen
 			nextTask = getRandomTaskToExecute();
 		}else	
 			nextTask = determineBestTaskToExecute(currentState);
@@ -47,9 +47,10 @@ public class DIRLAlgorithm extends AbstractAlgorithm{
 	        return bestTasks.get(taskId);        
 	    }
 	 
-	protected double calcExplorationFactor() {
-        double e=MIN_EPSILON+MAX_EPSILON*(SensorState.MAX_STATES-app.getNoOfStates())/SensorState.MAX_STATES;
-        return (e<MAX_EPSILON)?e:MAX_EPSILON;
+	protected double calcExplorationFactor(SensorState currentState) {
+		if(currentState==null) return MAX_EPSILON;
+		else
+			return currentState.calcExplorationFactor();        
     }
 
 	@Override

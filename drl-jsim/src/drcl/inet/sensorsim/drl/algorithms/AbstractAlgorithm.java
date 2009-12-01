@@ -3,7 +3,7 @@ package drcl.inet.sensorsim.drl.algorithms;
 import java.util.Hashtable;
 import java.util.logging.Level;
 
-import drcl.inet.sensorsim.drl.DRLSensorApp;
+import drcl.inet.sensorsim.drl.IDRLSensorApp;
 import drcl.inet.sensorsim.drl.SensorState;
 import drcl.inet.sensorsim.drl.SensorTask;
 import drcl.util.random.UniformDistribution;
@@ -15,17 +15,17 @@ public abstract class AbstractAlgorithm {
     }
     
 	//exploration factors for algorithms using exploration
-	public static final double MAX_EPSILON=0.3;    // MAX exploration factor
+	public static final double MAX_EPSILON=0.25;    // MAX exploration factor
 	public static final double MIN_EPSILON=0.1;    // MIN exploration factor
 	
 	
 	 protected UniformDistribution uniformDist;
 	 Hashtable<Integer,SensorTask> taskList;
-	 DRLSensorApp app;
+	 IDRLSensorApp app;
 	 
 	 
 	 
-	 protected AbstractAlgorithm(Hashtable<Integer,SensorTask> taskList, DRLSensorApp app){
+	 protected AbstractAlgorithm(Hashtable<Integer,SensorTask> taskList, IDRLSensorApp app){
 		 uniformDist= new UniformDistribution(0,taskList.size());
 		 this.taskList=taskList;
 		 this.app=app;
@@ -39,11 +39,12 @@ public abstract class AbstractAlgorithm {
 	    	SensorTask task=null;
 	    	do{
 	            int index = uniformDist.nextInt();
+	            SensorTask[] tasks= taskList.values().toArray(new SensorTask[taskList.size()]);
 	            if (index < taskList.size()) {
-	                task = (SensorTask) taskList.get(index);
+	                task = tasks[index]; //(SensorTask) taskList.get(index);
 	                if (task != null && task.isAvailable()) {
-	                    log(Level.FINEST,"using exploration:" + task);
-	                    return (SensorTask) taskList.get(index);
+	                	log(Level.FINEST,"using exploration:" + task);
+	                    return task;
 	                }
 	            }
 	        }while(task!=null);
@@ -54,8 +55,12 @@ public abstract class AbstractAlgorithm {
 		 app.log(level,msg);
 	 }
 	
-	 public static AbstractAlgorithm createInstance(Hashtable<Integer,SensorTask> taskList, DRLSensorApp app){
-		 Algorithm algo=Algorithm.valueOf(System.getProperty("algorithm", Algorithm.TEAM.toString()));
+	 public void handleTaskUpdate(){
+		 uniformDist.setMax(taskList.size());
+	 }
+	 
+	 public static AbstractAlgorithm createInstance(Hashtable<Integer,SensorTask> taskList, IDRLSensorApp app){
+		 Algorithm algo=Algorithm.valueOf(System.getProperty("algorithm", Algorithm.DIRL.toString()));
 	       
 		 if(algo.equals(Algorithm.DIRL)){
 			 return new DIRLAlgorithm(taskList, app);

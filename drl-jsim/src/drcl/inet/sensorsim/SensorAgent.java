@@ -182,7 +182,8 @@ public class SensorAgent extends drcl.net.Module {
                 sigPower = sigPower + (sensorPkt.data[i]*sensorPkt.data[i]);
             }
 
-            snr = sigPower / (2 * lastNoisePower) ;
+            //snr = sigPower / (2 * lastNoisePower) ;
+            snr = (lastNoisePower/10) ;
 
             maxSNR = ( snr > maxSNR ) ? snr : maxSNR ; // get the max SNR
 
