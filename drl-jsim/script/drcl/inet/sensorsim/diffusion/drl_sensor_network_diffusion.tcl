@@ -89,8 +89,8 @@ for {set i 0} {$i < [expr $sink_id + 1]} {incr i} {
 	mkdir drcl.inet.mac.WirelessPhy wphy
 	! wphy setRxThresh 0.0
 	! wphy setCSThresh 0.0	
-	! wphy setInitialEnergy 10
-	# 10 Joule as initial energy
+	! wphy setInitialEnergy 1000
+	# 1000 Joule as initial energy
 
 	mkdir drcl.inet.mac.FreeSpaceModel propagation 
 
@@ -137,7 +137,7 @@ for {set i 0} {$i < [expr $sink_id + 1]} {incr i} {
 	! id setDefaultID   $nid
 
 	! queue setMode      "packet"
-	! queue setCapacity  40
+	! queue setCapacity  400
 
 	# disable ARP 
 	! arp setBypassARP  [ expr 2>1]
@@ -236,7 +236,9 @@ for {set i [expr $sink_id + 1]} {$i < [expr $node_num - $target_node_num]} {incr
 	mkdir drcl.inet.mac.WirelessPhy wphy
 	! wphy setRxThresh 0.0
 	! wphy setCSThresh 0.0	
-
+    ! wphy setDebugEnabled 0
+    ! wphy setInitialEnergy 1000
+    
 	mkdir drcl.inet.mac.FreeSpaceModel propagation 
 
         set PD [mkdir drcl.inet.core.PktDispatcher      pktdispatcher]
@@ -279,7 +281,7 @@ for {set i [expr $sink_id + 1]} {$i < [expr $node_num - $target_node_num]} {incr
 	! id setDefaultID   $nid
 
 	! queue setMode      "packet"
-	! queue setCapacity  40
+	! queue setCapacity  400
 
 	# disable ARP 
 	! arp setBypassARP  [ expr 2>1]
@@ -319,7 +321,7 @@ for {set i [expr $sink_id + 1]} {$i < [expr $node_num - $target_node_num]} {incr
 #                                maxX maxY maxZ minX minY minZ dX dY dZ
     	! mobility setTopologyParameters 600.0 500.0 0.0 100.0 100.0 0.0 100.0 100.0 0.0
 
-	! mac  disable_MAC_TRACE_ALL
+	#! mac  disable_MAC_TRACE_ALL
 
 	connect -c  wireless_agent/down@ -and pktdispatcher/1111@up
 	
