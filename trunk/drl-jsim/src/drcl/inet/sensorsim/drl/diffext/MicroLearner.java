@@ -11,6 +11,7 @@ import drcl.comp.ACATimer;
 import drcl.comp.Port;
 import drcl.inet.mac.EnergyContract;
 import drcl.inet.sensorsim.CurrentTargetPositionTracker;
+import drcl.inet.sensorsim.drl.CSVLogger;
 import drcl.inet.sensorsim.drl.SensorState;
 import drcl.inet.sensorsim.drl.SensorTask;
 import drcl.inet.sensorsim.drl.algorithms.AbstractAlgorithm;
@@ -18,7 +19,7 @@ import drcl.inet.sensorsim.drl.diffext.DRLDiffApp.NodeState;
 
 public class MicroLearner {
 	public static final double TIMER_INTERVAL=5;
-	public static final double RECENT_WINDOW=25; // TIMESTEPS
+	public static final long RECENT_WINDOW=25; // TIMESTEPS
 	
 	public static final double ENERGY_DIFFUSE=((2.45*0.001) + (5.97*0.001));	
 	public static final double ENERGY_SAMPLE=8.41*0.00001 + ENERGY_DIFFUSE;
@@ -46,8 +47,8 @@ public class MicroLearner {
     int noOfStates=0;
     double totalPrice=0;
     int totalTrackingPkts=0;
-    long lastDiffusionParticipation; 
-    long lastSourceParticipation;
+    long lastDiffusionParticipation=-RECENT_WINDOW-1; 
+    long lastSourceParticipation=-RECENT_WINDOW-1;
     int noOfPkts=0;
     int noOfSensedPkts=0;
     double currentEnergy;
@@ -191,7 +192,7 @@ public class MicroLearner {
             public synchronized boolean isAvailable() {
                 return true;  
             }
-        });        
+        });       
     }
     
     class ApplicationTask extends SensorTask{
@@ -377,7 +378,7 @@ public class MicroLearner {
 			if(!shouldFilter(dataPkt)){
 				outboundMsgs.add(dataPkt);
 			}
-		}
-		
+		}		
 	}
+
 }

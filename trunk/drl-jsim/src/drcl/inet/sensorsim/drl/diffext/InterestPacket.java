@@ -86,10 +86,6 @@ public class InterestPacket
 		return true;
 	}
 
-	public void updatePayment(double amtToDeduct){
-		this.payment-=amtToDeduct;
-	}
-
 	public long getSourceId() {
 		return sourceId;
 	}

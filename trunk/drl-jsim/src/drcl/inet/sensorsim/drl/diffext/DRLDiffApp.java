@@ -60,7 +60,7 @@ public class DRLDiffApp extends drcl.inet.sensorsim.SensorApp implements drcl.co
 	public static final int REINFORCEMENT_PKT = 2 ;
 	public static final int BROADCAST_DEST=-1;
 	public static final double REINFORCE_WINDOW=10*MicroLearner.TIMER_INTERVAL; //10 TIMESTEPS
-	public static final double REINFORCE_SUPRESS_MARGIN= 0.05;
+	public static final double REINFORCE_SUPRESS_MARGIN= 0.10;
 	public static final boolean TRACE_ON=true;
 	
 	public static enum NodeState { SLEEPING, AWAKE};
@@ -406,6 +406,7 @@ public class DRLDiffApp extends drcl.inet.sensorsim.SensorApp implements drcl.co
 			SensorPacket spkt = (SensorPacket)data_ ;
 			if(nodeState.equals(NodeState.SLEEPING)){
 				log(Level.FINE,"Dropping packet as currenly asleep.."+spkt.getBody());
+				log(Level.FINE,"Current task:"+microLearner.currentTask+", current state:"+microLearner.currentState);
 				return;
 			}else{
 				log(Level.FINE,"Received sensor packet:"+spkt.getBody());
@@ -640,7 +641,7 @@ public class DRLDiffApp extends drcl.inet.sensorsim.SensorApp implements drcl.co
 	}
 	
 	public void log(Level level, String string) {
-		if(level.intValue()>=Level.INFO.intValue())
+		if(level.intValue()>=Level.FINE.intValue())
 			log.log(Level.INFO,getTime()+"[Node:"+nid+"]["+"] "+string);        
     }
 
@@ -669,6 +670,7 @@ public class DRLDiffApp extends drcl.inet.sensorsim.SensorApp implements drcl.co
         CSVLogger.log("stats",stats,microLearner.algorithm.getAlgorithm());
         CSVLogger.log("Qvalues",QValues,microLearner.algorithm.getAlgorithm());
         CSVLogger.log("ExpPrices",expPrices,microLearner.algorithm.getAlgorithm());
+        CSVLogger.log("States",microLearner.states.toString(),microLearner.algorithm.getAlgorithm());
        /* if(!globalLogged){
         	
         for(int i=0; i< globalRewardManager.getGlobalRewards().size();i++){
