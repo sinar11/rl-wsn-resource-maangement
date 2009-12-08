@@ -63,7 +63,7 @@ public class MacroLearner {
 			}
 			dataPacket.setDestinationId(destination);
 			dataPacket.setSourceId(diffApp.nid);			
-			diffApp.sendPacket(dataPacket,0.0);			
+			diffApp.sendPacket(dataPacket,diffApp.getDelay());			
 		}		
 		}finally{
 			insertDataPktInCache(dataPacket);
@@ -110,11 +110,15 @@ public class MacroLearner {
 				payable= taskEntry.getPayment();
 			}
 			List<DataPacket> totalPkts=dataCacheEntry.getRecentData();
+			if(totalPkts.size()==0) continue;
 			double totalReward=calcTotalReward(totalPkts, interest, payable);
 			Collection<DataStreamEntry> dataStreams=dataCacheEntry.getDataStreams();
 			for(DataStreamEntry stream: dataStreams){
 				List<DataPacket> pkts=dataCacheEntry.getRecentDataAcceptSource(stream.getSourceId());
 				double clReward=calcTotalReward(pkts, interest, payable);
+				if(totalReward<stream.getAvgPktReward()){
+					diffApp.log(Level.INFO,"Total Reward less than Pkt reward..");
+				}
 				double wlReward=totalReward-clReward;
 				stream.updateStatsOnNewWLReward(wlReward);
 			}
@@ -213,7 +217,7 @@ public class MacroLearner {
 		}
 		double costOfParticipation= calcCostOfParticipation(interestPkt);
 		double profit= (interestPkt.getPayment()-costOfParticipation)*PROFIT_MARGIN;
-		interestPkt.updatePayment(costOfParticipation+profit);
+		interestEntry.getInterest().setPayment(interestPkt.getPayment()-(costOfParticipation+profit));
 		interestEntry.setPayable(interestPkt.getPayment());
 		return true;
 	}
@@ -235,7 +239,7 @@ public class MacroLearner {
 		}
 		double costOfParticipation= calcCostOfParticipation(interestEntry.getInterest());
 		double profit= (reinforcementPkt.getPayment()-costOfParticipation)*PROFIT_MARGIN;
-		interestEntry.getInterest().updatePayment(costOfParticipation+profit);
+		interestEntry.getInterest().setPayment(reinforcementPkt.getPayment()-(costOfParticipation+profit));
 		interestEntry.setPayable(interestEntry.getInterest().getPayment());	
 		reinforceNeighborsIfRequired(interestEntry);
 	}
