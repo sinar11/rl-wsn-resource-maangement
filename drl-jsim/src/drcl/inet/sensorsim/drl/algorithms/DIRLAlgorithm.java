@@ -16,9 +16,9 @@ public class DIRLAlgorithm extends AbstractAlgorithm{
 		super(taskList, app);
 	}
 	 
-	public SensorTask getNextTaskToExecute(SensorState currentState) {
+	public SensorTask getNextTaskToExecute(SensorState currentState, SensorTask currentTask) {
 		SensorTask nextTask=null;
-		if (Math.random() < calcExplorationFactor(currentState)) { // exploration choosen
+		if (Math.random() < calcExplorationFactor(currentState, currentTask)) { // exploration choosen
 			nextTask = getRandomTaskToExecute();
 		}else	
 			nextTask = determineBestTaskToExecute(currentState);
@@ -47,10 +47,10 @@ public class DIRLAlgorithm extends AbstractAlgorithm{
 	        return bestTasks.get(taskId);        
 	    }
 	 
-	protected double calcExplorationFactor(SensorState currentState) {
+	protected double calcExplorationFactor(SensorState currentState, SensorTask currentTask) {
 		if(currentState==null) return MAX_EPSILON;
 		else
-			return currentState.calcExplorationFactor();        
+			return currentState.calcExplorationFactor(currentTask);        
     }
 
 	@Override

@@ -10,8 +10,8 @@ package drcl.inet.sensorsim.drl;
 
 public abstract class SensorTask {
     
-    public final double ALPHA=0.9; // LEARNING RATE PARAMETER
-    public final double GAMMA=0.5; //DISCOUNT FACTOR 
+    public final double ALPHA=0.8; // LEARNING RATE PARAMETER
+    public final double GAMMA=0.3; //DISCOUNT FACTOR 
     
     public String taskId;  // String id 
     public int id;

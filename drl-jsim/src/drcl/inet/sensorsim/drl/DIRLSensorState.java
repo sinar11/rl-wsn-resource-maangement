@@ -61,7 +61,7 @@ public class DIRLSensorState implements SensorState{
 
 
 
-	public double calcExplorationFactor() {
+	public double calcExplorationFactor(SensorTask currentTask) {
 		if(successInRecentRX || successInRecentSampling)
 			return AbstractAlgorithm.MIN_EPSILON;
 		else

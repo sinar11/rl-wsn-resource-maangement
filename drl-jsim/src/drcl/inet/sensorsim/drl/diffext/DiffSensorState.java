@@ -8,6 +8,7 @@ import java.util.Map;
 
 import drcl.inet.sensorsim.drl.DIRLSensorState;
 import drcl.inet.sensorsim.drl.SensorState;
+import drcl.inet.sensorsim.drl.SensorTask;
 import drcl.inet.sensorsim.drl.algorithms.AbstractAlgorithm;
 
 /*
@@ -61,8 +62,8 @@ public class DiffSensorState implements SensorState{
 		this.stateId=stateId;
 	}
 
-	public double calcExplorationFactor() {
-		if(successInRecentDiffusion || successInRecentSourceTask)
+	public double calcExplorationFactor(SensorTask currentTask) {
+		if(!currentTask.taskId.equals(MicroLearner.SLEEP) && (successInRecentDiffusion || successInRecentSourceTask))
 			return AbstractAlgorithm.MIN_EPSILON;
 		else
 			return AbstractAlgorithm.MAX_EPSILON;

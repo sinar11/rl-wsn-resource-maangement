@@ -22,6 +22,7 @@ public class MicroLearner {
 	public static final long RECENT_WINDOW=25; // TIMESTEPS
 	
 	public static final double ENERGY_DIFFUSE=((2.45*0.001) + (5.97*0.001));	
+	public static final double ENERGY_LISTEN=8.41*0.00001;
 	public static final double ENERGY_SAMPLE=8.41*0.00001 + ENERGY_DIFFUSE;
 	public static final double ENERGY_SLEEP=8.0*0.000001;
     
@@ -47,8 +48,8 @@ public class MicroLearner {
     int noOfStates=0;
     double totalPrice=0;
     int totalTrackingPkts=0;
-    long lastDiffusionParticipation=-RECENT_WINDOW-1; 
-    long lastSourceParticipation=-RECENT_WINDOW-1;
+    long lastDiffusionParticipation=-RECENT_WINDOW; 
+    long lastSourceParticipation=-RECENT_WINDOW;
     int noOfPkts=0;
     int noOfSensedPkts=0;
     double currentEnergy;
@@ -106,7 +107,7 @@ public class MicroLearner {
 			currentState = getMatchingState(noOfPkts>0, noOfSensedPkts>0);
 			algorithm.reinforcement(currentTask, prevState, currentState);
 			
-			currentTask=algorithm.getNextTaskToExecute(currentState);
+			currentTask=algorithm.getNextTaskToExecute(currentState, currentTask);
 			resetForNewTask();
 			if (currentTask != null)
 				currentTask.executeTask();
@@ -114,6 +115,7 @@ public class MicroLearner {
 			++timesteps;	
 		}else if (data.equals("reinforce")){ //reinforcement as used by sink 		
 			if(noOfPkts>0) mlearner.computeReinforcements();  //compute reinforcements for arriving data at this timestep
+			++timesteps;
 		}
 	}
 
@@ -162,13 +164,15 @@ public class MicroLearner {
             	noOfPkts=0;
             	diffApp.nodeState=NodeState.AWAKE;
             //	WakeUp();                
-                currentEnergy=currentEnergy-ENERGY_DIFFUSE;
+                
             }
             public synchronized double computeCost() {
-            	return ENERGY_DIFFUSE; //RX +TX
+            	double energyConsumed=ENERGY_LISTEN+ noOfPkts*ENERGY_DIFFUSE; 
+            	currentEnergy=currentEnergy-energyConsumed;
+            	return energyConsumed; //RX +TX
             }
             public synchronized double computePrice() {
-            	return (noOfPkts>0)?expectedPrice:0;
+            	return (lastDiffusionParticipation==timesteps)?expectedPrice:0;
             }
             public synchronized boolean isAvailable() {
               return true;  
