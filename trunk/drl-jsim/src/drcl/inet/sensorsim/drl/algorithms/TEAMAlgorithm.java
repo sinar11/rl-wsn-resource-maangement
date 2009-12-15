@@ -15,7 +15,7 @@ public class TEAMAlgorithm extends AbstractAlgorithm{
 		super(taskList, app);
 	}
 	 
-	public SensorTask getNextTaskToExecute(SensorState currentState) {
+	public SensorTask getNextTaskToExecute(SensorState currentState, SensorTask currentTask) {
 		SensorTask nextTask=getBestTeamGameBasedTask();
 		if (Math.random() < calcExplorationFactor()) { // exploration choosen
 			nextTask = getRandomTaskToExecute();

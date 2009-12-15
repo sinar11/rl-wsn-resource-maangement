@@ -406,7 +406,8 @@ public class DRLDiffApp extends drcl.inet.sensorsim.SensorApp implements drcl.co
 			SensorPacket spkt = (SensorPacket)data_ ;
 			if(nodeState.equals(NodeState.SLEEPING)){
 				log(Level.FINE,"Dropping packet as currenly asleep.."+spkt.getBody());
-				log(Level.FINE,"Current task:"+microLearner.currentTask+", current state:"+microLearner.currentState);
+				log(Level.FINE,"Current task:"+microLearner.currentTask+", current state:"+microLearner.currentState
+						+" time:"+microLearner.timesteps+" lastDiff:"+microLearner.lastDiffusionParticipation+" lastS:"+microLearner.lastSourceParticipation);
 				return;
 			}else{
 				log(Level.FINE,"Received sensor packet:"+spkt.getBody());
@@ -655,18 +656,18 @@ public class DRLDiffApp extends drcl.inet.sensorsim.SensorApp implements drcl.co
     public void collectStats(){
         log(Level.INFO,"*******************STATS**************");
         //nid,noOfEventsMissed,totalEvents,noOfPktsDropped,totalPkts,task1Id,task1,task2Id,task2,task3Id,task3,totalCost,totalReward,trPackets
-        String stats=""+nid+","+noOfInterests+","+noOfDataPkts+","+noOfReinforcements; //+","+totalPkts;
+        String stats=""+nid+",interests="+noOfInterests+",dataPkts="+noOfDataPkts+",reinf="+noOfReinforcements; //+","+totalPkts;
         String QValues=nid+",";
         String expPrices=nid+",";
         for(Integer i : microLearner.taskList.keySet()){
             SensorTask task= (SensorTask)microLearner.taskList.get(i);
-            stats+=","+task.id+","+task.getNoOfExecutions();
+            stats+=",task-"+task.taskId+","+task.getNoOfExecutions();
             QValues+="task:"+task.getTaskId()+","+task.printQValues();
             expPrices+="task:"+task.getTaskId()+","+task.printExpPrices();
         }
        // stats+=","+totalCost+","+totalReward+","+globalRewardManager.getEffectiveCost();
         if(microLearner.totalTrackingPkts>0)
-            stats+=","+microLearner.totalTrackingPkts;
+            stats+=",totalTracks="+microLearner.totalTrackingPkts;
         CSVLogger.log("stats",stats,microLearner.algorithm.getAlgorithm());
         CSVLogger.log("Qvalues",QValues,microLearner.algorithm.getAlgorithm());
         CSVLogger.log("ExpPrices",expPrices,microLearner.algorithm.getAlgorithm());

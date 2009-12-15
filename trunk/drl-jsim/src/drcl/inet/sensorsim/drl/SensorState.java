@@ -8,6 +8,6 @@ public interface SensorState {
 	 
 	 public void setStateId(int stateId);
 	 
-	 public double calcExplorationFactor();
+	 public double calcExplorationFactor(SensorTask currentTask);
 	 
 }

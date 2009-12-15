@@ -13,7 +13,7 @@ public class RANDOMAlgorithm extends AbstractAlgorithm{
 		super(taskList, app);
 	}
 
-	public SensorTask getNextTaskToExecute(SensorState currentState) {
+	public SensorTask getNextTaskToExecute(SensorState currentState, SensorTask currentTask) {
 		SensorTask nextTask=getRandomTaskToExecute();
 		return nextTask;
 	}

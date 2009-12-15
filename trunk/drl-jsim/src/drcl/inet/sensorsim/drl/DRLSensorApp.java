@@ -164,7 +164,7 @@ public class DRLSensorApp extends SensorApp implements drcl.comp.ActiveComponent
 			
 			exportvalues();
 			
-			currentTask=algorithm.getNextTaskToExecute(currentState);
+			currentTask=algorithm.getNextTaskToExecute(currentState, currentTask);
 			resetForNewTask();
 			if (currentTask != null)
 				currentTask.executeTask();

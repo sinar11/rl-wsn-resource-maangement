@@ -393,6 +393,9 @@ public class WirelessPhy extends drcl.net.Module implements ActiveComponent {
             last_send_time = getTime() + txtime;
             channel_become_idle_time = end_time;
             last_energy_update_time = end_time;
+           /* if(data_ instanceof Mac_Sensor_Packet)
+            	System.out.println("[WirelessPhy-"+nid+"]"+"SendPacket:"+((SensorPacket)(((InetPacket)((LLPacket)((Mac_Sensor_Packet)data_).getBody()).getBody()).getBody())).getBody());
+         */   
         }
         else {
             // siliently discards the packet
@@ -432,7 +435,7 @@ public class WirelessPhy extends drcl.net.Module implements ActiveComponent {
         	else if (pktType.equals("UDP") ) numUDP++;
         	else {
         		numOthers++;
-        		System.out.println("type <" + pktType + ">" );
+        	//	System.out.println("type <" + pktType + ">" );
 			}
 		}
     }
@@ -572,8 +575,9 @@ public class WirelessPhy extends drcl.net.Module implements ActiveComponent {
         double end_time = Math.max(channel_become_idle_time, getTime() + rcvtime);
         double actual_rcvtime = end_time-start_time;
 
-
-        /*
+       /* if(msg2.getPkt() instanceof Mac_Sensor_Packet)
+            System.out.println("[WirelessPhy-"+nid+"]"+"RcvdPacket:"+((SensorPacket)(((InetPacket)((LLPacket)((Mac_Sensor_Packet)msg2.getPkt()).getBody()).getBody()).getBody())).getBody());
+       */ /*
         * If I am not receiving the code of the incoming packet, drop it.
         * (Used in LEACH only!)
         * I am aware that the following is extremely ugly casting... and should not be used.

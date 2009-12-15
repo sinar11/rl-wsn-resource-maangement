@@ -16,7 +16,7 @@ public class SORAAlgorithm extends AbstractAlgorithm{
 		super(taskList, app);
 	}
 	 
-	public SensorTask getNextTaskToExecute(SensorState currentState) {
+	public SensorTask getNextTaskToExecute(SensorState currentState, SensorTask currentTask) {
 		SensorTask nextTask=null;
 		 if (Math.random() <= 0.1) { //exploration choosen
 			 nextTask = getRandomTaskToExecute();

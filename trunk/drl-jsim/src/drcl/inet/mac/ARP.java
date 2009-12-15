@@ -311,6 +311,7 @@ public class ARP extends drcl.net.Module
         // If there are more than three ARP requests are received for the same destination IP address, 
         // the current packet is also dropped along with the buffered packet.
         if(llinfo.count >= ARP_MAX_REQUEST_COUNT) {
+        	System.out.println("ARP DROPPING PACKETS for dst:"+dst_);
             if ( llinfo.getHold() != null ) {
                 drop(llinfo.getHold(), "DROP_IFQ_ARP_FULL");
             }    
