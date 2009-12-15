@@ -105,6 +105,13 @@ for {set i 0} {$i < [expr $sink_id + 1]} {incr i} {
         $PD bind $RT
         $PD bind $ID	
 
+mkdir drcl.inet.protocol.aodv.AODV  aodv
+	connect -c aodv/down@ -and pktdispatcher/103@up
+	connect aodv/.service_rt@ -and rt/.service_rt@
+	connect aodv/.service_id@ -and id/.service_id@
+	connect aodv/.ucastquery@ -and pktdispatcher/.ucastquery@
+	connect mac/.linkbroken@ -and aodv/.linkbroken@
+
 	# present if using 802.11 power-saving mode
 	connect mac/.energy@ -and wphy/.energy@ 
 
@@ -130,7 +137,7 @@ for {set i 0} {$i < [expr $sink_id + 1]} {incr i} {
 	! id setDefaultID   $nid
 
 	! queue setMode      "packet"
-	! queue setCapacity  40
+	! queue setCapacity  400
 
 	# disable ARP 
 	! arp setBypassARP  [ expr 2>1]

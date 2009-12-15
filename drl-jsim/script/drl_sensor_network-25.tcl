@@ -7,7 +7,7 @@ source "script/test/include.tcl"
 cd [mkdir -q drcl.comp.Component /aodvtest]
 
 # TOTAL number of nodes (sensor nodes + target nodes)
-set node_num 25
+set node_num 20
 
 # Number of TARGET nodes ONLY
 set target_node_num 1
@@ -58,7 +58,8 @@ for {set i 0} {$i < [expr $sink_id + 1]} {incr i} {
 	! app setNid $i
 	! app setSinkNid $sink_id
 	! app setCoherentThreshold 1000.0
-
+    ! app setNoOfNodes $node_num
+    
 	# create wireless agent layers
 	mkdir drcl.inet.sensorsim.WirelessAgent wireless_agent
 
@@ -413,16 +414,16 @@ connect -c n$sink_id/app/.actual@ -to $position_/actual@
 ! n17/app setDestId 6
 ! n18/mobility setPosition 0.0 350.0 150.0 0.0
 ! n18/app setDestId 6
-! n19/mobility setPosition 0.0 125.0 170.0 0.0
-! n19/app setDestId 7
-! n20/mobility setPosition 0.0 275.0 225.0 0.0
-! n20/app setDestId 13
-! n21/mobility setPosition 0.0 300.0 225.0 0.0
-! n21/app setDestId 15
-! n22/mobility setPosition 0.0 330.0 225.0 0.0
-! n22/app setDestId 17
-! n23/mobility setPosition 0.0 375.0 175.0 0.0
-! n23/app setDestId 18
+#! n19/mobility setPosition 0.0 125.0 170.0 0.0
+#! n19/app setDestId 7
+#! n20/mobility setPosition 0.0 275.0 225.0 0.0
+#! n20/app setDestId 13
+#! n21/mobility setPosition 0.0 300.0 225.0 0.0
+#! n21/app setDestId 15
+#! n22/mobility setPosition 0.0 330.0 225.0 0.0
+#! n22/app setDestId 17
+#! n23/mobility setPosition 0.0 375.0 175.0 0.0
+#! n23/app setDestId 18
 
 puts "simulation begins..."
 set sim [attach_simulator .]
@@ -450,11 +451,11 @@ script {run n16} -at 3.8 -on $sim
 script {run n17} -at 4.0 -on $sim
 script {run n18} -at 4.2 -on $sim
 script {run n19} -at 4.5 -on $sim
-script {run n20} -at 5.0 -on $sim
-script {run n21} -at 5.5 -on $sim
-script {run n22} -at 6.0 -on $sim
-script {run n23} -at 6.5 -on $sim
-script {run n24} -at 8.0 -on $sim
+#script {run n20} -at 5.0 -on $sim
+#script {run n21} -at 5.5 -on $sim
+#script {run n22} -at 6.0 -on $sim
+#script {run n23} -at 6.5 -on $sim
+#script {run n24} -at 8.0 -on $sim
 
 # set the position of target nodes
 # Max. speed is the first argument of setPosition.
@@ -462,20 +463,20 @@ script {run n24} -at 8.0 -on $sim
 #! n24/mobility setPosition 0.0 250.0  250.0 0.0
 set np 13; # number of points
 set t [java::new {double[][]} $np]
-$t set 0 [java::new {double[]} 4 "0 125.0 220.0 0"]
-$t set 1 [java::new {double[]} 4 "1000 175.0 260.0 0"]
-$t set 2 [java::new {double[]} 4 "2000 175.0 260.0 0"]
-$t set 3 [java::new {double[]} 4 "3000 200.0 200.0 0"]
-$t set 4 [java::new {double[]} 4 "4000 200.0 200.0 0"]
-$t set 5 [java::new {double[]} 4 "5000 250.0 285.0 0"]
-$t set 6 [java::new {double[]} 4 "6000 250.0 285.0 0"]
-$t set 7 [java::new {double[]} 4 "7000 275.0 200.0 0"]
-$t set 8 [java::new {double[]} 4 "8000 275.0 200.0 0"]
-$t set 9 [java::new {double[]} 4 "9000 325.0 270.0 0"]
-$t set 10 [java::new {double[]} 4 "10000 325.0 270.0 0"]
-$t set 11 [java::new {double[]} 4 "11000 375.0 220.0 0"]
-$t set 12 [java::new {double[]} 4 "12000 375.0 220.0 0"]
-! n24/mobility installTrajectory $t
+$t set 0 [java::new {double[]} 4 "0 125.0 200.0 0"]
+$t set 1 [java::new {double[]} 4 "1000 175.0 220.0 0"]
+$t set 2 [java::new {double[]} 4 "2000 175.0 220.0 0"]
+$t set 3 [java::new {double[]} 4 "3000 175.0 220.0 0"]
+$t set 4 [java::new {double[]} 4 "4000 220.0 200.0 0"]
+$t set 5 [java::new {double[]} 4 "5000 220.0 200.0 0"]
+$t set 6 [java::new {double[]} 4 "6000 220.0 210.0 0"]
+$t set 7 [java::new {double[]} 4 "7000 270.0 220.0 0"]
+$t set 8 [java::new {double[]} 4 "8000 275.0 230.0 0"]
+$t set 9 [java::new {double[]} 4 "9000 275.0 225.0 0"]
+$t set 10 [java::new {double[]} 4 "10000 350.0 240.0 0"]
+$t set 11 [java::new {double[]} 4 "11000 350.0 250.0 0"]
+$t set 12 [java::new {double[]} 4 "12000 350.0 250.0 0"]
+! n19/mobility installTrajectory $t
 
 # collect statistics at the end
 set end 12000.0
@@ -498,11 +499,11 @@ script {! n15/app collectStats} -at $end -on $sim
 script {! n16/app collectStats} -at $end -on $sim
 script {! n17/app collectStats} -at $end -on $sim
 script {! n18/app collectStats} -at $end -on $sim
-script {! n19/app collectStats} -at $end -on $sim
-script {! n20/app collectStats} -at $end -on $sim
-script {! n21/app collectStats} -at $end -on $sim
-script {! n22/app collectStats} -at $end -on $sim
-script {! n23/app collectStats} -at $end -on $sim
+#script {! n19/app collectStats} -at $end -on $sim
+#script {! n20/app collectStats} -at $end -on $sim
+#script {! n21/app collectStats} -at $end -on $sim
+#script {! n22/app collectStats} -at $end -on $sim
+#script {! n23/app collectStats} -at $end -on $sim
 
 
 $sim resumeTo $end 
