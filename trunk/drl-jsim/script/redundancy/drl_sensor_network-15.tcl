@@ -27,7 +27,7 @@ mkdir drcl.inet.sensorsim.SeismicProp seismic_Prop
 
 # create the sensor node position tracker
 mkdir drcl.inet.sensorsim.SensorNodePositionTracker nodetracker
-! nodetracker setGrid 450.0 100.0 400.0 100.0
+! nodetracker setGrid 350.0 100.0 300.0 100.0
 
 # connect the sensor channel to the sensor node position tracker
 connect chan/.tracker@ -and nodetracker/.channel@
@@ -42,7 +42,7 @@ mkdir drcl.inet.mac.Channel channel
 # create the node position tracker
 mkdir drcl.inet.mac.NodePositionTracker tracker
 #                 maxX  minX maxY minY  dX   dY
-! tracker setGrid 450.0 100.0 400.0 100.0 60.0 60.0
+! tracker setGrid 350.0 100.0 300.0 100.0 60.0 60.0
 
 connect channel/.tracker@ -and tracker/.channel@
 
@@ -318,7 +318,7 @@ if { $target_node_num == 0 } {
 		mkdir drcl.inet.sensorsim.SensorPhy phy 
 		! phy setRxThresh 0.0
 		! phy setNid $i 
-		! phy setRadius 80.0
+		! phy setRadius 100.0
 
 		# create mobility models
 		mkdir drcl.inet.sensorsim.SensorMobilityModel mobility

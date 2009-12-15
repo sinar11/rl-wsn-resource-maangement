@@ -27,7 +27,7 @@ mkdir drcl.inet.sensorsim.SeismicProp seismic_Prop
 
 # create the sensor node position tracker
 mkdir drcl.inet.sensorsim.SensorNodePositionTracker nodetracker
-! nodetracker setGrid 450.0 100.0 400.0 100.0
+! nodetracker setGrid 350.0 100.0 300.0 100.0
 
 # connect the sensor channel to the sensor node position tracker
 connect chan/.tracker@ -and nodetracker/.channel@
@@ -42,7 +42,7 @@ mkdir drcl.inet.mac.Channel channel
 # create the node position tracker
 mkdir drcl.inet.mac.NodePositionTracker tracker
 #                 maxX  minX maxY minY  dX   dY
-! tracker setGrid 450.0 100.0 400.0 100.0 60.0 60.0
+! tracker setGrid 350.0 100.0 300.0 100.0 60.0 60.0
 
 connect channel/.tracker@ -and tracker/.channel@
 
@@ -58,7 +58,8 @@ for {set i 0} {$i < [expr $sink_id + 1]} {incr i} {
 	! app setNid $i
 	! app setSinkNid $sink_id
 	! app setCoherentThreshold 1000.0
-
+    ! app setNoOfNodes $node_num
+    
 	# create wireless agent layers
 	mkdir drcl.inet.sensorsim.WirelessAgent wireless_agent
 
@@ -335,7 +336,7 @@ if { $target_node_num == 0 } {
 		! mobility setNid $i
 
 		# set the topology parameters
-		! mobility setTopologyParameters 600.0 500.0 0.0 100.0 100.0 0.0
+		! mobility setTopologyParameters 350.0 240.0 0.0 150.0 160.0 0.0
 
 		cd ..
 	}
@@ -429,26 +430,26 @@ script {run n14} -at 8.0 -on $sim
 # set the position of target nodes
 # Max. speed is the first argument of setPosition.
 # In order to make the target nodes mobile with max. speed (e.g., 30) m/sec., 
-! n14/mobility setPosition 0.0 250.0  250.0 0.0
+! n14/mobility setPosition 0.0 200.0 170.0 0.0
 set np 13; # number of points
 set t [java::new {double[][]} $np]
-$t set 0 [java::new {double[]} 4 "0 125.0 250.0 0"]
+$t set 0 [java::new {double[]} 4 "0 170.0 200.0 0"]
 $t set 1 [java::new {double[]} 4 "1000 175.0 180.0 0"]
 $t set 2 [java::new {double[]} 4 "2000 175.0 180.0 0"]
-$t set 3 [java::new {double[]} 4 "3000 200.0 240.0 0"]
-$t set 4 [java::new {double[]} 4 "4000 200.0 240.0 0"]
+$t set 3 [java::new {double[]} 4 "3000 200.0 220.0 0"]
+$t set 4 [java::new {double[]} 4 "4000 200.0 220.0 0"]
 $t set 5 [java::new {double[]} 4 "5000 225.0 185.0 0"]
 $t set 6 [java::new {double[]} 4 "6000 225.0 185.0 0"]
-$t set 7 [java::new {double[]} 4 "7000 250.0 250.0 0"]
-$t set 8 [java::new {double[]} 4 "8000 250.0 250.0 0"]
+$t set 7 [java::new {double[]} 4 "7000 250.0 225.0 0"]
+$t set 8 [java::new {double[]} 4 "8000 250.0 225.0 0"]
 $t set 9 [java::new {double[]} 4 "9000 300.0 200.0 0"]
 $t set 10 [java::new {double[]} 4 "10000 300.0 200.0 0"]
-$t set 11 [java::new {double[]} 4 "11000 350.0 250.0 0"]
-$t set 12 [java::new {double[]} 4 "12000 350.0 250.0 0"]
-! n14/mobility installTrajectory $t
+$t set 11 [java::new {double[]} 4 "11000 350.0 230.0 0"]
+$t set 12 [java::new {double[]} 4 "12000 350.0 230.0 0"]
+#! n14/mobility installTrajectory $t
 
 # collect statistics at the end
-set end 12000.0
+set end 10000.0
 script {! n0/app collectStats} -at $end -on $sim
 script {! n1/app collectStats} -at $end -on $sim
 script {! n2/app collectStats} -at $end -on $sim

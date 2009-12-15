@@ -55,6 +55,7 @@ for {set i 0} {$i < [expr $sink_id + 1]} {incr i} {
 	! app setNid $i
 	! app setSinkNid $sink_id
 	! app setCoherentThreshold 1000.0
+	! app setNoOfNodes $node_num
 
 	# create wireless agent layers
 	mkdir drcl.inet.sensorsim.WirelessAgent wireless_agent
@@ -370,7 +371,7 @@ for {set i 0} {$i < $target_node_num} {incr i} {
 ! n0/mobility setPosition 0.0 250.0 225.0 0.0
 
 # set the position of target nodes
-# Max. speed is the first argument of setPosition.
+# Max. speed is the first argument of setPosition;.
 # In order to make the target nodes mobile with max. speed (e.g., 30) m/sec., 
 # set the first argument of setPosition to 30.0 
 #! n4/mobility setPosition 0.0 250.0 350.0 0.0
@@ -383,9 +384,9 @@ $t set 3 [java::new {double[]} 4 "3000 225.0 275.0 0"]
 $t set 4 [java::new {double[]} 4 "4000 225.0 275.0 0"]
 $t set 5 [java::new {double[]} 4 "5000 275.0 300.0 0"]
 $t set 6 [java::new {double[]} 4 "6000 275.0 300.0 0"]
-$t set 7 [java::new {double[]} 4 "7000 325.0 325.0 0"]
-$t set 8 [java::new {double[]} 4 "8000 325.0 325.0 0"]
-$t set 9 [java::new {double[]} 4 "9000 370.0 340.0 0"]
+$t set 7 [java::new {double[]} 4 "7000 300.0 305.0 0"]
+$t set 8 [java::new {double[]} 4 "8000 300.0 305.0 0"]
+$t set 9 [java::new {double[]} 4 "9000 310.0 310.0 0"]
 ! n4/mobility installTrajectory $t
 
 #! n4/mobility setPosition 0.0 400.0 450.0 0.0
