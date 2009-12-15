@@ -642,7 +642,7 @@ public class DRLDiffApp extends drcl.inet.sensorsim.SensorApp implements drcl.co
 	}
 	
 	public void log(Level level, String string) {
-		if(level.intValue()>=Level.FINE.intValue())
+		if(level.intValue()>=Level.INFO.intValue())
 			log.log(Level.INFO,getTime()+"[Node:"+nid+"]["+"] "+string);        
     }
 

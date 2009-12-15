@@ -15,7 +15,7 @@ public abstract class AbstractAlgorithm {
     }
     
 	//exploration factors for algorithms using exploration
-	public static final double MAX_EPSILON=0.5;    // MAX exploration factor
+	public static final double MAX_EPSILON=0.25;    // MAX exploration factor
 	public static final double MIN_EPSILON=0.05;    // MIN exploration factor
 	
 	
