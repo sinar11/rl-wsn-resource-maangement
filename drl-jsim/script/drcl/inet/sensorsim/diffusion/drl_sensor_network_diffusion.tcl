@@ -250,6 +250,13 @@ for {set i [expr $sink_id + 1]} {$i < [expr $node_num - $target_node_num]} {incr
         $PD bind $RT
         $PD bind $ID	
 
+	mkdir drcl.inet.protocol.aodv.AODV  aodv
+	connect -c aodv/down@ -and pktdispatcher/103@up
+	connect aodv/.service_rt@ -and rt/.service_rt@
+	connect aodv/.service_id@ -and id/.service_id@
+	connect aodv/.ucastquery@ -and pktdispatcher/.ucastquery@
+	connect mac/.linkbroken@ -and aodv/.linkbroken@
+
 	# present if using 802.11 power-saving mode
 	connect mac/.energy@ -and wphy/.energy@ 
 
@@ -428,10 +435,10 @@ script {! n5/app getRemainingEnergy} -at 1.4 -on $sim
 script {! n0/app subscribe 10 100.0 300.0 200.0 400.0 100000.0 53.0 5.0 2000.0 5} -at 1.5 -on $sim
 
 script {! n7/mobility setPosition 0.0 101.0 320.0 0.0} -at 500.0 -on $sim
-#script {! n7/mobility setPosition 0.0 251.0 200.0 0.0} -at 1000.0 -on $sim
-#script {! n7/mobility setPosition 0.0 111.0 310.0 0.0} -at 1500.0 -on $sim
+script {! n7/mobility setPosition 0.0 251.0 200.0 0.0} -at 1000.0 -on $sim
+script {! n7/mobility setPosition 0.0 111.0 310.0 0.0} -at 1500.0 -on $sim
 
-set end 1000.0
+set end 2000.0
 script {! n0/app collectStats} -at $end -on $sim
 script {! n1/app collectStats} -at $end -on $sim
 script {! n2/app collectStats} -at $end -on $sim
