@@ -162,7 +162,7 @@ public class SensorApp extends drcl.net.Module {
     {
 		super();
 		cpuEventTime = 0.0 ;
-		cpuMode = 1 ;
+		cpuMode = 0 ;
 		coherentThreshold = 20.0 ; 
 		lastSeenSNR = 0.0;
 		lastSeenDataSize = 0;

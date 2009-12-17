@@ -106,7 +106,7 @@ public class WirelessPhy extends drcl.net.Module implements ActiveComponent {
     private boolean     LEACHmode       = false;    //true iff running LEACH mode.
     private boolean     steady_state    = false;    //used only for LEACH mode. Turns true if we are in steady state
     private boolean     isCH            = false;    //true iff this sensor is a Cluster head (Only for LEACH)
-    private boolean     MIT_uAMPS       = false;    //Determines which radio model you want to use:
+    private boolean     MIT_uAMPS       = true;    //Determines which radio model you want to use:
                                                     //MIT_uAMPS is the software controlled version and the non (default)
                                                     //one is the non-software controlled one.
 

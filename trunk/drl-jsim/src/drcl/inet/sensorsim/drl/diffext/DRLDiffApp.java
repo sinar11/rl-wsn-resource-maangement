@@ -317,6 +317,7 @@ public class DRLDiffApp extends drcl.inet.sensorsim.SensorApp implements drcl.co
 					.getEnergyLevel();
 			if (energy <= 0)
 				throw new RuntimeException("Out of energy..");
+			log(Level.INFO,"Energy:"+energy);
 			return energy;
 		}else
     		return Integer.MAX_VALUE;

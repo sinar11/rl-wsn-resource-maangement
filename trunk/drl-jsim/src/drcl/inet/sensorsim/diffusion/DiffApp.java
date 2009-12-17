@@ -30,6 +30,7 @@ package drcl.inet.sensorsim.diffusion ;
 
 import drcl.inet.mac.EnergyContract;
 import drcl.inet.sensorsim.* ;
+import drcl.inet.sensorsim.drl.diffext.DRLDiffApp.NodeState;
 import drcl.comp.*;
 import java.util.*;
 import drcl.comp.Port;
@@ -40,7 +41,7 @@ import drcl.comp.Port;
 * @author Ahmed Sobeih
 * @version 1.0, 10/19/2004
 */
-public class DiffApp extends drcl.inet.sensorsim.SensorApp 
+public class DiffApp extends drcl.inet.sensorsim.SensorApp implements drcl.comp.ActiveComponent
 {
 	public static final String MOBILITY_PORT_ID    = ".mobility";
 
@@ -95,9 +96,24 @@ public class DiffApp extends drcl.inet.sensorsim.SensorApp
 		dataCache = new Vector () ;
 		activeTasksList = new Vector () ;
 		interestCache_purgeTimer = null ;
-		dataCache_purgeTimer = null ;
+		dataCache_purgeTimer = null ;		
 	}
+	
+	@Override
+	 protected void _start() {
+		 setTimeout(new CPUCheck(), 5);	 
+	 }
 
+	/* protected void _stop()  {		 
+	 }
+
+	 protected void _resume() {		 
+	 }*/
+	  
+
+	class CPUCheck{	
+	}
+	
 	public double getEnergy(){
 	// Contract type: ENERGY_QUERY =0
     double energy = ((EnergyContract.Message)wirelessPhyPort.sendReceive(new EnergyContract.Message(0, -1.0,-1))).getEnergyLevel();
@@ -824,6 +840,7 @@ public class DiffApp extends drcl.inet.sensorsim.SensorApp
 		{
 			DiffTimer d = (DiffTimer)data_ ;
 			int type = d.EVT_Type ;
+			
 			switch ( type )
 			{
 				case DiffTimer.TIMEOUT_DATA_CACHE_PURGE :
@@ -861,7 +878,6 @@ public class DiffApp extends drcl.inet.sensorsim.SensorApp
 					}
 					break ;
 				case DiffTimer.TIMEOUT_SEND_DATA :
-					
 					DataPacket dataPkt = (DataPacket)(d.getObject()) ;
 					DataCacheEntry dataEntry = dataCache_lookup(dataPkt.getEvent(), dataPkt.getDataInterval()) ;
 					if ( dataEntry == null )
@@ -948,10 +964,32 @@ public class DiffApp extends drcl.inet.sensorsim.SensorApp
 					d.handle = null ;
 					break ;
 			}
-		}
-		else
+		}else if(data_ instanceof CPUCheck){
+			WakeUp();		
+			setTimeout(data_, 5);
+		}else
 		{
 			super.timeout(data_) ;
 		}    
 	}
+	
+	/**
+     * Set both Radio components in IDLE
+     * so that they are ready for either receiving, sending, and/or
+     * processing.
+    */
+    public void WakeUp()
+    {
+    	//set the CPU to ACTIVE
+       // if (cpuMode != 2) {
+        	setCPUMode(2);    //CPU_IDLE=0, CPU_SLEEP=1, CPU_ACTIVE=2, CPU_OFF=3
+        //}
+        //set the radio to IDLE
+        //Contract type: SET_RADIO_MODE = 1 & Radio Modes:RADIO_IDLE=0
+        EnergyContract.Message temp = (EnergyContract.Message)wirelessPhyPort.sendReceive(new EnergyContract.Message(1, -1.0, 0));
+        if (temp.getRadioMode() != 0) {
+            System.out.println("Unable to turn radio back on to Idle mode. Its mode is: " + temp.getRadioMode());
+        }
+        return;
+    }
 }

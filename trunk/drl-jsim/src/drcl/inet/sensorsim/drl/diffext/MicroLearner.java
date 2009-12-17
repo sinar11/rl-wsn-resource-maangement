@@ -162,8 +162,7 @@ public class MicroLearner {
         taskList.put(0, new SensorTask(0,DIFFUSE,10*ENERGY_DIFFUSE) {
             public synchronized void execute() {
             	noOfPkts=0;
-            	diffApp.nodeState=NodeState.AWAKE;
-            //	WakeUp();                
+            	WakeUp();                
                 
             }
             public synchronized double computeCost() {
@@ -182,8 +181,7 @@ public class MicroLearner {
         taskList.put(1, new SensorTask(1,SLEEP,0.00) {
             public void execute() {
                 noOfPkts=0;
-                diffApp.nodeState=NodeState.SLEEPING;
-        //        GoToSleep();
+                GoToSleep();
                 currentEnergy=currentEnergy-ENERGY_SLEEP;
             }
 
@@ -214,8 +212,7 @@ public class MicroLearner {
 		}
 		protected void execute() {
 			noOfSensedPkts=0;
-			diffApp.nodeState=NodeState.AWAKE;
-      //  	WakeUp();                
+			WakeUp();                
             currentEnergy=currentEnergy-ENERGY_SAMPLE;			
 		}
 		public boolean isAvailable() {
