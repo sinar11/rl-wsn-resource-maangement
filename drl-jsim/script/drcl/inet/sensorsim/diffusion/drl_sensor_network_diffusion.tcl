@@ -89,7 +89,7 @@ for {set i 0} {$i < [expr $sink_id + 1]} {incr i} {
 	mkdir drcl.inet.mac.WirelessPhy wphy
 	! wphy setRxThresh 0.0
 	! wphy setCSThresh 0.0	
-	! wphy setInitialEnergy 1000
+	#! wphy setInitialEnergy 5
 	# 1000 Joule as initial energy
 
 	mkdir drcl.inet.mac.FreeSpaceModel propagation 
@@ -237,7 +237,7 @@ for {set i [expr $sink_id + 1]} {$i < [expr $node_num - $target_node_num]} {incr
 	! wphy setRxThresh 0.0
 	! wphy setCSThresh 0.0	
     ! wphy setDebugEnabled 0
-    ! wphy setInitialEnergy 1000
+    #! wphy setInitialEnergy 5
     
 	mkdir drcl.inet.mac.FreeSpaceModel propagation 
 
@@ -429,6 +429,7 @@ script {! n2/app getRemainingEnergy} -at 1.4 -on $sim
 script {! n3/app getRemainingEnergy} -at 1.4 -on $sim
 script {! n4/app getRemainingEnergy} -at 1.4 -on $sim
 script {! n5/app getRemainingEnergy} -at 1.4 -on $sim
+script {! n6/app getRemainingEnergy} -at 1.4 -on $sim
 
 # Sinks subscribing to interests
 #                         taskId longMin longMax latMin latMax duration interval data_interval refreshPeriod payment)
@@ -448,5 +449,12 @@ script {! n5/app collectStats} -at $end -on $sim
 script {! n6/app collectStats} -at $end -on $sim
 #script {! n7/app collectStats} -at $end -on $sim
 #script {! n8/app collectStats} -at $end -on $sim
+
+script {! n1/app getRemainingEnergy} -at $end -on $sim
+script {! n2/app getRemainingEnergy} -at $end -on $sim
+script {! n3/app getRemainingEnergy} -at $end -on $sim
+script {! n4/app getRemainingEnergy} -at $end -on $sim
+script {! n5/app getRemainingEnergy} -at $end -on $sim
+script {! n6/app getRemainingEnergy} -at $end -on $sim
 
 $sim resumeTo $end

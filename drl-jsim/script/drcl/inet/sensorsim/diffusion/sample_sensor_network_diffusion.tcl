@@ -423,13 +423,13 @@ script {! n5/app getEnergy} -at 1.4 -on $sim
 
 # Sinks subscribing to interests
 #                          longMin longMax latMin latMax duration interval data_interval refreshPeriod)
-script {! n0/app subscribe 100.0 200.0 200.0 400.0 922.0 53.0 5.0 10.0} -at 1.5 -on $sim
+script {! n0/app subscribe 100.0 200.0 200.0 400.0 2000.0 53.0 5.0 10.0} -at 1.5 -on $sim
 
+set end 2000.0
+script {! n1/app getEnergy} -at $end -on $sim
+script {! n2/app getEnergy} -at $end -on $sim
+script {! n3/app getEnergy} -at $end -on $sim
+script {! n4/app getEnergy} -at $end -on $sim
+script {! n5/app getEnergy} -at $end -on $sim
 
-script {! n1/app getEnergy} -at 1000.0 -on $sim
-script {! n2/app getEnergy} -at 1000.0 -on $sim
-script {! n3/app getEnergy} -at 1000.0 -on $sim
-script {! n4/app getEnergy} -at 1000.0 -on $sim
-script {! n5/app getEnergy} -at 1000.0 -on $sim
-
-$sim resumeTo 1000.0
+$sim resumeTo $end
