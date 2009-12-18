@@ -227,12 +227,12 @@ public class MicroLearner {
     */
     public void WakeUp()
     {
-    	if(diffApp.nodeState.equals(NodeState.AWAKE)) return;
+    	//if(diffApp.nodeState.equals(NodeState.AWAKE)) return;
     	
         //set the CPU to ACTIVE
-        if (diffApp.cpuMode != 2) {
+      //  if (diffApp.cpuMode != 2) {
         	diffApp.setCPUMode(2);    //CPU_IDLE=0, CPU_SLEEP=1, CPU_ACTIVE=2, CPU_OFF=3
-        }
+       // }
         //set the radio to IDLE
         //Contract type: SET_RADIO_MODE = 1 & Radio Modes:RADIO_IDLE=0
         EnergyContract.Message temp = (EnergyContract.Message)diffApp.wirelessPhyPort.sendReceive(new EnergyContract.Message(1, -1.0, 0));
@@ -248,11 +248,11 @@ public class MicroLearner {
     */
     public void GoToSleep()
     {
-    	if(diffApp.nodeState.equals(NodeState.SLEEPING)) return;
+    	//if(diffApp.nodeState.equals(NodeState.SLEEPING)) return;
         //set the CPU to sleep
-        if (diffApp.cpuMode != 1) {
+      //  if (diffApp.cpuMode != 1) {
         	diffApp.setCPUMode(1);    //CPU_IDLE=0, CPU_SLEEP=1, CPU_ACTIVE=2, CPU_OFF=3
-        }
+        //}
 
         //Contract type: SET_RADIO_MODE = 1  &  Radio Modes: RADIO_SLEEP=1
         EnergyContract.Message temp = (EnergyContract.Message)diffApp.wirelessPhyPort.sendReceive(new EnergyContract.Message(1, -1.0,1));
