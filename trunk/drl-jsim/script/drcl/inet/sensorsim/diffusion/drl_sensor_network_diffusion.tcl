@@ -435,9 +435,9 @@ script {! n6/app getRemainingEnergy} -at 1.4 -on $sim
 #                         taskId longMin longMax latMin latMax duration interval data_interval refreshPeriod payment)
 script {! n0/app subscribe 10 100.0 300.0 200.0 400.0 100000.0 53.0 5.0 2000.0 5} -at 1.5 -on $sim
 
-script {! n7/mobility setPosition 0.0 101.0 320.0 0.0} -at 500.0 -on $sim
-script {! n7/mobility setPosition 0.0 251.0 200.0 0.0} -at 1000.0 -on $sim
-script {! n7/mobility setPosition 0.0 111.0 310.0 0.0} -at 1500.0 -on $sim
+#script {! n7/mobility setPosition 0.0 101.0 320.0 0.0} -at 500.0 -on $sim
+#script {! n7/mobility setPosition 0.0 251.0 200.0 0.0} -at 1000.0 -on $sim
+#script {! n7/mobility setPosition 0.0 111.0 310.0 0.0} -at 1500.0 -on $sim
 
 set end 2000.0
 script {! n0/app collectStats} -at $end -on $sim
