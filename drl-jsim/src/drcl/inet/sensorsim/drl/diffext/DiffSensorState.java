@@ -63,7 +63,7 @@ public class DiffSensorState implements SensorState{
 	}
 
 	public double calcExplorationFactor(SensorTask currentTask) {
-		if(!currentTask.taskId.equals(MicroLearner.SLEEP) && (successInRecentDiffusion || successInRecentSourceTask))
+		if(currentTask!=null && !currentTask.taskId.equals(MicroLearner.SLEEP) && (successInRecentDiffusion || successInRecentSourceTask))
 			return AbstractAlgorithm.MIN_EPSILON;
 		else
 			return AbstractAlgorithm.MAX_EPSILON;

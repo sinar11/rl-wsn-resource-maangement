@@ -116,6 +116,7 @@ public class MicroLearner {
 		}else if (data.equals("reinforce")){ //reinforcement as used by sink 		
 			if(noOfPkts>0) mlearner.computeReinforcements();  //compute reinforcements for arriving data at this timestep
 			++timesteps;
+			taskTimer = diffApp.setTimeout("performTask", TIMER_INTERVAL);
 		}
 	}
 
@@ -126,7 +127,7 @@ public class MicroLearner {
 		try{
 	 	for (Iterator<DataPacket> iter = outboundMsgs.iterator(); iter.hasNext();) {
 	 		DataPacket msg = iter.next();
-            msg.addCostReward(currentTask.lastReward, currentTask.getLastCost(),diffApp.nid); 
+	 		msg.addCostReward(currentTask.lastReward, currentTask.getLastCost(),diffApp.nid); 
             mlearner.dataArriveAtUpPort(msg);  
         }
 	 	if(noOfPkts>0) 
@@ -321,6 +322,7 @@ public class MicroLearner {
 	}
 
 	private boolean shouldFilter(DataPacket inData) {
+		
 		for(DataPacket data:outboundMsgs){
 			if(data.getTaskId()==inData.getTaskId() && data.getSinkId()==inData.getSinkId()){
 				return true;
@@ -371,10 +373,16 @@ public class MicroLearner {
 		InterestCacheEntry interestEntry = diffApp.getMatchingInterest(event) ;
 		if ( interestEntry != null )	/* if there is a matching interest. */
 		{
+			InterestPacket interest= interestEntry.getInterest();
+			//check if QoS constraints match or not
+			if(!TupleUtils.isMatching(interest.getQosConstraints(), event)){
+				return;
+			}
 			noOfSensedPkts++;
 			lastSourceParticipation=timesteps;
-			InterestPacket interest= interestEntry.getInterest();
 			DataPacket dataPkt=new DataPacket(diffApp.nid,interest.getSinkId(),interest.getTaskId(),event, diffApp.getTime());
+			
+			
 			//filtering of data for same task for this timestep, 
 			if(!shouldFilter(dataPkt)){
 				outboundMsgs.add(dataPkt);

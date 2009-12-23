@@ -88,6 +88,14 @@ public class DiffApp extends drcl.inet.sensorsim.SensorApp implements drcl.comp.
 	/** Timer used to periodically check if there are any entries in the daat cache that need to be purged. */
 	public DiffTimer dataCache_purgeTimer ;
 
+	private long noOfTracks=0;
+	
+	public long getNoOfTracks() {
+		System.out.println("No. Of tracks="+noOfTracks);
+		
+		return noOfTracks;
+	}
+
 	public DiffApp ()
 	{
 		super();
@@ -613,6 +621,7 @@ public class DiffApp extends drcl.inet.sensorsim.SensorApp implements drcl.comp.
 				ActiveTasksEntry taskEntry = activeTasksList_lookup(event) ;
 				if ( taskEntry != null ) /* if there is a matching task */
 				{
+					noOfTracks++;
 					/* Check if the neighbor sending the event needs to be positively reinforced. */
 					if ( CheckToSendPositiveReinforcement(taskEntry, dataPkt) == true )
 					{
@@ -627,8 +636,8 @@ public class DiffApp extends drcl.inet.sensorsim.SensorApp implements drcl.comp.
 					}
 					else
 					{
-						if ( isDebugEnabled() )
-							System.out.println("DiffApp " + nid + ": Receiving information about an active task from " + dataPkt.getSource() + " at time " + currentTime + "! But this information was already seen before OR " + dataPkt.getSource() + " is already sending data at the higher data rate.") ;
+						//if ( isDebugEnabled() )
+							//System.out.println("DiffApp " + nid + ": Receiving information about an active task from " + dataPkt.getSource() + " at time " + currentTime + "! But this information was already seen before OR " + dataPkt.getSource() + " is already sending data at the higher data rate.") ;
 					}
 				}
 			} // end else

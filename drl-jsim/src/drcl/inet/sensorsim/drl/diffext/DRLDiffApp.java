@@ -284,7 +284,7 @@ public class DRLDiffApp extends drcl.inet.sensorsim.SensorApp implements drcl.co
 	/** Constructs a sensing event */
 	public List<Tuple> ConstructSensingEvent(SensorAppAgentContract.Message msg)
 	{
-		double locX, locY;
+		double locX, locY, snr;
 		long targetNid;
 		if (msg == null) {
 			/*
@@ -297,16 +297,19 @@ public class DRLDiffApp extends drcl.inet.sensorsim.SensorApp implements drcl.co
 			locX = positionMsg.getX();
 			locY = positionMsg.getY();
 			targetNid=this.nid;
+			snr=500;
 		}else{
 			locX = msg.getTargetX() ;
 		    locY = msg.getTargetY() ;
 		    targetNid=msg.getTargetNid();
+		    snr=msg.getSNR();
 		}
 		List<Tuple> event = new ArrayList<Tuple>() ;
 		event.add(new Tuple(Tuple.LONGITUDE_KEY, Type.FLOAT32_TYPE, Operator.IS, locX)) ;
 		event.add(new Tuple(Tuple.LATITUDE_KEY, Type.FLOAT32_TYPE, Operator.IS, locY)) ;
 		event.add(new Tuple(Tuple.TARGET_KEY, Type.STRING_TYPE, Operator.IS, TargetName)) ;
 		event.add(new Tuple(Tuple.TARGET_NID, Type.INT32_TYPE, Operator.IS, targetNid)) ;
+		event.add(new Tuple(Tuple.SNR, Type.FLOAT32_TYPE, Operator.IS, snr)) ;
 		return event ;
 	}
 
@@ -462,10 +465,13 @@ public class DRLDiffApp extends drcl.inet.sensorsim.SensorApp implements drcl.co
 		if ( taskEntry == null ) /* if there is NOT a matching task entry */
 		{
 			List<CostParam> costParams= new ArrayList<CostParam>();
-			costParams.add(new CostParam(CostParam.Type.Energy,1.0));
+			costParams.add(new CostParam(CostParam.Type.Energy,0.5));
+			costParams.add(new CostParam(CostParam.Type.Lifetime,0.5));
 			InterestPacket intPkt = new InterestPacket(taskId,this.nid,interest,payment,getTime(),dataInterval,costParams) ;
 			intPkt.setDuration(duration);
-			
+			List<Tuple> qosConstraints= new ArrayList<Tuple>();
+			qosConstraints.add(new Tuple(Tuple.SNR,Type.FLOAT32_TYPE,Operator.GE, new Double(50)));
+			intPkt.setQosConstraints(qosConstraints);
 			taskEntry= new TaskEntry(taskId,intPkt,getTime(),refreshPeriod,true);
 			taskEntry.setPayment(payment);
 			activeTasksList.put(taskId, taskEntry);
@@ -531,16 +537,16 @@ public class DRLDiffApp extends drcl.inet.sensorsim.SensorApp implements drcl.co
 		else if ( data_ instanceof ReinforcementPacket ) /* PositiveReinforcement Packet */
 		{
 			ReinforcementPacket reinforcementPkt = (ReinforcementPacket)data_ ;	
-			log(Level.INFO,"Sending REINFORCEMENT:"+reinforcementPkt);
 			
 			if (delay != 0.0)
 			{
 				DiffTimer bcast_EVT = new DiffTimer(DiffTimer.TIMEOUT_DELAY_BROADCAST, reinforcementPkt);
 				bcast_EVT.handle = setTimeout(bcast_EVT, delay);
-			}
-			else if(reinforcementPkt.getDestinationId()==BROADCAST_DEST){
+			}else if(reinforcementPkt.getDestinationId()==BROADCAST_DEST){
+				log(Level.INFO,"Broadcasting REINFORCEMENT:"+reinforcementPkt);
 				downPort.doSending(new SensorAppWirelessAgentContract.Message(SensorAppWirelessAgentContract.BROADCAST_SENSOR_PACKET, REINFORCEMENT_PKT, reinforcementPkt)) ;
 			}else{
+				log(Level.INFO,"Sending REINFORCEMENT:"+reinforcementPkt);
 				downPort.doSending(new SensorAppWirelessAgentContract.Message(SensorAppWirelessAgentContract.UNICAST_SENSOR_PACKET,
 						reinforcementPkt.getDestinationId(),nid, 100, REINFORCEMENT_PKT, reinforcementPkt)) ;
 			}
