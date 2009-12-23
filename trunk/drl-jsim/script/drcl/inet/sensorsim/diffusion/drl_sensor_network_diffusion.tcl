@@ -7,7 +7,7 @@ source "script/test/include.tcl"
 cd [mkdir -q drcl.comp.Component /aodvtest]
 
 # TOTAL number of nodes (sensor nodes + target nodes)
-set node_num 8
+set node_num 10
 
 # Number of TARGET nodes ONLY
 set target_node_num 1
@@ -237,7 +237,7 @@ for {set i [expr $sink_id + 1]} {$i < [expr $node_num - $target_node_num]} {incr
 	! wphy setRxThresh 0.0
 	! wphy setCSThresh 0.0	
     ! wphy setDebugEnabled 0
-    #! wphy setInitialEnergy 5
+    ! wphy setInitialEnergy 25
     
 	mkdir drcl.inet.mac.FreeSpaceModel propagation 
 
@@ -398,7 +398,7 @@ for {set i 0} {$i < $target_node_num} {incr i} {
 # Max. speed is the first argument of setPosition.
 # In order to make the target nodes mobile with max. speed (e.g., 30) m/sec., 
 # set the first argument of setPosition to 30.0 
-! n7/mobility setPosition 0.0 251.0 200.0 0.0
+! n9/mobility setPosition 0.0 251.0 270.0 0.0
 
 # set the position of sensor nodes
 # should be made to read from a scenario file
@@ -408,6 +408,11 @@ for {set i 0} {$i < $target_node_num} {incr i} {
 ! n4/mobility setPosition 0.0 250.0 250.0 0.0
 ! n5/mobility setPosition 0.0 250.0 450.0 0.0
 ! n6/mobility setPosition 0.0 150.0 350.0 0.0
+! n7/mobility setPosition 0.0 270.0 325.0 0.0
+! n8/mobility setPosition 0.0 170.0 370.0 0.0
+
+#! n4/wphy setInitialEnergy 50
+#! n2/wphy setInitialEnergy 50
 
 puts "simulation begins..."
 set sim [attach_simulator .]
@@ -423,6 +428,8 @@ script {run n4} -at 0.7 -on $sim
 script {run n5} -at 0.8 -on $sim
 script {run n6} -at 0.9 -on $sim
 script {run n7} -at 1.0 -on $sim
+script {run n8} -at 1.1 -on $sim
+script {run n9} -at 1.2 -on $sim
 
 script {! n1/app getRemainingEnergy} -at 1.4 -on $sim
 script {! n2/app getRemainingEnergy} -at 1.4 -on $sim
@@ -430,14 +437,16 @@ script {! n3/app getRemainingEnergy} -at 1.4 -on $sim
 script {! n4/app getRemainingEnergy} -at 1.4 -on $sim
 script {! n5/app getRemainingEnergy} -at 1.4 -on $sim
 script {! n6/app getRemainingEnergy} -at 1.4 -on $sim
+script {! n7/app getRemainingEnergy} -at 1.4 -on $sim
+script {! n8/app getRemainingEnergy} -at 1.4 -on $sim
 
 # Sinks subscribing to interests
 #                         taskId longMin longMax latMin latMax duration interval data_interval refreshPeriod payment)
-script {! n0/app subscribe 10 100.0 300.0 200.0 400.0 100000.0 53.0 5.0 2000.0 5} -at 1.5 -on $sim
+script {! n0/app subscribe 10 100.0 300.0 200.0 400.0 100000.0 53.0 5.0 200.0 5} -at 1.5 -on $sim
 
-#script {! n7/mobility setPosition 0.0 101.0 320.0 0.0} -at 500.0 -on $sim
-#script {! n7/mobility setPosition 0.0 251.0 200.0 0.0} -at 1000.0 -on $sim
-#script {! n7/mobility setPosition 0.0 111.0 310.0 0.0} -at 1500.0 -on $sim
+#script {! n9/mobility setPosition 0.0 101.0 320.0 0.0} -at 500.0 -on $sim
+#script {! n9/mobility setPosition 0.0 251.0 200.0 0.0} -at 1000.0 -on $sim
+script {! n9/mobility setPosition 0.0 111.0 310.0 0.0} -at 1000.0 -on $sim
 
 set end 2000.0
 script {! n0/app collectStats} -at $end -on $sim
@@ -447,8 +456,8 @@ script {! n3/app collectStats} -at $end -on $sim
 script {! n4/app collectStats} -at $end -on $sim
 script {! n5/app collectStats} -at $end -on $sim
 script {! n6/app collectStats} -at $end -on $sim
-#script {! n7/app collectStats} -at $end -on $sim
-#script {! n8/app collectStats} -at $end -on $sim
+script {! n7/app collectStats} -at $end -on $sim
+script {! n8/app collectStats} -at $end -on $sim
 
 script {! n1/app getRemainingEnergy} -at $end -on $sim
 script {! n2/app getRemainingEnergy} -at $end -on $sim
@@ -456,5 +465,9 @@ script {! n3/app getRemainingEnergy} -at $end -on $sim
 script {! n4/app getRemainingEnergy} -at $end -on $sim
 script {! n5/app getRemainingEnergy} -at $end -on $sim
 script {! n6/app getRemainingEnergy} -at $end -on $sim
+script {! n7/app getRemainingEnergy} -at $end -on $sim
+script {! n8/app getRemainingEnergy} -at $end -on $sim
 
+script {! $sim info} -at $end -on $sim
+ 
 $sim resumeTo $end
