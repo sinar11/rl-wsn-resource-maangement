@@ -431,5 +431,7 @@ script {! n2/app getEnergy} -at $end -on $sim
 script {! n3/app getEnergy} -at $end -on $sim
 script {! n4/app getEnergy} -at $end -on $sim
 script {! n5/app getEnergy} -at $end -on $sim
+script {! n6/app getEnergy} -at $end -on $sim
+script {! n0/app getNoOfTracks} -at $end -on $sim
 
 $sim resumeTo $end
