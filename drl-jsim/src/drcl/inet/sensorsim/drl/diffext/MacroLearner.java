@@ -14,12 +14,12 @@ import drcl.inet.sensorsim.drl.diffext.InterestPacket.CostParam;
 public class MacroLearner {
 
 	private static final double COST_UNIT_ENERGY = 1.0;
-	private static final double COST_REMAINING_ENERGY=1;
+	private static final double COST_REMAINING_ENERGY=0.5;
 	private static final double COST_PER_HOP = 0.001;
 	private static final double PROFIT_MARGIN=0.05;
 	private static final double MAX_DATA_QUALITY=1.0;
 	private static final double MIN_DATA_QUALITY=0.0;
-	private static final double EXPLORATION_FACTOR = 0.1 ;//0.1;
+	private static final double EXPLORATION_FACTOR = 0.0;
 	
 	DRLDiffApp diffApp;
 	
@@ -60,7 +60,8 @@ public class MacroLearner {
 					diffApp.log(Level.INFO,"Dropping packet as gradient's payment is zero or negative");
 					return;
 				}
-				destination=gradient.getNeighbor();  // using neighbor with max gradient				
+				destination=gradient.getNeighbor();  // using neighbor with max gradient
+				//if(dataPacket.destination)
 			}
 			dataPacket.setDestinationId(destination);
 			dataPacket.setSourceId(diffApp.nid);			
@@ -116,17 +117,20 @@ public class MacroLearner {
 			double totalReward=calcTotalReward(totalPkts, interest, payable);
 			Collection<DataStreamEntry> dataStreams=dataCacheEntry.getDataStreams();
 			for(DataStreamEntry stream: dataStreams){
-				if(stream.getNoOfPackets()==0) return;
+				if(stream.getNoOfPackets()==0) continue;
 				List<DataPacket> pkts=dataCacheEntry.getRecentDataAcceptSource(stream.getSourceId());
 				double clReward=calcTotalReward(pkts, interest, payable);
-				if(totalReward<stream.getAvgPktReward()){
-					diffApp.log(Level.INFO,"Total Reward less than Pkt reward..");
-				}
+				/*if(totalReward<stream.getAvgPktReward()){
+					diffApp.log(Level.INFO,"Total Reward less than Pkt reward for stream:"+stream);
+				}*/
 				double wlReward=totalReward-clReward;
-				if(wlReward>0)
-					stream.updateStatsOnNewWLReward(totalReward);					
-				else
-					stream.updateStatsOnNewWLReward(wlReward);
+				if(dataCacheEntry.isQualityAchieved() && !dataCacheEntry.isFavoredStream(stream)){
+					stream.updateStatsOnNewWLReward(0);
+				}else if(wlReward>=totalReward){
+					dataCacheEntry.addToFavoredStream(stream);
+					dataCacheEntry.setQualityAchieved(true);
+					stream.updateStatsOnNewWLReward(totalReward);				
+				}
 				//return;
 				//stream.updateStatsOnNewWLReward(wlReward);
 			}
@@ -155,14 +159,15 @@ public class MacroLearner {
 			InterestPacket interest) {
 		List<Tuple> qosConstraints=interest.getQosConstraints();
 		if(qosConstraints==null || qosConstraints.size()==0) return MAX_DATA_QUALITY;
-		DataPacket bestPkt=null;
-		double bestQuality=Integer.MIN_VALUE;
+		int passCount=0, totalCount=0;
 		for(DataPacket pkt:pkts){
 			//TODO how to get QoS attributes, should it be just part of normal data attributes?
-			double quality=TupleUtils.calcQuality(qosConstraints, pkt.getAttributes());
-			if(quality>bestQuality) bestQuality=quality;
+			if(TupleUtils.isMatching(qosConstraints, pkt.getAttributes())){
+				passCount++;
+			}
+			totalCount++;
 		}
-		return bestQuality;
+		return (passCount*MAX_DATA_QUALITY)/totalCount;
 	}
 
 	/**
@@ -246,15 +251,13 @@ public class MacroLearner {
 			gradientEntry.setTimestamp(diffApp.getTime());
 			gradientEntry.setDuration(duration);
 		}
-		double costOfParticipation= calcCostOfParticipation(interestEntry.getInterest());
-		double profit= (reinforcementPkt.getPayment()-costOfParticipation)*PROFIT_MARGIN;
-		interestEntry.getInterest().setPayment(reinforcementPkt.getPayment()-(costOfParticipation+profit));
+		interestEntry.getInterest().setPayment(interestEntry.getMaxGradient().getPayment());
 		interestEntry.setPayable(interestEntry.getInterest().getPayment());	
 		reinforceNeighborsIfRequired(interestEntry);
 	}
 	
 	private void reinforceNeighborsIfRequired(InterestCacheEntry interestEntry) {
-		// TODO Auto-generated method stub
+		//diffApp.
 		
 	}
 

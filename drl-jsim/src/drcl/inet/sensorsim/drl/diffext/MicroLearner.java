@@ -287,7 +287,11 @@ public class MicroLearner {
 	 */
 	public void handleInterestPkt(InterestPacket interestPkt) {
 		int taskId=interestPkt.getTaskId();
-		if(taskList.containsKey(taskId)) return;  //task already present nothing to do
+		if(taskList.containsKey(taskId)){   //update task's payment
+			SensorTask task= taskList.get(taskId);
+			task.expectedPrice=interestPkt.getPayment();
+			return;  
+		}
 		lastDiffusionParticipation=timesteps;
 		if(diffApp.canSatisfyInterest(interestPkt)){
 			ApplicationTask newTask= new ApplicationTask(interestPkt);
@@ -358,7 +362,7 @@ public class MicroLearner {
 			lastDiffusionParticipation=timesteps;
 			SensorTask task= taskList.get(reinforcementPkt.getTaskId());
 			if(task!=null){
-				task.expectedPrice=reinforcementPkt.getPayment();
+				task.expectedPrice=reinforcementPkt.getPayment(); //diffApp.interestCache.get(reinforcementPkt.getTaskId()).getMaxGradient().getPayment();
 			}
 		}		
 	}
