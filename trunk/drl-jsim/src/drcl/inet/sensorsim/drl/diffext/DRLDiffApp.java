@@ -3,7 +3,6 @@ package drcl.inet.sensorsim.drl.diffext ;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -19,7 +18,6 @@ import drcl.inet.sensorsim.SensorAppAgentContract.Message;
 import drcl.inet.sensorsim.drl.CSVLogger;
 import drcl.inet.sensorsim.drl.IDRLSensorApp;
 import drcl.inet.sensorsim.drl.SensorTask;
-import drcl.inet.sensorsim.drl.algorithms.AbstractAlgorithm;
 import drcl.inet.sensorsim.drl.diffext.InterestPacket.CostParam;
 import drcl.inet.sensorsim.drl.diffext.Tuple.Operator;
 import drcl.inet.sensorsim.drl.diffext.Tuple.Type;
@@ -320,7 +318,7 @@ public class DRLDiffApp extends drcl.inet.sensorsim.SensorApp implements drcl.co
 					.getEnergyLevel();
 			if (energy <= 0)
 				throw new RuntimeException("Out of energy..");
-			log(Level.INFO,"Energy:"+energy);
+			//log(Level.INFO,"Energy:"+energy);
 			return energy;
 		}else
     		return Integer.MAX_VALUE;
@@ -679,6 +677,7 @@ public class DRLDiffApp extends drcl.inet.sensorsim.SensorApp implements drcl.co
         CSVLogger.log("Qvalues",QValues,microLearner.algorithm.getAlgorithm());
         CSVLogger.log("ExpPrices",expPrices,microLearner.algorithm.getAlgorithm());
         CSVLogger.log("States",microLearner.states.toString(),microLearner.algorithm.getAlgorithm());
+        CSVLogger.log("Energy",""+getRemainingEnergy(),microLearner.algorithm.getAlgorithm());
        /* if(!globalLogged){
         	
         for(int i=0; i< globalRewardManager.getGlobalRewards().size();i++){

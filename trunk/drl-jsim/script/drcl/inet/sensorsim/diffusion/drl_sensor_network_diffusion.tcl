@@ -442,13 +442,13 @@ script {! n8/app getRemainingEnergy} -at 1.4 -on $sim
 
 # Sinks subscribing to interests
 #                         taskId longMin longMax latMin latMax duration interval data_interval refreshPeriod payment)
-script {! n0/app subscribe 10 100.0 300.0 200.0 400.0 100000.0 53.0 5.0 200.0 5} -at 1.5 -on $sim
+script {! n0/app subscribe 10 100.0 300.0 200.0 400.0 20000.0 53.0 5.0 200.0 5} -at 1.5 -on $sim
 
 #script {! n9/mobility setPosition 0.0 101.0 320.0 0.0} -at 500.0 -on $sim
 #script {! n9/mobility setPosition 0.0 251.0 200.0 0.0} -at 1000.0 -on $sim
-script {! n9/mobility setPosition 0.0 111.0 310.0 0.0} -at 1000.0 -on $sim
-
-set end 2000.0
+script {! n9/mobility setPosition 0.0 111.0 310.0 0.0} -at 1.0 -on $sim
+script {! n9/mobility setPosition 0.0 251.0 270.0 0.0} -at 2500.0 -on $sim
+set end 5000.0
 script {! n0/app collectStats} -at $end -on $sim
 script {! n1/app collectStats} -at $end -on $sim
 script {! n2/app collectStats} -at $end -on $sim

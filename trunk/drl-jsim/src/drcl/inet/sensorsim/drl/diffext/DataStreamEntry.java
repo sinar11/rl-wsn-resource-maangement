@@ -26,6 +26,9 @@ public class DataStreamEntry {
 		this.sourceId=sourceId;
 	}
 	
+	public String toString(){
+		return "sourceId="+sourceId+",noOfPackets="+noOfPackets+",noOfWLRewards="+noOfWLRewards+",avgPktReward="+avgPktReward+",avgWLReward="+avgWLReward;
+	}
 	public double getTimestamp() {
 		return timestamp;
 	}

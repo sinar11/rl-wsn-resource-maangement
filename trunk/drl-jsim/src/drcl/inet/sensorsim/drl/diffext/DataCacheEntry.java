@@ -54,6 +54,10 @@ public class DataCacheEntry
 	/** State related to source nodes, one per each neighbor from which data is received for this task */
 	Map<Long,DataStreamEntry> dataStreams= new HashMap<Long,DataStreamEntry>();
 	
+	/** A flag to track whether expected quality data has been achieved for this entry for current time step */ 
+	boolean qualityAchieved=false;
+	
+	List<DataStreamEntry> favoredStreams=new ArrayList<DataStreamEntry>();
 	
 	public DataCacheEntry(int taskId, DataPacket data)
 	{
@@ -91,9 +95,10 @@ public class DataCacheEntry
 		List<ReinforcementPacket> pkts= new ArrayList<ReinforcementPacket>();
 		for(DataStreamEntry stream: dataStreams.values()){
 			if(stream.shouldReinforce(currentTime, margin)){
-				pkts.add(new ReinforcementPacket(taskId,stream.getAvgWLReward(),nid,stream.getSourceId()));				
+				pkts.add(new ReinforcementPacket(taskId,stream.getAvgWLReward(),nid,stream.getSourceId()));		
+				stream.resetStatsOnReinforcement(currentTime);
+				
 			}
-			stream.resetStatsOnReinforcement(currentTime);
 		}
 		return pkts;
 	}
@@ -113,9 +118,27 @@ public class DataCacheEntry
 	
 	public void resetData(){
 		this.recentData.clear();		
+		this.qualityAchieved=false;
+		this.favoredStreams.clear();
 	}
 
 	public Collection<DataStreamEntry> getDataStreams() {
 		return dataStreams.values();
+	}
+
+	public boolean isQualityAchieved() {
+		return qualityAchieved;
+	}
+
+	public void setQualityAchieved(boolean qualityAchieved) {
+		this.qualityAchieved = qualityAchieved;
+	}
+
+	public void addToFavoredStream(DataStreamEntry stream) {
+		favoredStreams.add(stream);		
+	}
+	
+	public boolean isFavoredStream(DataStreamEntry stream) {
+		return favoredStreams.contains(stream);		
 	}
 }
