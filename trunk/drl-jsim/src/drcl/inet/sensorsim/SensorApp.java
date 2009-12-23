@@ -395,7 +395,11 @@ public class SensorApp extends drcl.net.Module {
     */
 	public synchronized void setCPUMode(int mode)
     {
-        this.cpuMode = ((IntObj)cpuPort.sendReceive(new IntObj(mode))).intValue();
+		try{
+			this.cpuMode = ((IntObj)cpuPort.sendReceive(new IntObj(mode))).intValue();
+		}catch(Exception e){
+			
+		}
 	}
 
 

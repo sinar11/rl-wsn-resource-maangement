@@ -91,9 +91,9 @@ public class DataCacheEntry
 		List<ReinforcementPacket> pkts= new ArrayList<ReinforcementPacket>();
 		for(DataStreamEntry stream: dataStreams.values()){
 			if(stream.shouldReinforce(currentTime, margin)){
-				pkts.add(new ReinforcementPacket(taskId,stream.getAvgWLReward(),nid,stream.getSourceId()));
-				stream.resetStatsOnReinforcement(currentTime);
+				pkts.add(new ReinforcementPacket(taskId,stream.getAvgWLReward(),nid,stream.getSourceId()));				
 			}
+			stream.resetStatsOnReinforcement(currentTime);
 		}
 		return pkts;
 	}

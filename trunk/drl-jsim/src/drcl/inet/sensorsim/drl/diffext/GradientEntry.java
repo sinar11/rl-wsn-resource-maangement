@@ -68,11 +68,10 @@ public class GradientEntry
 	/** Checks if the lifetime of the gradient has expired */
 	public boolean IsExpired(double currentTime)
 	{
-		return false;
-		/*if ( (currentTime - timestamp) > duration )
+		if ( (currentTime - timestamp) > duration )
 			return true ;
 		else
-			return false ;*/
+			return false ;
 	}
 
 	public String toString(){

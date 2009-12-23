@@ -34,6 +34,7 @@ public class Tuple implements Serializable{
 	public static final String TARGET_KEY = "target" ;		// STRING_TYPE
 	public static final String TARGET_NID = "targetNid" ;		// INT_TYPE
 	public static final String TARGET_RANGE_KEY = "range" ; 	// FLOAT_TYPE, in sec.
+	public static final String SNR = "snr";
 		
 	final private String key;
 	final private Type type;

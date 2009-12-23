@@ -292,7 +292,7 @@ public class WirelessPhy extends drcl.net.Module implements ActiveComponent {
     protected synchronized void dataArriveAtUpPort(Object data_,  drcl.comp.Port upPort_)
     {
         if ((radioMode == RADIO_SLEEP) && (!oneHopMode) && (!oneHopModeTDMA)){
-            System.out.println("Attemping to send when Sensor"+this.nid + " is in sleep mode (WirelessPhy.java)");
+            //System.out.println("Attemping to send:"+data_+" when Sensor"+this.nid + " is in sleep mode (WirelessPhy.java)");
             return;     //  packet can not be transmitted, drop siliently
         }
 
