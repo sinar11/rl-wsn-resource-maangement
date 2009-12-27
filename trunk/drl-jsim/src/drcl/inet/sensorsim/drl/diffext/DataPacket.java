@@ -69,6 +69,7 @@ public class DataPacket
 	private double reward;
 	
 	/** This is only for ease of debugging.. not required for protocol. Provides path taken by this data packet **/
+	/** though can be useful to detect loop **/
 	private List<Long> trace;
 	
 	public DataPacket(long sourceId, long sinkId, int taskId, List<Tuple> attributes, double timestamp)
@@ -128,6 +129,8 @@ public class DataPacket
 		if (sinkId != other.sinkId)
 			return false;
 		if (taskId != other.taskId)
+			return false;
+		if(sourceId != other.sourceId)
 			return false;
 		if (Double.doubleToLongBits(timestamp) != Double
 				.doubleToLongBits(other.timestamp))

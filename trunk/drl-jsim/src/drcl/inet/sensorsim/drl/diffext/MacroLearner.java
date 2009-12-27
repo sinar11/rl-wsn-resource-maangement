@@ -58,6 +58,7 @@ public class MacroLearner {
 				GradientEntry gradient= interestEntry.getMaxGradient();
 				if(gradient.getPayment()<=0){
 					diffApp.log(Level.INFO,"Dropping packet as gradient's payment is zero or negative");
+					diffApp.interestCachePrint();
 					return;
 				}
 				destination=gradient.getNeighbor();  // using neighbor with max gradient
@@ -87,7 +88,10 @@ public class MacroLearner {
 	 * @param dataPkt
 	 */
 	public boolean dataArriveAtDownPort(DataPacket dataPkt) {
-		if(diffApp.dataPacketExists(dataPkt)) return false;
+		if(diffApp.dataPacketExists(dataPkt)){
+			diffApp.log(Level.FINE, "Not processing recently seen data packet:"+dataPkt);
+			return false; //prevents loop by not processing data packets already seen earlier
+		}
 		//InterestCacheEntry interestEntry=diffApp.interestCacheLookup(dataPkt.getTaskId());
 		//if(interestEntry==null) return true; //no entry for task
 		insertDataPktInCache(dataPkt);
@@ -96,7 +100,6 @@ public class MacroLearner {
 	
 	public void computeReinforcements(){
 		for(DataCacheEntry dataCacheEntry: diffApp.dataCache.values()){
-			if(dataCacheEntry.getRecentData().size()==0) continue;
 			InterestPacket interest;
 			double payable;
 			if (diffApp.nid != diffApp.sink_nid) {
@@ -113,30 +116,85 @@ public class MacroLearner {
 				payable= taskEntry.getPayment();
 			}
 			List<DataPacket> totalPkts=dataCacheEntry.getRecentData();
-			if(totalPkts.size()==0) continue;
-			double totalReward=calcTotalReward(totalPkts, interest, payable);
+			if(totalPkts.size()==0){ //If no recently seen data, try to publish interest
+				/*if(dataCacheEntry.dataStreams.size()>0 && (diffApp.getTime()-dataCacheEntry.lastDataTimestamp)>MicroLearner.RECENT_WINDOW*MicroLearner.TIMER_INTERVAL){
+					interest.setDestinationId(DRLDiffApp.BROADCAST_DEST);
+					diffApp.sendPacket(interest, 0);
+					dataCacheEntry.lastDataTimestamp=diffApp.getTime();
+				}	*/
+				continue;
+			}
+			
+			/*double totalReward=(diffApp.nid==diffApp.sink_nid)?payable:calcTotalReward(totalPkts, interest, payable);
 			Collection<DataStreamEntry> dataStreams=dataCacheEntry.getDataStreams();
 			for(DataStreamEntry stream: dataStreams){
 				if(stream.getNoOfPackets()==0) continue;
 				List<DataPacket> pkts=dataCacheEntry.getRecentDataAcceptSource(stream.getSourceId());
 				double clReward=calcTotalReward(pkts, interest, payable);
-				/*if(totalReward<stream.getAvgPktReward()){
+				if(totalReward<stream.getAvgPktReward()){
 					diffApp.log(Level.INFO,"Total Reward less than Pkt reward for stream:"+stream);
-				}*/
+				}
 				double wlReward=totalReward-clReward;
 				if(dataCacheEntry.isQualityAchieved() && !dataCacheEntry.isFavoredStream(stream)){
 					stream.updateStatsOnNewWLReward(0);
-				}else if(wlReward>=totalReward){
+				}else if(wlReward>=totalReward || !dataCacheEntry.isQualityAchieved()){
 					dataCacheEntry.addToFavoredStream(stream);
 					dataCacheEntry.setQualityAchieved(true);
-					stream.updateStatsOnNewWLReward(totalReward);				
+					if(stream.getSourceId()!=diffApp.nid)
+						stream.updateStatsOnNewWLReward(totalReward);				
 				}
-				//return;
-				//stream.updateStatsOnNewWLReward(wlReward);
+				
+			}*/
+			//Determine stream with lowest cost and required quality and give reward equal to payable to that stream. All other streams should receive zero reward. 
+			DataStreamEntry bestStream=findBestStream(dataCacheEntry, interest);
+			for(DataStreamEntry stream: dataCacheEntry.getDataStreams()){
+				/*if(dataCacheEntry.isQualityAchieved() && !dataCacheEntry.isFavoredStream(bestStream)){
+					stream.updateStatsOnNewWLReward(0);
+				}*/
+				if(stream.equals(bestStream)){
+					if(bestStream.getSourceId()!=diffApp.nid){
+						dataCacheEntry.addToFavoredStream(stream);
+						dataCacheEntry.setQualityAchieved(true);
+						stream.updateStatsOnNewWLReward(payable);
+					}
+				}else if(dataCacheEntry.isQualityAchieved() && !dataCacheEntry.isFavoredStream(stream)){
+					stream.updateStatsOnNewWLReward(0);
+				}
 			}
+			/*if(dataCacheEntry.isQualityAchieved() && !dataCacheEntry.isFavoredStream(bestStream)){
+				bestStream.updateStatsOnNewWLReward(0);
+			}else{
+				dataCacheEntry.addToFavoredStream(bestStream);
+				dataCacheEntry.setQualityAchieved(true);
+				if(bestStream.getSourceId()!=diffApp.nid)
+					bestStream.updateStatsOnNewWLReward(payable);				
+			}*/
 		}
-		/*if(diffApp.nid==diffApp.sink_nid)
-			diffApp.sendReinforcements();*/
+		
+	}
+	
+	/**
+	 * Determine stream with lowest cost and required quality
+	 * @param dataCacheEntry
+	 * @param interest
+	 * @return
+	 */
+	private DataStreamEntry findBestStream(DataCacheEntry dataCacheEntry, InterestPacket interest){
+		Collection<DataStreamEntry> dataStreams=dataCacheEntry.getDataStreams();
+		double minCost=Integer.MAX_VALUE;
+		DataStreamEntry bestStream=null;;
+		for(DataStreamEntry stream: dataStreams){
+			if(stream.getNoOfPackets()==0) continue;
+			List<DataPacket> pkts=dataCacheEntry.getRecentDataForSource(stream.getSourceId());
+			if(calcDataQuality(pkts, interest)==MAX_DATA_QUALITY){
+				double cost=getAvgCost(pkts);
+				if(cost<minCost){
+					minCost=cost;
+					bestStream=stream;
+				}
+			}		
+		}
+		return bestStream;
 	}
 	
 	private double calcTotalReward(List<DataPacket> pkts,
@@ -148,6 +206,15 @@ public class MacroLearner {
 			if(pkt.getCost()<minCost) minCost=pkt.getCost();
 		}
 		return quality*payable-minCost;		
+	}
+	
+	private double getAvgCost(List<DataPacket> pkts){
+		if(pkts.size()==0) return 0;
+		double totalCost=0;
+		for(DataPacket pkt: pkts){
+			totalCost+=pkt.getCost();
+		}
+		return totalCost/pkts.size();
 	}
 	/**
 	 * Matches data attributes to QoS contraints and returns a value between 0 and 1 representing data quality
@@ -209,18 +276,20 @@ public class MacroLearner {
 			diffApp.interestCacheInsert(interestEntry) ;
 			shouldProcess=true;
 		}else{
-			gradientList=interestEntry.gradientList;			
+			gradientList=interestEntry.gradientList;	
+			interestEntry.setLastRefresh(interestPkt.getTimestamp());			
 		}
-		GradientEntry gradientEntry=interestEntry.gradientListLookup(sourceId,diffApp.getTime());	
+		GradientEntry gradientEntry=interestEntry.gradientListLookup(sourceId,diffApp.getTime());
 		if(gradientEntry==null){
 			gradientEntry=new GradientEntry(sourceId,interestPkt.getPayment(),interestPkt.getDuration(),diffApp.getTime());
 			interestEntry.gradientListInsert(gradientEntry);
 		}else{
-			if(gradientEntry.IsExpired(diffApp.getTime()) || gradientEntry.getPayment()!=interestPkt.getPayment()){
-				gradientEntry.setPayment(interestPkt.getPayment());
-				shouldProcess=true;
-			}
-			gradientEntry.setTimestamp(diffApp.getTime());
+			if(gradientEntry.getInterestTimestamp()==interestPkt.getTimestamp()){ //this interest already being processed
+				return false;
+			}					
+			gradientEntry.setPayment(interestPkt.getPayment(),interestPkt.getTimestamp());
+			shouldProcess=true;
+			gradientEntry.setInterestTimestamp(interestPkt.getTimestamp());
 			gradientEntry.setDuration(interestPkt.getDuration());
 		}
 		//check to see if this gradient entry is maximum among all set gradients, if so we further process this packet otherwise not
@@ -230,9 +299,10 @@ public class MacroLearner {
 		double costOfParticipation= calcCostOfParticipation(interestPkt);
 		double profit= (interestPkt.getPayment()-costOfParticipation)*PROFIT_MARGIN;
 		interestEntry.getInterest().setPayment(interestPkt.getPayment()-(costOfParticipation+profit));
-		interestEntry.setPayable(interestPkt.getPayment());
+		interestEntry.setPayable(interestEntry.getInterest().getPayment());
 		diffApp.log(Level.INFO, "After updating gradient from interest:"+interestPkt);
 		diffApp.interestCachePrint();
+		interestPkt.setPayment(interestEntry.getInterest().getPayment());
 		return true;
 	}
 
@@ -247,11 +317,11 @@ public class MacroLearner {
 			gradientEntry=new GradientEntry(reinforcementPkt.getSourceId(),reinforcementPkt.getPayment(),duration,diffApp.getTime());
 			interestEntry.gradientListInsert(gradientEntry);
 		}else{
-			gradientEntry.setPayment(reinforcementPkt.getPayment());
-			gradientEntry.setTimestamp(diffApp.getTime());
-			gradientEntry.setDuration(duration);
+			gradientEntry.setPayment(reinforcementPkt.getPayment(),diffApp.getTime());
 		}
-		interestEntry.getInterest().setPayment(interestEntry.getMaxGradient().getPayment());
+		double costOfParticipation= calcCostOfParticipation(interestEntry.getInterest());
+		double profit= (reinforcementPkt.getPayment()-costOfParticipation)*PROFIT_MARGIN;
+		interestEntry.getInterest().setPayment(reinforcementPkt.getPayment()-(costOfParticipation+profit));
 		interestEntry.setPayable(interestEntry.getInterest().getPayment());	
 		reinforceNeighborsIfRequired(interestEntry);
 	}

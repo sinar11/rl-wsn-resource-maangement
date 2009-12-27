@@ -50,6 +50,8 @@ public class InterestCacheEntry
 	/** Amount that owning node needs to pay to its source for this task **/
 	private double payable;
 	
+	private double lastRefresh;
+	
 	/** The gradient list which contains several gradient fields (each of which is GradientEntry), up to one per neighbor */
 	public List<GradientEntry> gradientList ;
 
@@ -71,6 +73,7 @@ public class InterestCacheEntry
 		interest = interest_ ;
 		lastTimeSent = 0 ;
 		gradientList = gradientList_ ;
+		lastRefresh=interest.getTimestamp();
 	}
 
 
@@ -147,16 +150,14 @@ public class InterestCacheEntry
 	/** Purges the gradient list */
 	public void gradientListPurge(double currentTime)
 	{
-		for (int i = 0 ; i < gradientList.size() ; ) 
+		for (int i = 0 ; i < gradientList.size() ;i++) 
 		{
 			GradientEntry entry = (GradientEntry)gradientList.get(i);
-			if ( entry.IsExpired(currentTime) == true )
-			{
-				gradientList.remove(i) ;
-			}
-			else
-			{
-				i++ ;
+			if ( entry.IsExpired(currentTime) == true ){
+				System.out.println("Entry expired:"+entry);
+				entry.setPayment(0, currentTime);
+			}else{			
+				entry.applyTimeDecay(currentTime);
 			}
 		}
 	}
@@ -168,10 +169,7 @@ public class InterestCacheEntry
 		for (int i = 0 ; i < no ; i++) 
 		{
 			GradientEntry entry = (GradientEntry)gradientList.get(i);
-			if ( 		( entry.getNeighbor() == previousHop ) 
-				&&
-					( entry.IsExpired(currentTime) == false )
-			   )
+			if (entry.getNeighbor() == previousHop )
 				return entry ;
 		}
 
@@ -200,6 +198,14 @@ public class InterestCacheEntry
 
 	public InterestPacket getInterest() {
 		return interest;
+	}
+
+	public double getLastRefresh() {
+		return lastRefresh;
+	}
+
+	public void setLastRefresh(double lastRefresh) {
+		this.lastRefresh = lastRefresh;
 	}
 
 }

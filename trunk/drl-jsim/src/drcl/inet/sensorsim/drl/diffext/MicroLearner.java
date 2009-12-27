@@ -19,7 +19,7 @@ import drcl.inet.sensorsim.drl.diffext.DRLDiffApp.NodeState;
 
 public class MicroLearner {
 	public static final double TIMER_INTERVAL=5;
-	public static final long RECENT_WINDOW=25; // TIMESTEPS
+	public static final long RECENT_WINDOW=20; // TIMESTEPS
 	
 	public static final double ENERGY_DIFFUSE=((2.45*0.001) + (5.97*0.001));	
 	public static final double ENERGY_LISTEN=8.41*0.00001;
@@ -114,9 +114,9 @@ public class MicroLearner {
 			taskTimer = diffApp.setTimeout("performTask", TIMER_INTERVAL);
 			++timesteps;	
 		}else if (data.equals("reinforce")){ //reinforcement as used by sink 		
-			if(noOfPkts>0) mlearner.computeReinforcements();  //compute reinforcements for arriving data at this timestep
+		//	if(noOfPkts>0) mlearner.computeReinforcements();  //compute reinforcements for arriving data at this timestep
 			++timesteps;
-			taskTimer = diffApp.setTimeout("performTask", TIMER_INTERVAL);
+			taskTimer = diffApp.setTimeout("reinforce", TIMER_INTERVAL);
 		}
 	}
 
@@ -193,7 +193,7 @@ public class MicroLearner {
             	return (expectedPrice);
             }
             public synchronized boolean isAvailable() {
-                return true;  
+                return !diffApp.isExpectingInterestRefresh();  
             }
         });       
     }
@@ -362,7 +362,8 @@ public class MicroLearner {
 			lastDiffusionParticipation=timesteps;
 			SensorTask task= taskList.get(reinforcementPkt.getTaskId());
 			if(task!=null){
-				task.expectedPrice=reinforcementPkt.getPayment(); //diffApp.interestCache.get(reinforcementPkt.getTaskId()).getMaxGradient().getPayment();
+				task.expectedPrice=reinforcementPkt.getPayment();
+				//task.expectedPrice=diffApp.interestCache.get(reinforcementPkt.getTaskId()).getMaxGradient().getPayment();
 			}
 		}		
 	}
