@@ -55,7 +55,7 @@ for {set i 0} {$i < [expr $sink_id + 1]} {incr i} {
 	
 	cd n$i
 
-	mkdir drcl.inet.sensorsim.drl.diffext.DRLDiffApp app
+	mkdir drcl.inet.sensorsim.diffusion.DiffApp app
 	! app setNid $i
 	! app setSinkNid $sink_id
 	! app setCoherentThreshold 1000.0
@@ -63,7 +63,7 @@ for {set i 0} {$i < [expr $sink_id + 1]} {incr i} {
 	! app setTargetName "Wheeled Vehicle"
 
 	# create wireless agent layers
-	mkdir drcl.inet.sensorsim.drl.diffext.WirelessDiffAgent wireless_agent
+	mkdir drcl.inet.sensorsim.diffusion.WirelessDiffAgent wireless_agent
 
 	! wireless_agent setDebugEnabled 0
 
@@ -168,7 +168,7 @@ for {set i [expr $sink_id + 1]} {$i < [expr $node_num - $target_node_num]} {incr
 	
 	cd n$i
 
-	mkdir drcl.inet.sensorsim.drl.diffext.DRLDiffApp app
+	mkdir drcl.inet.sensorsim.diffusion.DiffApp app
 	! app setNid $i
 	! app setSinkNid $sink_id
 	! app setCoherentThreshold 1000.0
@@ -210,7 +210,7 @@ for {set i [expr $sink_id + 1]} {$i < [expr $node_num - $target_node_num]} {incr
 	! mobility setNid $i
 
 	# create wireless agent layers
-	mkdir drcl.inet.sensorsim.drl.diffext.WirelessDiffAgent wireless_agent
+	mkdir drcl.inet.sensorsim.diffusion.WirelessDiffAgent wireless_agent
 
 	! wireless_agent setDebugEnabled 0
 
@@ -236,7 +236,6 @@ for {set i [expr $sink_id + 1]} {$i < [expr $node_num - $target_node_num]} {incr
 	mkdir drcl.inet.mac.WirelessPhy wphy
 	! wphy setRxThresh 0.0
 	! wphy setCSThresh 0.0	
-    ! wphy setDebugEnabled 0
     ! wphy setInitialEnergy 25
     
 	mkdir drcl.inet.mac.FreeSpaceModel propagation 
@@ -433,18 +432,10 @@ script {run n7} -at 1.0 -on $sim
 script {run n8} -at 1.1 -on $sim
 script {run n9} -at 1.2 -on $sim
 
-script {! n1/app getRemainingEnergy} -at 1.4 -on $sim
-script {! n2/app getRemainingEnergy} -at 1.4 -on $sim
-script {! n3/app getRemainingEnergy} -at 1.4 -on $sim
-script {! n4/app getRemainingEnergy} -at 1.4 -on $sim
-script {! n5/app getRemainingEnergy} -at 1.4 -on $sim
-script {! n6/app getRemainingEnergy} -at 1.4 -on $sim
-script {! n7/app getRemainingEnergy} -at 1.4 -on $sim
-script {! n8/app getRemainingEnergy} -at 1.4 -on $sim
 
 # Sinks subscribing to interests
-#                         taskId longMin longMax latMin latMax duration interval data_interval refreshPeriod payment)
-script {! n0/app subscribe 10 100.0 300.0 200.0 400.0 11000.0 53.0 5.0 1000.0 10} -at 1.5 -on $sim
+#                         longMin longMax latMin latMax duration interval data_interval refreshPeriod)
+script {! n0/app subscribe 100.0 300.0 200.0 400.0 11000.0 53.0 5.0 500.0} -at 1.5 -on $sim
 
 #script {! n9/mobility setPosition 0.0 101.0 320.0 0.0} -at 500.0 -on $sim
 #script {! n9/mobility setPosition 0.0 251.0 200.0 0.0} -at 1000.0 -on $sim
@@ -470,14 +461,15 @@ script {! n6/app collectStats} -at $end -on $sim
 script {! n7/app collectStats} -at $end -on $sim
 script {! n8/app collectStats} -at $end -on $sim
 
-script {! n1/app printEnergy} -at $end -on $sim
-script {! n2/app printEnergy} -at $end -on $sim
-script {! n3/app printEnergy} -at $end -on $sim
-script {! n4/app printEnergy} -at $end -on $sim
-script {! n5/app printEnergy} -at $end -on $sim
-script {! n6/app printEnergy} -at $end -on $sim
-script {! n7/app printEnergy} -at $end -on $sim
-script {! n8/app printEnergy} -at $end -on $sim
+script {! n1/app getEnergy} -at $end -on $sim
+script {! n2/app getEnergy} -at $end -on $sim
+script {! n3/app getEnergy} -at $end -on $sim
+script {! n4/app getEnergy} -at $end -on $sim
+script {! n5/app getEnergy} -at $end -on $sim
+script {! n6/app getEnergy} -at $end -on $sim
+script {! n7/app getEnergy} -at $end -on $sim
+script {! n8/app getEnergy} -at $end -on $sim
+script {! n0/app getNoOfTracks} -at $end -on $sim
 
 script {! $sim info} -at $end -on $sim
  
