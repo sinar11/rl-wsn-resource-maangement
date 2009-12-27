@@ -30,9 +30,14 @@ package drcl.inet.sensorsim.diffusion ;
 
 import drcl.inet.mac.EnergyContract;
 import drcl.inet.sensorsim.* ;
+import drcl.inet.sensorsim.drl.CSVLogger;
+import drcl.inet.sensorsim.drl.SensorTask;
 import drcl.inet.sensorsim.drl.diffext.DRLDiffApp.NodeState;
 import drcl.comp.*;
 import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import drcl.comp.Port;
 
 
@@ -50,7 +55,7 @@ public class DiffApp extends drcl.inet.sensorsim.SensorApp implements drcl.comp.
 
 	/** A node may suppress a received interest if it recently (i.e., within RESEND_INTEREST_WINDOW secs.) resent a matching interest. */	
 	public static final double RESEND_INTEREST_WINDOW = 2.0 ;
-
+	
 	/** Period between two successive times to check if any entries in the interest cache need to be purged. */
 	public static final double INTEREST_CACHE_PURGE_INTERVAL = 120.0 ; /* secs. */
 
@@ -69,6 +74,8 @@ public class DiffApp extends drcl.inet.sensorsim.SensorApp implements drcl.comp.
 	public static final int NEGATIVE_REINFORCEMENT_PKT = 3 ;
 
 	public static final double DELAY = 1.0; 			/* fixed delay to keep arp happy */
+
+
 	public static java.util.Random rand = new java.util.Random(7777) ;
 
 	public int numSubscriptions ;
@@ -89,6 +96,12 @@ public class DiffApp extends drcl.inet.sensorsim.SensorApp implements drcl.comp.
 	public DiffTimer dataCache_purgeTimer ;
 
 	private long noOfTracks=0;
+
+	private int noOfDataPkts;
+
+	private int noOfReinforcements;
+
+	private int noOfInterests;
 	
 	public long getNoOfTracks() {
 		System.out.println("No. Of tracks="+noOfTracks);
@@ -125,7 +138,6 @@ public class DiffApp extends drcl.inet.sensorsim.SensorApp implements drcl.comp.
 	public double getEnergy(){
 	// Contract type: ENERGY_QUERY =0
     double energy = ((EnergyContract.Message)wirelessPhyPort.sendReceive(new EnergyContract.Message(0, -1.0,-1))).getEnergyLevel();
-    System.out.println("Node:"+nid+" Energy:"+energy);
     return energy;
 	}
 
@@ -719,18 +731,22 @@ public class DiffApp extends drcl.inet.sensorsim.SensorApp implements drcl.comp.
 			{
 				case DiffApp.INTEREST_PKT :
 					InterestPacket interestPkt = (InterestPacket)spkt.getBody() ;
+					noOfInterests++;
 					HandleIncomingInterest(interestPkt) ;
 					break ;
 				case DiffApp.DATA_PKT :
 					DataPacket dataPkt = (DataPacket)spkt.getBody() ;
+					noOfDataPkts++;
 					HandleIncomingData(dataPkt) ;
 					break ;
 				case DiffApp.POSITIVE_REINFORCEMENT_PKT :
 					PositiveReinforcementPacket pstvReinforcementPkt = (PositiveReinforcementPacket)spkt.getBody() ;
+					noOfReinforcements++;
 					HandleIncomingPositiveReinforcement(pstvReinforcementPkt) ;
 					break ;
 				case DiffApp.NEGATIVE_REINFORCEMENT_PKT :
 					NegativeReinforcementPacket ngtvReinforcementPkt = (NegativeReinforcementPacket)spkt.getBody() ;
+					noOfReinforcements++;
 					HandleIncomingNegativeReinforcement(ngtvReinforcementPkt) ;
 					break ;
 				default :
@@ -811,7 +827,9 @@ public class DiffApp extends drcl.inet.sensorsim.SensorApp implements drcl.comp.
 			}
 			else
 			{
-				downPort.doSending(new SensorAppWirelessAgentContract.Message(SensorAppWirelessAgentContract.BROADCAST_SENSOR_PACKET, DATA_PKT, dataPkt)) ;
+				//downPort.doSending(new SensorAppWirelessAgentContract.Message(SensorAppWirelessAgentContract.BROADCAST_SENSOR_PACKET, DATA_PKT, dataPkt)) ;
+				downPort.doSending(new SensorAppWirelessAgentContract.Message(SensorAppWirelessAgentContract.UNICAST_SENSOR_PACKET,
+						dataPkt.destination, nid, 100, DATA_PKT, dataPkt)) ;
 			}
 		}
 		else if ( data_ instanceof PositiveReinforcementPacket ) /* PositiveReinforcement Packet */
@@ -974,6 +992,7 @@ public class DiffApp extends drcl.inet.sensorsim.SensorApp implements drcl.comp.
 					break ;
 			}
 		}else if(data_ instanceof CPUCheck){
+			if(nid==sink_nid) return;
 			WakeUp();		
 			setTimeout(data_, 5);
 		}else
@@ -981,7 +1000,31 @@ public class DiffApp extends drcl.inet.sensorsim.SensorApp implements drcl.comp.
 			super.timeout(data_) ;
 		}    
 	}
+	public void log(Level level, String string) {
+		if(level.intValue()>=Level.INFO.intValue())
+			Logger.global.log(Level.INFO,getTime()+"[Node:"+nid+"]["+"] "+string);        
+    }
 	
+	public void collectStats(){
+        log(Level.INFO,"*******************STATS**************");
+        //nid,noOfEventsMissed,totalEvents,noOfPktsDropped,totalPkts,task1Id,task1,task2Id,task2,task3Id,task3,totalCost,totalReward,trPackets
+        String stats=""+nid+",interests="+noOfInterests+",dataPkts="+noOfDataPkts+",reinf="+noOfReinforcements; //+","+totalPkts;
+        if(nid==sink_nid)
+        	stats+=",totalTracks="+getNoOfTracks();
+        CSVLogger.log("stats",stats,null);
+        if(nid!=sink_nid){
+        	CSVLogger.log("Energy",""+getEnergy(),null);
+        	interestCache_print();
+        }
+       /* if(!globalLogged){
+        	
+        for(int i=0; i< globalRewardManager.getGlobalRewards().size();i++){
+            CSVLogger.log("reward",""+globalRewardManager.getGlobalRewards().get(i),false,algorithm.getAlgorithm());            
+        }
+        CSVLogger.logGlobal("global-stats",globalRewardManager.stats(),algorithm.getAlgorithm());
+        globalLogged=true;
+        }*/
+    }
 	/**
      * Set both Radio components in IDLE
      * so that they are ready for either receiving, sending, and/or

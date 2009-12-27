@@ -59,6 +59,8 @@ public class DataCacheEntry
 	
 	List<DataStreamEntry> favoredStreams=new ArrayList<DataStreamEntry>();
 	
+	double lastDataTimestamp;
+	
 	public DataCacheEntry(int taskId, DataPacket data)
 	{
 		addDataPacket(data);
@@ -77,6 +79,7 @@ public class DataCacheEntry
 			dataStreams.put(data.getSourceId(),entry);
 		}
 		entry.updateStatsOnNewDataPkt(data.getReward(),data.getTimestamp());
+		lastDataTimestamp=data.getTimestamp();
 	}
 	
 	/** Prints the data cache entry */
@@ -94,11 +97,13 @@ public class DataCacheEntry
 	public List<ReinforcementPacket> getPendingReinforcements(long nid, double currentTime, double margin){
 		List<ReinforcementPacket> pkts= new ArrayList<ReinforcementPacket>();
 		for(DataStreamEntry stream: dataStreams.values()){
+			if(stream.getSourceId()==nid) continue;
+			Double amt=null;
 			if(stream.shouldReinforce(currentTime, margin)){
-				pkts.add(new ReinforcementPacket(taskId,stream.getAvgWLReward(),nid,stream.getSourceId()));		
-				stream.resetStatsOnReinforcement(currentTime);
-				
-			}
+				amt=stream.getAvgPktReward();
+				pkts.add(new ReinforcementPacket(taskId,amt,nid,stream.getSourceId()));		
+				stream.resetStatsOnReinforcement(currentTime);				
+			}				
 		}
 		return pkts;
 	}
@@ -111,6 +116,15 @@ public class DataCacheEntry
 		List<DataPacket> list= new ArrayList<DataPacket>();
 		for(DataPacket pkt:recentData){
 			if(pkt.getSourceId()!=sourceId)
+				list.add(pkt);			
+		}
+		return list;
+	}
+	
+	public List<DataPacket> getRecentDataForSource(long sourceId) {
+		List<DataPacket> list= new ArrayList<DataPacket>();
+		for(DataPacket pkt:recentData){
+			if(pkt.getSourceId()==sourceId)
 				list.add(pkt);			
 		}
 		return list;

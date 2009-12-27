@@ -50,6 +50,9 @@ public class DRLDiffApp extends drcl.inet.sensorsim.SensorApp implements drcl.co
 	/** Size of the window of N events used for judging whether a neighbor needs to be negatively reinforced or not. Negatively reinforce that neighbor from which no new events have been received within a window of N events */
 	public static final int N_WINDOW = 5 ;
 
+	/** Decay computed gradients at a rate represented by DECAY_FACTOR **/
+	public static final double DECAY_FACTOR = 0.01;
+	
 	/** Name of the target that a sink node is interested in (and a sensor node capable of) detecting */
 	public String TargetName ;
 
@@ -213,6 +216,16 @@ public class DRLDiffApp extends drcl.inet.sensorsim.SensorApp implements drcl.co
 		}
 	}
 
+	public boolean isExpectingInterestRefresh(){
+		double currentTime = getTime() ;
+		for(InterestCacheEntry entry:interestCache.values()){
+			double lapseTime=currentTime-entry.getLastRefresh() ;
+			if(Math.abs(lapseTime-entry.getInterest().getRefreshInterval())<5*MicroLearner.TIMER_INTERVAL)
+				return true;
+		}
+		return false;
+	}
+	
 	public InterestCacheEntry interestCacheLookup(int taskId) {
 		return interestCache.get(taskId);		
 	}
@@ -317,13 +330,16 @@ public class DRLDiffApp extends drcl.inet.sensorsim.SensorApp implements drcl.co
 					.sendReceive(new EnergyContract.Message(0, -1.0, -1)))
 					.getEnergyLevel();
 			if (energy <= 0)
-				throw new RuntimeException("Out of energy..");
-			//log(Level.INFO,"Energy:"+energy);
+				log(Level.WARNING,"Out Of Energy");
 			return energy;
 		}else
     		return Integer.MAX_VALUE;
     	
     }
+	
+	public void printEnergy(){
+		log(Level.INFO,getRemainingEnergy()+"");
+	}
 	
 	/** Handles information received over the sensor channel  */
 	public void recvSensorEvent(Object data_)
@@ -465,7 +481,7 @@ public class DRLDiffApp extends drcl.inet.sensorsim.SensorApp implements drcl.co
 			List<CostParam> costParams= new ArrayList<CostParam>();
 			costParams.add(new CostParam(CostParam.Type.Energy,0.5));
 			costParams.add(new CostParam(CostParam.Type.Lifetime,0.5));
-			InterestPacket intPkt = new InterestPacket(taskId,this.nid,interest,payment,getTime(),dataInterval,costParams) ;
+			InterestPacket intPkt = new InterestPacket(taskId,this.nid,interest,payment,getTime(),dataInterval,refreshPeriod, costParams) ;
 			intPkt.setDuration(duration);
 			List<Tuple> qosConstraints= new ArrayList<Tuple>();
 			qosConstraints.add(new Tuple(Tuple.SNR,Type.FLOAT32_TYPE,Operator.GE, new Double(50)));
@@ -489,7 +505,10 @@ public class DRLDiffApp extends drcl.inet.sensorsim.SensorApp implements drcl.co
         	   log(Level.INFO, "Sending INTEREST packet at time " + getTime()) ;
 
 			/* sends the interest */
-			sendPacket(taskEntry.interest, 0.0) ;
+            InterestPacket newInterest= new InterestPacket(taskEntry.getInterest());
+            newInterest.setTimestamp(getTime());
+            //taskEntry.interest.setTimestamp(getTime());
+			sendPacket(newInterest, 0.0) ;
 		}
 	}
 
@@ -616,20 +635,20 @@ public class DRLDiffApp extends drcl.inet.sensorsim.SensorApp implements drcl.co
 					int taskId = I.intValue() ;
 					TaskEntry taskEntry = activeTasksList.get(taskId) ;
 					InterestPacket interest= taskEntry.getInterest();
-					if ( (getTime() - taskEntry.getStartTime()) <= interest.getDuration()) /* depends on getTime() - interest start time */
-					{
+					//if ( (getTime() - taskEntry.getStartTime()) <= interest.getDuration()) /* depends on getTime() - interest start time */
+					//{
 						if ( isDebugEnabled() )
 							System.out.println("DiffApp " + nid + ": Sending INTEREST packet at time " + getTime()) ;
-
+						interest.setTimestamp(getTime());
 						sendPacket(interest, 0.0 ) ;
 						DiffTimer refresh_EVT = new DiffTimer(DiffTimer.TIMEOUT_REFRESH_INTEREST, new Integer(taskId)); 
 						refresh_EVT.handle = setTimeout(refresh_EVT, taskEntry.getRefreshPeriod()) ;
-					}
+					/*}
 					else if ( d.handle != null )
 					{
-						/* The task state has to be purged from the node after the time indicated by the duration attribute. */
+						// The task state has to be purged from the node after the time indicated by the duration attribute. 
 						activeTasksList.remove(taskId) ;
-					}
+					}*/
 					cancelTimeout(d.handle) ;
 					d.setObject(null) ;
 					d.handle = null ;
@@ -678,6 +697,7 @@ public class DRLDiffApp extends drcl.inet.sensorsim.SensorApp implements drcl.co
         CSVLogger.log("ExpPrices",expPrices,microLearner.algorithm.getAlgorithm());
         CSVLogger.log("States",microLearner.states.toString(),microLearner.algorithm.getAlgorithm());
         CSVLogger.log("Energy",""+getRemainingEnergy(),microLearner.algorithm.getAlgorithm());
+        interestCachePrint();
        /* if(!globalLogged){
         	
         for(int i=0; i< globalRewardManager.getGlobalRewards().size();i++){

@@ -23,7 +23,7 @@ public class InterestPacket
 	/** The list of attributes that sink is interested in */
 	private List<Tuple> attributes = null ;
 	/** time at this interest was published **/
-	private final double timestamp;
+	private double timestamp;
 	/** Optional List of QoS contraints associated with this task **/
 	private List<Tuple> qosConstraints=null;
 	/**List of cost parameters associated with this task **/
@@ -33,13 +33,15 @@ public class InterestPacket
 	
 	private double duration;
 	
+	private double refreshInterval;
+	
 	/** Payment associated with this task, initial value set by application/sink and each node
 	 * updates the value after deducting its cost and profit.
 	 */
 	private double payment;
 	
 	
-	public InterestPacket(int taskId, long sinkId, List<Tuple> attributes, double payment, double timestamp, double dataInterval, List<CostParam> costParameters)
+	public InterestPacket(int taskId, long sinkId, List<Tuple> attributes, double payment, double timestamp, double dataInterval, double refreshInterval, List<CostParam> costParameters)
 	{
 		this.taskId=taskId;
 		this.sinkId=sinkId;
@@ -48,6 +50,7 @@ public class InterestPacket
 		this.costParameters=costParameters;		
 		this.dataInterval=dataInterval;
 		this.payment=payment;
+		this.refreshInterval=refreshInterval;
 	}
 
 	public InterestPacket(InterestPacket pkt){
@@ -61,10 +64,7 @@ public class InterestPacket
 		this.payment=pkt.payment;
 		this.dataInterval=pkt.dataInterval;
 		this.duration=pkt.duration;
-	}
-	
-	public String toString(String separator_){
-		return "InterestPacket[taskId="+taskId+",sinkId="+sinkId+",attributes="+attributes+",timestamp="+timestamp+"]";		
+		this.refreshInterval=pkt.refreshInterval;
 	}
 	
 	@Override
@@ -174,7 +174,15 @@ public class InterestPacket
 		this.destinationId = destinationId;
 	}	
 	
+	public void setTimestamp(double timestamp) {
+		this.timestamp = timestamp;
+	}
+
+	public double getRefreshInterval() {
+		return refreshInterval;
+	}
+
 	public String toString(){
-		return "InterestPacket[taskId="+taskId+",sinkId="+sinkId+",sourceId="+sourceId+",destinationId="+destinationId+",payment="+payment;
+		return "InterestPacket[taskId="+taskId+",sinkId="+sinkId+",sourceId="+sourceId+",destinationId="+destinationId+",payment="+payment+",timestamp="+timestamp+"]";
 	}
 }

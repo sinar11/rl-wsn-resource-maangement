@@ -16,7 +16,7 @@ public class ReinforcementPacket
 	private long sourceId;
 
 	/** New payment value associated with about task **/
-	private double payment;
+	private Double payment;
 	
 	/** Destination for this packet **/
 	private long destinationId;
@@ -44,7 +44,7 @@ public class ReinforcementPacket
 		return payment;
 	}
 
-	public void setPayment(double payment) {
+	public void setPayment(Double payment) {
 		this.payment = payment;
 	}
 
