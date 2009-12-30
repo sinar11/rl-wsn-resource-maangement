@@ -25,6 +25,9 @@ public class GradientEntry
 	/** Timestamp at which this gradient entry was last updated (either result of interest or reinforcement**/
 	private double updateTimestamp;
 	
+	/** Timestamp at which this gradient entry was last used to send data out. Used to detect failed nodes **/
+	private double usedTimestamp;
+	
 	public GradientEntry(long neighbor, double payment, double duration, double timestamp)
 	{
 		this.neighbor = neighbor ;
@@ -82,6 +85,21 @@ public class GradientEntry
 			return true ;
 		else
 			return false ;
+	}
+
+	/*public boolean isAlive(double currentTime){
+		if((currentTime- usedTimestamp)< 4*DRLDiffApp.REINFORCE_WINDOW
+				&& (currentTime- updateTimestamp)> 2*DRLDiffApp.REINFORCE_WINDOW)
+			return false;
+		else
+			return true;
+	}*/
+	public double getUsedTimestamp() {
+		return usedTimestamp;
+	}
+
+	public void setUsedTimestamp(double usedTimestamp) {
+		this.usedTimestamp = usedTimestamp;
 	}
 
 	public String toString(){

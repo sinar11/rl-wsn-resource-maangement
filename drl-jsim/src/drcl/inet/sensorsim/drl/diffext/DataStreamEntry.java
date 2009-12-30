@@ -19,9 +19,7 @@ public class DataStreamEntry {
 	/** no of WL reward updates from last reinforcement **/
 	private int noOfWLRewards;
 	
-	/** Time at which last reinforcement was sent **/ 
-	private double lastReinforcedTime;
-
+	
 	public DataStreamEntry(long sourceId){
 		this.sourceId=sourceId;
 	}
@@ -37,14 +35,6 @@ public class DataStreamEntry {
 		this.timestamp = timestamp;
 	}
 
-	public double getLastReinforcedTime() {
-		return lastReinforcedTime;
-	}
-
-	public void setLastReinforcedTime(double lastReinforcedTime) {
-		this.lastReinforcedTime = lastReinforcedTime;
-	}
-	
 	public int getNoOfPackets() {
 		return noOfPackets;
 	}
@@ -57,6 +47,9 @@ public class DataStreamEntry {
 		return avgPktReward;
 	}
 
+	public double getTotalPktReward(){
+		return avgPktReward*noOfPackets;
+	}
 	public long getSourceId() {
 		return sourceId;
 	}
@@ -73,18 +66,15 @@ public class DataStreamEntry {
 	}
 	
 	public void resetStatsOnReinforcement(double reinforcedTime){
-		lastReinforcedTime= reinforcedTime;
 		noOfPackets=0;
 		noOfWLRewards=0;
 		avgWLReward=0;
 		avgPktReward=0;
 	}
 
-	public boolean shouldReinforce(double currentTime, double margin) {
-		if(noOfWLRewards==0||noOfPackets==0) return false;  //not ready for evaluation yet
-		
-		if(((currentTime-lastReinforcedTime)>DRLDiffApp.REINFORCE_WINDOW) &&
-				Math.abs(avgWLReward-avgPktReward)>margin){
+	public boolean shouldReinforce(double payable, double margin) {
+		//if(noOfPackets==0) return false;  //not ready for evaluation yet
+		if(Math.abs(payable-avgPktReward)>margin){
 			return true;
 		}else return false;
 	}

@@ -51,7 +51,7 @@ public class DRLDiffApp extends drcl.inet.sensorsim.SensorApp implements drcl.co
 	public static final int N_WINDOW = 5 ;
 
 	/** Decay computed gradients at a rate represented by DECAY_FACTOR **/
-	public static final double DECAY_FACTOR = 0.01;
+	public static final double DECAY_FACTOR = 0.25;
 	
 	/** Name of the target that a sink node is interested in (and a sensor node capable of) detecting */
 	public String TargetName ;
@@ -60,8 +60,8 @@ public class DRLDiffApp extends drcl.inet.sensorsim.SensorApp implements drcl.co
 	public static final int DATA_PKT = 1 ;
 	public static final int REINFORCEMENT_PKT = 2 ;
 	public static final int BROADCAST_DEST=-1;
-	public static final double REINFORCE_WINDOW=10*MicroLearner.TIMER_INTERVAL; //10 TIMESTEPS
-	public static final double REINFORCE_SUPRESS_MARGIN= 0.10;
+	public static final double REINFORCE_WINDOW=10*MicroLearner.TIMER_INTERVAL; //20 TIMESTEPS
+	public static final double REINFORCE_SUPRESS_MARGIN= 0.1;
 	public static final boolean TRACE_ON=true;
 	
 	public static enum NodeState { SLEEPING, AWAKE};
@@ -99,6 +99,7 @@ public class DRLDiffApp extends drcl.inet.sensorsim.SensorApp implements drcl.co
 	private int noOfReinforcements=0;
 	private int noOfDataPkts=0;
 	private int noOfInterests=0;
+	private Double lifetime=null;
 	   
 	public DRLDiffApp ()
 	{
@@ -187,21 +188,31 @@ public class DRLDiffApp extends drcl.inet.sensorsim.SensorApp implements drcl.co
 		}
 	}
 
-	/** Purges expired entries from the data cache */
 	public void sendReinforcements(){
 		for(DataCacheEntry entry: dataCache.values()){
 			double payable;
+			InterestPacket interest;
 			if(nid==sink_nid){
-				payable= activeTasksList.get(entry.getTaskId()).getPayment();
+				TaskEntry tentry=activeTasksList.get(entry.getTaskId());
+				payable= tentry.getPayment();
+				interest=tentry.getInterest();
 			}else{
-				payable= interestCacheLookup(entry.getTaskId()).getPayable();
+				InterestCacheEntry icentry=interestCacheLookup(entry.getTaskId());
+				payable= icentry.getPayable();
+				interest=icentry.getInterest();
 			}
-			List<ReinforcementPacket> pendingReinforcements=entry.getPendingReinforcements(nid, getTime(), REINFORCE_SUPRESS_MARGIN*payable);
-			for(ReinforcementPacket pkt: pendingReinforcements){
-				sendPacket(pkt, getDelay());
-			}
-			entry.resetData();
-		}	
+			sendReinforcements(entry,payable,interest);
+		}
+	}
+	
+	public void sendReinforcements(DataCacheEntry entry, double payable,
+			InterestPacket interest) {
+		List<ReinforcementPacket> pendingReinforcements = entry
+				.getPendingReinforcements(nid, getTime(),
+						REINFORCE_SUPRESS_MARGIN * payable, interest, payable);
+		for (ReinforcementPacket pkt : pendingReinforcements) {
+			sendPacket(pkt, getDelay());
+		}
 	}
 
 	/** Purges expired entries from the interest cache */
@@ -329,8 +340,10 @@ public class DRLDiffApp extends drcl.inet.sensorsim.SensorApp implements drcl.co
 			double energy = ((EnergyContract.Message) wirelessPhyPort
 					.sendReceive(new EnergyContract.Message(0, -1.0, -1)))
 					.getEnergyLevel();
-			if (energy <= 0)
-				log(Level.WARNING,"Out Of Energy");
+			if (energy <= 0 && lifetime==null){
+				lifetime=getTime();
+				log(Level.WARNING,"Out Of Energy, lifetime="+lifetime);
+			}
 			return energy;
 		}else
     		return Integer.MAX_VALUE;
@@ -451,8 +464,8 @@ public class DRLDiffApp extends drcl.inet.sensorsim.SensorApp implements drcl.co
 				case DRLDiffApp.REINFORCEMENT_PKT :
 					noOfReinforcements++;
 					ReinforcementPacket reinforcementPkt = (ReinforcementPacket)spkt.getBody() ;
-					log(Level.INFO,"Received REINFORCEMENT:"+reinforcementPkt);
-					interestCachePrint();
+					log(Level.FINE,"Received REINFORCEMENT:"+reinforcementPkt);
+					//interestCachePrint();
 					macroLearner.handleReinforcement(reinforcementPkt);
 					microLearner.handleReinforcement(reinforcementPkt);
 					break ;
@@ -560,10 +573,10 @@ public class DRLDiffApp extends drcl.inet.sensorsim.SensorApp implements drcl.co
 				DiffTimer bcast_EVT = new DiffTimer(DiffTimer.TIMEOUT_DELAY_BROADCAST, reinforcementPkt);
 				bcast_EVT.handle = setTimeout(bcast_EVT, delay);
 			}else if(reinforcementPkt.getDestinationId()==BROADCAST_DEST){
-				log(Level.INFO,"Broadcasting REINFORCEMENT:"+reinforcementPkt);
+				log(Level.FINE,"Broadcasting REINFORCEMENT:"+reinforcementPkt);
 				downPort.doSending(new SensorAppWirelessAgentContract.Message(SensorAppWirelessAgentContract.BROADCAST_SENSOR_PACKET, REINFORCEMENT_PKT, reinforcementPkt)) ;
 			}else{
-				log(Level.INFO,"Sending REINFORCEMENT:"+reinforcementPkt);
+				log(Level.FINE,"Sending REINFORCEMENT:"+reinforcementPkt);
 				downPort.doSending(new SensorAppWirelessAgentContract.Message(SensorAppWirelessAgentContract.UNICAST_SENSOR_PACKET,
 						reinforcementPkt.getDestinationId(),nid, 100, REINFORCEMENT_PKT, reinforcementPkt)) ;
 			}
@@ -582,7 +595,7 @@ public class DRLDiffApp extends drcl.inet.sensorsim.SensorApp implements drcl.co
 				case DiffTimer.TIMEOUT_SEND_REINFORCEMENT :
 					sendReinforcements() ;
 
-					/* if the size of the dataCache has become 0, there is no need for the timer. The timer will be set next time dataCache_insert is called. */
+					// if the size of the dataCache has become 0, there is no need for the timer. The timer will be set next time dataCache_insert is called. 
 					if ( (dataCache.size() == 0) && (reinforcementTimer.handle != null) )
 					{
 						cancelTimeout(reinforcementTimer.handle) ;
@@ -591,7 +604,7 @@ public class DRLDiffApp extends drcl.inet.sensorsim.SensorApp implements drcl.co
 						reinforcementTimer = null ;
 					}
 					else{
-						/* reset the timer. */
+					//	 reset the timer. 
 						reinforcementTimer.handle = setTimeout(reinforcementTimer, REINFORCE_WINDOW) ;
 					}
 					break ;
@@ -696,9 +709,11 @@ public class DRLDiffApp extends drcl.inet.sensorsim.SensorApp implements drcl.co
         CSVLogger.log("Qvalues",QValues,microLearner.algorithm.getAlgorithm());
         CSVLogger.log("ExpPrices",expPrices,microLearner.algorithm.getAlgorithm());
         CSVLogger.log("States",microLearner.states.toString(),microLearner.algorithm.getAlgorithm());
-        CSVLogger.log("Energy",""+getRemainingEnergy(),microLearner.algorithm.getAlgorithm());
-        interestCachePrint();
-       /* if(!globalLogged){
+        if(nid!=sink_nid){
+        	CSVLogger.log("Energy",""+getRemainingEnergy()+","+lifetime+","+microLearner.lastTrackTime,microLearner.algorithm.getAlgorithm());        	
+        	interestCachePrint();            
+        }
+        /* if(!globalLogged){
         	
         for(int i=0; i< globalRewardManager.getGlobalRewards().size();i++){
             CSVLogger.log("reward",""+globalRewardManager.getGlobalRewards().get(i),false,algorithm.getAlgorithm());            
