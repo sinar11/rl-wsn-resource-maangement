@@ -88,19 +88,19 @@ public class InterestCacheEntry
 
 	/** Checks whether or not to forward the REINFORCEMENT packet. 
 	 * returns true if passed neighbor currently helds highest gradient for this interest and passed payment value is different, false otherwise
-	 **/
+	 **//*
 	public boolean shouldForwardReinforcement(long neighbor, double payment){
 		GradientEntry entry = getMaxGradient();
 		if(entry==null || ((neighbor==entry.getNeighbor()) && payment != entry.getPayment()))
 				return true ;
 		return false ;
-	}
+	}*/
 	
 	public boolean shouldForwardInterest(long neighbor, double payment){
 		GradientEntry entry = getMaxGradient();
 		if(entry==null || ((neighbor==entry.getNeighbor()) && payment != entry.getPayment()))
 				return true ;
-		return false ;
+		return false ;		
 	}
 	
 	public GradientEntry getMaxGradient() {
@@ -114,6 +114,20 @@ public class InterestCacheEntry
 		return maxEntry;
 	}
 
+	/*public GradientEntry getMaxAliveGradient(double currentTime){
+		GradientEntry maxEntry=getMaxGradient();
+		for(int i=0;i<gradientList.size();i++){
+			if(maxEntry.isAlive(currentTime)){
+				maxEntry.setUsedTimestamp(currentTime);
+				return maxEntry;
+			}else{
+				System.out.println("Marking entry dead:"+maxEntry);
+				maxEntry.setPayment(0, currentTime);
+				maxEntry= getMaxGradient();
+			}
+		}
+		return null;
+	}*/
 	public GradientEntry getRandomGradient() {
 		if(gradientList==null || gradientList.size()==0) return null;
 		UniformDistribution dist= new UniformDistribution(1,gradientList.size());

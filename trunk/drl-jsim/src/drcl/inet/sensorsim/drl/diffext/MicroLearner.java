@@ -7,6 +7,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Level;
 
+import sun.reflect.ReflectionFactory.GetReflectionFactoryAction;
+
 import drcl.comp.ACATimer;
 import drcl.comp.Port;
 import drcl.inet.mac.EnergyContract;
@@ -19,7 +21,7 @@ import drcl.inet.sensorsim.drl.diffext.DRLDiffApp.NodeState;
 
 public class MicroLearner {
 	public static final double TIMER_INTERVAL=5;
-	public static final long RECENT_WINDOW=20; // TIMESTEPS
+	public static final long RECENT_WINDOW=10; // TIMESTEPS
 	
 	public static final double ENERGY_DIFFUSE=((2.45*0.001) + (5.97*0.001));	
 	public static final double ENERGY_LISTEN=8.41*0.00001;
@@ -57,6 +59,7 @@ public class MicroLearner {
     int timesteps=0;
     double totalReward=0;
     double totalCost=0;
+	double lastTrackTime;
     
     public MicroLearner(DRLDiffApp app, MacroLearner mLearner){
     	this.mlearner=mLearner;
@@ -96,6 +99,7 @@ public class MicroLearner {
  
     public void timeout(Object data) {
 		if (data.equals("performTask")) {
+			diffApp.getRemainingEnergy();
 			if (currentTask != null) {
 				currentTask.computeReward();
 				totalReward += currentTask.lastReward;
@@ -114,7 +118,8 @@ public class MicroLearner {
 			taskTimer = diffApp.setTimeout("performTask", TIMER_INTERVAL);
 			++timesteps;	
 		}else if (data.equals("reinforce")){ //reinforcement as used by sink 		
-		//	if(noOfPkts>0) mlearner.computeReinforcements();  //compute reinforcements for arriving data at this timestep
+			//if(noOfPkts>0) mlearner.computeReinforcements();  //compute reinforcements for arriving data at this timestep
+			diffApp.sendReinforcements();
 			++timesteps;
 			taskTimer = diffApp.setTimeout("reinforce", TIMER_INTERVAL);
 		}
@@ -124,17 +129,17 @@ public class MicroLearner {
 	}
 
 	private void endTask(SensorTask task, SensorState state) {
-		try{
+		/*try{
 	 	for (Iterator<DataPacket> iter = outboundMsgs.iterator(); iter.hasNext();) {
 	 		DataPacket msg = iter.next();
 	 		msg.addCostReward(currentTask.lastReward, currentTask.getLastCost(),diffApp.nid); 
-            mlearner.dataArriveAtUpPort(msg);  
+            mlearner.dataArriveAtUpPort(msg); 
         }
 	 	if(noOfPkts>0) 
 	 		mlearner.computeReinforcements();  //compute reinforcements for arriving data at this timestep
-		}finally{
+		}finally{*/
 			outboundMsgs.clear();
-		}
+		//}
 	}
 
     public SensorState getMatchingState(boolean successfulDiffusion, boolean successfulSample) {
@@ -289,7 +294,8 @@ public class MicroLearner {
 		int taskId=interestPkt.getTaskId();
 		if(taskList.containsKey(taskId)){   //update task's payment
 			SensorTask task= taskList.get(taskId);
-			task.expectedPrice=interestPkt.getPayment();
+			task.expectedPrice=diffApp.interestCache.get(taskId).getMaxGradient().getPayment();
+			//task.expectedPrice=interestPkt.getPayment();
 			return;  
 		}
 		lastDiffusionParticipation=timesteps;
@@ -321,6 +327,8 @@ public class MicroLearner {
 		//filtering of data for same task for this timestep, 
 		if(!shouldFilter(dataPkt)){
 			outboundMsgs.add(dataPkt);
+			dataPkt.addCostReward(currentTask.lastReward, currentTask.getLastCost(),diffApp.nid); 
+            mlearner.dataArriveAtUpPort(dataPkt); 
 		}
 		//Any other application specific data aggregation/filtering..
 	}
@@ -337,14 +345,25 @@ public class MicroLearner {
 
 	private void handleSinkData(DataPacket dataPkt) {
 		List<Tuple> attributes= dataPkt.getAttributes();
-		totalTrackingPkts++;
-		diffApp.log(Level.INFO,"Tracking event with pkt:" + dataPkt);
-		double[] target_location= new double[2];
-		target_location[0] = (Double) TupleUtils.getAttributeValue(attributes, Tuple.LONGITUDE_KEY);
-		target_location[1] = (Double) TupleUtils.getAttributeValue(attributes, Tuple.LATITUDE_KEY);
-		long targetNid= (Long) TupleUtils.getAttributeValue(attributes, Tuple.TARGET_NID);
-		double[] curr = CurrentTargetPositionTracker.getInstance().getTargetPosition(targetNid);
-		diffApp.log(Level.INFO,"Tracked position:"+doubleArrToString(target_location)+"  Actual position:"+doubleArrToString(curr));
+		TaskEntry taskEntry= diffApp.activeTasksList.get(dataPkt.getTaskId());
+		if ((diffApp.getTime() - lastTrackTime+0.1) >= taskEntry.getInterest().getDataInterval()) {
+			lastTrackTime = diffApp.getTime();
+			totalTrackingPkts++;
+			diffApp.log(Level.INFO, "Tracking event with pkt:" + dataPkt);
+			double[] target_location = new double[2];
+			target_location[0] = (Double) TupleUtils.getAttributeValue(
+					attributes, Tuple.LONGITUDE_KEY);
+			target_location[1] = (Double) TupleUtils.getAttributeValue(
+					attributes, Tuple.LATITUDE_KEY);
+			long targetNid = (Long) TupleUtils.getAttributeValue(attributes,
+					Tuple.TARGET_NID);
+			double[] curr = CurrentTargetPositionTracker.getInstance()
+					.getTargetPosition(targetNid);
+			diffApp.log(Level.INFO, "Tracked position:"
+					+ doubleArrToString(target_location) + "  Actual position:"
+					+ doubleArrToString(curr));
+		}
+		
 	}
 	
 	private String doubleArrToString(double[] arr){
@@ -362,8 +381,8 @@ public class MicroLearner {
 			lastDiffusionParticipation=timesteps;
 			SensorTask task= taskList.get(reinforcementPkt.getTaskId());
 			if(task!=null){
-				task.expectedPrice=reinforcementPkt.getPayment();
-				//task.expectedPrice=diffApp.interestCache.get(reinforcementPkt.getTaskId()).getMaxGradient().getPayment();
+				//task.expectedPrice=reinforcementPkt.getPayment();
+				task.expectedPrice=diffApp.interestCache.get(reinforcementPkt.getTaskId()).getMaxGradient().getPayment();
 			}
 		}		
 	}
@@ -387,10 +406,11 @@ public class MicroLearner {
 			lastSourceParticipation=timesteps;
 			DataPacket dataPkt=new DataPacket(diffApp.nid,interest.getSinkId(),interest.getTaskId(),event, diffApp.getTime());
 			
-			
 			//filtering of data for same task for this timestep, 
 			if(!shouldFilter(dataPkt)){
 				outboundMsgs.add(dataPkt);
+				dataPkt.addCostReward(currentTask.lastReward, currentTask.getLastCost(),diffApp.nid); 
+	            mlearner.dataArriveAtUpPort(dataPkt); 
 			}
 		}		
 	}

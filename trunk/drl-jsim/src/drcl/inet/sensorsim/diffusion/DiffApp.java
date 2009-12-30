@@ -30,6 +30,7 @@ package drcl.inet.sensorsim.diffusion ;
 
 import drcl.inet.mac.EnergyContract;
 import drcl.inet.sensorsim.* ;
+import drcl.inet.sensorsim.SensorAppAgentContract.Message;
 import drcl.inet.sensorsim.drl.CSVLogger;
 import drcl.inet.sensorsim.drl.SensorTask;
 import drcl.inet.sensorsim.drl.diffext.DRLDiffApp.NodeState;
@@ -96,12 +97,15 @@ public class DiffApp extends drcl.inet.sensorsim.SensorApp implements drcl.comp.
 	public DiffTimer dataCache_purgeTimer ;
 
 	private long noOfTracks=0;
-
+	private double lastTrackTime=0;
+	
 	private int noOfDataPkts;
 
 	private int noOfReinforcements;
 
 	private int noOfInterests;
+	
+	private Double lifetime;
 	
 	public long getNoOfTracks() {
 		System.out.println("No. Of tracks="+noOfTracks);
@@ -138,6 +142,10 @@ public class DiffApp extends drcl.inet.sensorsim.SensorApp implements drcl.comp.
 	public double getEnergy(){
 	// Contract type: ENERGY_QUERY =0
     double energy = ((EnergyContract.Message)wirelessPhyPort.sendReceive(new EnergyContract.Message(0, -1.0,-1))).getEnergyLevel();
+    if (energy <= 0 && lifetime==null){
+		lifetime=getTime();
+		log(Level.WARNING,"Out Of Energy, lifetime="+lifetime);
+	}
     return energy;
 	}
 
@@ -371,15 +379,29 @@ public class DiffApp extends drcl.inet.sensorsim.SensorApp implements drcl.comp.
 	}
 
 	/** Constructs a sensing event */
-	public synchronized AttributeVector ConstructSensingEvent()
+	public synchronized AttributeVector ConstructSensingEvent(SensorAppAgentContract.Message msg)
 	{
-		/* sensorLocX and sensorLocY are the X and Y coordinates of the sensor node and must be obtained from the mobility model. */
-		/* get most up-to-date location from SensorMobilityModel */
-		SensorPositionReportContract.Message msg = new SensorPositionReportContract.Message();
-		msg = (SensorPositionReportContract.Message) mobilityPort.sendReceive(msg);
-		float sensorLocX = (float)(msg.getX()) ;
-		float sensorLocY = (float)(msg.getY()) ;
-
+		double sensorLocX, sensorLocY, snr;
+		long targetNid;
+		if (msg == null) {
+			/*
+			 * sensorLocX and sensorLocY are the X and Y coordinates of the
+			 * sensor node and must be obtained from the mobility model.
+			 */
+			SensorPositionReportContract.Message positionMsg = new SensorPositionReportContract.Message();
+			positionMsg = (SensorPositionReportContract.Message) mobilityPort
+					.sendReceive(positionMsg);
+			sensorLocX = positionMsg.getX();
+			sensorLocY = positionMsg.getY();
+			targetNid=this.nid;
+			snr=500;
+		}else{
+			sensorLocX = msg.getTargetX() ;
+			sensorLocY = msg.getTargetY() ;
+		    targetNid=msg.getTargetNid();
+		    snr=msg.getSNR();
+		}
+		
 		AttributeVector event = new AttributeVector() ;
 		event.addElement(new Attribute(Attribute.CLASS_KEY, Attribute.INT32_TYPE, Attribute.IS, -1, new Integer(Attribute.DATA_CLASS) ) ) ;
 		event.addElement(new Attribute(Attribute.SCOPE_KEY, Attribute.INT32_TYPE, Attribute.IS, -1, new Integer(Attribute.NODE_LOCAL_SCOPE) ) ) ;
@@ -397,7 +419,7 @@ public class DiffApp extends drcl.inet.sensorsim.SensorApp implements drcl.comp.
 		/* A sensor node that detects a target searches its interest cache for a matching interest entry. A matching entry is one whose rect encompasses the sensor location and the type of the entry matches the detected target type. */
 
 		/* construct the event as a list of attribute-value pairs. */
-		AttributeVector event = ConstructSensingEvent() ;
+		AttributeVector event = ConstructSensingEvent((Message) data_) ;
 
 		InterestCacheEntry intrstEntry = interestCache_lookup(event) ;
 		if ( intrstEntry != null )	/* if there is a matching interest. */
@@ -413,7 +435,7 @@ public class DiffApp extends drcl.inet.sensorsim.SensorApp implements drcl.comp.
 	public synchronized boolean CanSatisfyInterest(AttributeVector interest)
 	{
 		/* construct the event as a list of attribute-value pairs. */
-		AttributeVector event = ConstructSensingEvent() ;
+		AttributeVector event = ConstructSensingEvent(null) ;
 
 		if ( interest.IsMatching(event) == true )
 		{
@@ -492,7 +514,7 @@ public class DiffApp extends drcl.inet.sensorsim.SensorApp implements drcl.comp.
 						grdntEntry.dataTimer = null ;
 
 						/* set a new data timer using the new data rate. */
-						grdntEntry.dataTimer = new DiffTimer(DiffTimer.TIMEOUT_SEND_DATA, new DataPacket(nid, grdntEntry.getPreviousHop(), ConstructSensingEvent(), grdntEntry.getDataRate())) ;
+						grdntEntry.dataTimer = new DiffTimer(DiffTimer.TIMEOUT_SEND_DATA, new DataPacket(nid, grdntEntry.getPreviousHop(), ConstructSensingEvent(null), grdntEntry.getDataRate())) ;
 
 						grdntEntry.dataTimer.handle = setTimeout(grdntEntry.dataTimer, (double)(grdntEntry.getDataRate())) ;
 					}
@@ -589,7 +611,7 @@ public class DiffApp extends drcl.inet.sensorsim.SensorApp implements drcl.comp.
 						grdntEntry.dataTimer = null ;
 
 						/* set a new data timer using the new data rate. */
-						grdntEntry.dataTimer = new DiffTimer(DiffTimer.TIMEOUT_SEND_DATA, new DataPacket(nid, grdntEntry.getPreviousHop(), ConstructSensingEvent(), grdntEntry.getDataRate())) ;
+						grdntEntry.dataTimer = new DiffTimer(DiffTimer.TIMEOUT_SEND_DATA, new DataPacket(nid, grdntEntry.getPreviousHop(), ConstructSensingEvent(null), grdntEntry.getDataRate())) ;
 
 						grdntEntry.dataTimer.handle = setTimeout(grdntEntry.dataTimer, (double)(grdntEntry.getDataRate())) ;
 					}
@@ -633,7 +655,10 @@ public class DiffApp extends drcl.inet.sensorsim.SensorApp implements drcl.comp.
 				ActiveTasksEntry taskEntry = activeTasksList_lookup(event) ;
 				if ( taskEntry != null ) /* if there is a matching task */
 				{
-					noOfTracks++;
+					if((getTime()-lastTrackTime)>=taskEntry.getDataInterval()){
+						lastTrackTime=getTime();
+						noOfTracks++;
+					}
 					/* Check if the neighbor sending the event needs to be positively reinforced. */
 					if ( CheckToSendPositiveReinforcement(taskEntry, dataPkt) == true )
 					{
@@ -993,6 +1018,7 @@ public class DiffApp extends drcl.inet.sensorsim.SensorApp implements drcl.comp.
 			}
 		}else if(data_ instanceof CPUCheck){
 			if(nid==sink_nid) return;
+			getEnergy();
 			WakeUp();		
 			setTimeout(data_, 5);
 		}else
@@ -1014,6 +1040,7 @@ public class DiffApp extends drcl.inet.sensorsim.SensorApp implements drcl.comp.
         CSVLogger.log("stats",stats,null);
         if(nid!=sink_nid){
         	CSVLogger.log("Energy",""+getEnergy(),null);
+        	CSVLogger.log("Lifetime",""+lifetime,null);            
         	interestCache_print();
         }
        /* if(!globalLogged){

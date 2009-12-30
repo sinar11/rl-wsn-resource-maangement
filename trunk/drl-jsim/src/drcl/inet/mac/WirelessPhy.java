@@ -400,7 +400,7 @@ public class WirelessPhy extends drcl.net.Module implements ActiveComponent {
         else {
             // siliently discards the packet
             dropped_packets ++;
-            System.out.println("NODE"+this.nid+" is dead therefore dropping outgoing packet");
+           // System.out.println("NODE"+this.nid+" is dead therefore dropping outgoing packet");
             return;
         }
 
