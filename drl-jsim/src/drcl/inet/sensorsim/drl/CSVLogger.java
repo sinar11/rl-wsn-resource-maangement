@@ -22,7 +22,7 @@ public class CSVLogger {
     FileOutputStream fout;
     static HashMap loggers= new HashMap();
     static String currentRun=System.currentTimeMillis()+"";
-    static int noOfNodes;
+    public static int noOfNodes;
     
     public CSVLogger(String filename, Algorithm algorithm, int noOfNodes){
         this(filename,algorithm,noOfNodes, false);
@@ -32,7 +32,7 @@ public class CSVLogger {
     	this.filename=filename;
     	String dir="results"+File.separator+algorithm+File.separator+noOfNodes+File.separator+currentRun;
     	if(global) 
-    		dir="results"+File.separator+"global"+File.separator+noOfNodes;
+    		dir="results"+File.separator+"global"+File.separator; //+noOfNodes;
             
         new File(dir).mkdirs();
         
