@@ -43,10 +43,10 @@ public class EnergyModel extends drcl.DrclObj {
 
     //values for RADIO COMPONENT
     private double Pt         = 0.096;       // Amplifier power (in watts);
-    private double Pt_consume = 0.016;       // Transmittting Current that is required ( in amps)
-    private double Pr_consume = 0.008;       // Receiving Current that is required (in amps)
+    private double Pt_consume = 0.020;       // Transmittting Current that is required ( in amps)
+    private double Pr_consume = 0.010;       // Receiving Current that is required (in amps)
     private double P_idle     = 0.0002;      // When Idle the unit still consumes current (this figure is an approximation)
-    private double P_sleep    = 0.000008;    // current drawn when radio is in sleep mode.
+    private double P_sleep    = 0.000001;    // current drawn when radio is in sleep mode.
     private double P_off      = 0.000001;    // 1 micro (10^-6) amps that is drawn when radio is off
 
     // Values for CPU COMPONENT
