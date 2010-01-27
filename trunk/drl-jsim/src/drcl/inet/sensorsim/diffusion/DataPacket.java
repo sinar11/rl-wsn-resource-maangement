@@ -49,13 +49,16 @@ public class DataPacket
 	/** The data or exploratory interval */
 	public float dataInterval ;
 
-	public DataPacket(long source_, long destination_, AttributeVector event_, float dataInterval_)
+	public double timestamp;
+	
+	public DataPacket(long source_, long destination_, AttributeVector event_, float dataInterval_, double timestamp)
 	{
 		super() ;
 		source = source_ ;
 		destination = destination_ ;
 		event = event_ ;
 		dataInterval = dataInterval_ ;
+		this.timestamp=timestamp;
 	}
 
 	/** Gets the source of the packet */

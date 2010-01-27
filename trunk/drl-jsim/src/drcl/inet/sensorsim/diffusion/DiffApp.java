@@ -32,7 +32,9 @@ import drcl.inet.mac.EnergyContract;
 import drcl.inet.sensorsim.* ;
 import drcl.inet.sensorsim.SensorAppAgentContract.Message;
 import drcl.inet.sensorsim.drl.CSVLogger;
+import drcl.inet.sensorsim.drl.EnergyStats;
 import drcl.inet.sensorsim.drl.SensorTask;
+import drcl.inet.sensorsim.drl.algorithms.AbstractAlgorithm.Algorithm;
 import drcl.inet.sensorsim.drl.diffext.DRLDiffApp.NodeState;
 import drcl.comp.*;
 import java.util.*;
@@ -98,6 +100,7 @@ public class DiffApp extends drcl.inet.sensorsim.SensorApp implements drcl.comp.
 
 	private long noOfTracks=0;
 	private double lastTrackTime=0;
+	private double averageDelay=0;
 	
 	private int noOfDataPkts;
 
@@ -106,6 +109,13 @@ public class DiffApp extends drcl.inet.sensorsim.SensorApp implements drcl.comp.
 	private int noOfInterests;
 	
 	private Double lifetime;
+
+	private int noOfNodes;
+
+	private double initialEnergy;
+
+	private double totalEnergyUsed;
+	private double targetMoving;
 	
 	public long getNoOfTracks() {
 		System.out.println("No. Of tracks="+noOfTracks);
@@ -126,6 +136,10 @@ public class DiffApp extends drcl.inet.sensorsim.SensorApp implements drcl.comp.
 	
 	@Override
 	 protected void _start() {
+		if(nid==sink_nid)
+			EnergyStats.init(noOfNodes);
+		else
+			initialEnergy=getEnergy();
 		 setTimeout(new CPUCheck(), 5);	 
 	 }
 
@@ -137,6 +151,11 @@ public class DiffApp extends drcl.inet.sensorsim.SensorApp implements drcl.comp.
 	  
 
 	class CPUCheck{	
+	}
+	
+	public void setNoOfNodes(int noOfNodes) {
+		this.noOfNodes = noOfNodes;
+		CSVLogger.noOfNodes=noOfNodes;
 	}
 	
 	public double getEnergy(){
@@ -368,8 +387,9 @@ public class DiffApp extends drcl.inet.sensorsim.SensorApp implements drcl.comp.
 			if ( entry.dataTimer == null )
 			{
 				/* One may also consider adding sendPacket(, rand) here to send the data to the sink promptly instead of waiting until the gradient timer expires */
-				entry.dataTimer = new DiffTimer(DiffTimer.TIMEOUT_SEND_DATA, new DataPacket(nid, entry.getPreviousHop(), event, entry.getDataRate())) ;
-				entry.dataTimer.handle = setTimeout(entry.dataTimer, (double)(entry.getDataRate())) ;
+				sendPacket(new DataPacket(nid, entry.getPreviousHop(), event, entry.getDataRate(), getTime()), 0.0);
+				/*entry.dataTimer = new DiffTimer(DiffTimer.TIMEOUT_SEND_DATA, new DataPacket(nid, entry.getPreviousHop(), event, entry.getDataRate(), getTime())) ;
+				entry.dataTimer.handle = setTimeout(entry.dataTimer, (double)(entry.getDataRate())) ;*/
 			}
 			else
 			{
@@ -514,7 +534,7 @@ public class DiffApp extends drcl.inet.sensorsim.SensorApp implements drcl.comp.
 						grdntEntry.dataTimer = null ;
 
 						/* set a new data timer using the new data rate. */
-						grdntEntry.dataTimer = new DiffTimer(DiffTimer.TIMEOUT_SEND_DATA, new DataPacket(nid, grdntEntry.getPreviousHop(), ConstructSensingEvent(null), grdntEntry.getDataRate())) ;
+						grdntEntry.dataTimer = new DiffTimer(DiffTimer.TIMEOUT_SEND_DATA, new DataPacket(nid, grdntEntry.getPreviousHop(), ConstructSensingEvent(null), grdntEntry.getDataRate(), getTime())) ;
 
 						grdntEntry.dataTimer.handle = setTimeout(grdntEntry.dataTimer, (double)(grdntEntry.getDataRate())) ;
 					}
@@ -611,7 +631,7 @@ public class DiffApp extends drcl.inet.sensorsim.SensorApp implements drcl.comp.
 						grdntEntry.dataTimer = null ;
 
 						/* set a new data timer using the new data rate. */
-						grdntEntry.dataTimer = new DiffTimer(DiffTimer.TIMEOUT_SEND_DATA, new DataPacket(nid, grdntEntry.getPreviousHop(), ConstructSensingEvent(null), grdntEntry.getDataRate())) ;
+						grdntEntry.dataTimer = new DiffTimer(DiffTimer.TIMEOUT_SEND_DATA, new DataPacket(nid, grdntEntry.getPreviousHop(), ConstructSensingEvent(null), grdntEntry.getDataRate(),getTime())) ;
 
 						grdntEntry.dataTimer.handle = setTimeout(grdntEntry.dataTimer, (double)(grdntEntry.getDataRate())) ;
 					}
@@ -643,7 +663,7 @@ public class DiffApp extends drcl.inet.sensorsim.SensorApp implements drcl.comp.
 					for (int i = 0 ; i < no ; i++)
 					{
 						GradientEntry entry = (GradientEntry)intrstEntry.gradientList.elementAt(i);
-						sendPacket(new DataPacket(nid, entry.getPreviousHop(), event, entry.getDataRate()), DELAY * rand.nextDouble()) ;
+						sendPacket(new DataPacket(nid, entry.getPreviousHop(), event, entry.getDataRate(),getTime()), 0.0) ;
 					} // end for
 				} // end if
 				else
@@ -655,10 +675,14 @@ public class DiffApp extends drcl.inet.sensorsim.SensorApp implements drcl.comp.
 				ActiveTasksEntry taskEntry = activeTasksList_lookup(event) ;
 				if ( taskEntry != null ) /* if there is a matching task */
 				{
-					if((getTime()-lastTrackTime)>=taskEntry.getDataInterval()){
-						lastTrackTime=getTime();
-						noOfTracks++;
+					if ((getTime() - lastTrackTime+0.1) >= taskEntry.getDataInterval()) {
+						lastTrackTime = getTime();
+						averageDelay=(averageDelay*noOfTracks+(lastTrackTime-dataPkt.timestamp))/(noOfTracks+1);
+						noOfTracks++;						
+						EnergyStats.markAsReporting();
+						totalEnergyUsed=EnergyStats.getTotalEnergy();
 					}
+					
 					/* Check if the neighbor sending the event needs to be positively reinforced. */
 					if ( CheckToSendPositiveReinforcement(taskEntry, dataPkt) == true )
 					{
@@ -940,8 +964,8 @@ public class DiffApp extends drcl.inet.sensorsim.SensorApp implements drcl.comp.
 					{
 						dataEntry.setTimeStamp(getTime()) ;
 					}
-
-					sendPacket(dataPkt, DELAY * rand.nextDouble()) ;
+					dataPkt.timestamp=getTime();
+					sendPacket(dataPkt, 0.0) ;
 					InterestCacheEntry intrstEntry = interestCache_lookup(dataPkt.getEvent()) ;
 					if ( intrstEntry != null )
 					{
@@ -1018,7 +1042,8 @@ public class DiffApp extends drcl.inet.sensorsim.SensorApp implements drcl.comp.
 			}
 		}else if(data_ instanceof CPUCheck){
 			if(nid==sink_nid) return;
-			getEnergy();
+			double currEnergy= getEnergy();
+			EnergyStats.update((int) nid, initialEnergy-currEnergy,currEnergy>0, getTime());			
 			WakeUp();		
 			setTimeout(data_, 5);
 		}else
@@ -1034,15 +1059,18 @@ public class DiffApp extends drcl.inet.sensorsim.SensorApp implements drcl.comp.
 	public void collectStats(){
         log(Level.INFO,"*******************STATS**************");
         //nid,noOfEventsMissed,totalEvents,noOfPktsDropped,totalPkts,task1Id,task1,task2Id,task2,task3Id,task3,totalCost,totalReward,trPackets
-        String stats=""+nid+",interests="+noOfInterests+",dataPkts="+noOfDataPkts+",reinf="+noOfReinforcements; //+","+totalPkts;
-        if(nid==sink_nid)
-        	stats+=",totalTracks="+getNoOfTracks();
-        CSVLogger.log("stats",stats,null);
-        if(nid!=sink_nid){
-        	CSVLogger.log("Energy",""+getEnergy(),null);
-        	CSVLogger.log("Lifetime",""+lifetime,null);            
+        if(nid==sink_nid){
+        	EnergyStats.NodeStat lowestLifeNode=EnergyStats.getNodeWithLowestLifetime();
+        	String mobility=System.getProperties().getProperty("target.mobile", "true");
+        	String stats=noOfNodes+","+nid+","+getNoOfTracks()+","+lastTrackTime+","+averageDelay+","+totalEnergyUsed+","
+        		+lowestLifeNode.toString()+","+Boolean.parseBoolean(mobility);
+        	CSVLogger.logGlobal("sinkStats",stats,Algorithm.DIFFUSION);        	
+        }else{
+        	String nodeStats=noOfNodes+","+nid+","+noOfInterests+","+noOfDataPkts+","+noOfReinforcements+","+getEnergy()+","+lifetime; //+","+totalPkts;
+            CSVLogger.logGlobal("nodeStats", nodeStats, Algorithm.DIFFUSION);
         	interestCache_print();
         }
+        
        /* if(!globalLogged){
         	
         for(int i=0; i< globalRewardManager.getGlobalRewards().size();i++){
