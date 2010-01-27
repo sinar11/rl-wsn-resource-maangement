@@ -107,10 +107,10 @@ public class DataCacheEntry
 		for(DataStreamEntry stream: dataStreams.values()){
 			if(stream.getSourceId()==nid) continue;
 			if(stream.equals(bestStream)){
-				//if(stream.shouldReinforce(payable, margin)){
+				if(stream.shouldReinforce(payable, margin)){
 					System.out.println(nid+":+VE Reinforcement:"+payable+"-"+stream);
 					pkts.add(new ReinforcementPacket(taskId,payable,nid,stream.getSourceId()));
-				//}
+				}
 			}else if(stream.getNoOfPackets()>0){
 				System.out.println(nid+":-VE Reinforcement:"+stream+" bestStream:"+bestStream);
 				pkts.add(new ReinforcementPacket(taskId,0,nid,stream.getSourceId()));
@@ -136,15 +136,12 @@ public class DataCacheEntry
 			//	double cost= getAvgCost(pkts);
 				if(bestStream==null){
 					bestStream=stream;
-				}else if(stream.getAvgPktReward()>=1.1*bestStream.getAvgPktReward()){
+				}else if(stream.getAvgWLReward()>1.1*bestStream.getAvgWLReward()){
+					bestStream=stream;
+				}/*else if(stream.getAvgPktReward()>=1.1*bestStream.getAvgPktReward()){
 					bestStream=stream;
 				}else if(stream.getTotalPktReward()>bestStream.getTotalPktReward()){
 					bestStream=stream;
-				}/*else{
-					if (cost < minCost) {
-						minCost = cost;
-						bestStream = stream;
-					}
 				}*/
 			}		
 		}
