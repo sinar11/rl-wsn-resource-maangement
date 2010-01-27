@@ -11,7 +11,7 @@ import drcl.util.random.UniformDistribution;
 public abstract class AbstractAlgorithm {
 	
 	public enum Algorithm{
-    	DIRL, COIN, RANDOM, TEAM, SORA, ORACLE
+    	DIRL, COIN, RANDOM, TEAM, SORA, ORACLE, DIFFUSION
     }
     
 	//exploration factors for algorithms using exploration
