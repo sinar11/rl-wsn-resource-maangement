@@ -20,6 +20,7 @@ public class MacroLearner {
 	static final double MAX_DATA_QUALITY=1.0;
 	private static final double MIN_DATA_QUALITY=0.0;
 	private static final double EXPLORATION_FACTOR = 0.05;
+	private static final double NO_OF_PKTS_FACTOR = 0.01;
 	
 	DRLDiffApp diffApp;
 	
@@ -118,7 +119,7 @@ public class MacroLearner {
 			}
 			double payable= calcPayable(interest, payment);
 			
-			/*double totalReward=(diffApp.nid==diffApp.sink_nid)?payable:calcTotalReward(totalPkts, interest, payable);
+			double totalReward=(diffApp.nid==diffApp.sink_nid)?payable:calcTotalReward(totalPkts, interest, payable);
 			Collection<DataStreamEntry> dataStreams=dataCacheEntry.getDataStreams();
 			for(DataStreamEntry stream: dataStreams){
 				if(stream.getNoOfPackets()==0) continue;
@@ -126,71 +127,34 @@ public class MacroLearner {
 				double clReward=calcTotalReward(pkts, interest, payable);
 				
 				double wlReward=totalReward-clReward;
-				if(dataCacheEntry.isQualityAchieved() && !dataCacheEntry.isFavoredStream(stream)){
-					stream.updateStatsOnNewWLReward(wlReward);
-				if(wlReward>=totalReward){
-					if(dataCacheEntry.favoredStream==null)
-						dataCacheEntry.setFavoredStream(stream);
-					dataCacheEntry.setQualityAchieved(true);
-					if(stream.getSourceId()!=diffApp.nid)
-						stream.updateStatsOnNewWLReward(totalReward);				
-				}
-				
-			}*/
+				stream.updateStatsOnNewWLReward(wlReward);
+			}
 			//Determine stream with lowest cost and required quality and give reward equal to payable to that stream. All other streams should receive zero reward. 
-			DataStreamEntry bestStream=findBestStream(dataCacheEntry, interest);
+			/*DataStreamEntry bestStream=findBestStream(dataCacheEntry, interest);
 			for(DataStreamEntry stream: dataCacheEntry.getDataStreams()){
 				if(stream.equals(bestStream) && bestStream.getSourceId()!=diffApp.nid){
 					stream.updateStatsOnNewWLReward(payable);
 				}				
-			}			
+			}		*/	
 		}
 		
 	}
-	
-	/**
-	 * Determine stream with lowest cost and required quality
-	 * @param dataCacheEntry
-	 * @param interest
-	 * @return
-	 */
-	private DataStreamEntry findBestStream(DataCacheEntry dataCacheEntry, InterestPacket interest){
-		Collection<DataStreamEntry> dataStreams=dataCacheEntry.getDataStreams();
-		double minCost=Integer.MAX_VALUE;
-		DataStreamEntry bestStream=null;;
-		for(DataStreamEntry stream: dataStreams){
-			if(stream.getNoOfPackets()==0) continue;
-			List<DataPacket> pkts=dataCacheEntry.getRecentDataForSource(stream.getSourceId());
-			if(calcDataQuality(pkts, interest)==MAX_DATA_QUALITY){
-				double cost=getAvgCost(pkts);
-				if(cost<minCost){
-					minCost=cost;
-					bestStream=stream;
-				}
-			}		
-		}
-		return bestStream;
-	}
-	
+
 	private double calcTotalReward(List<DataPacket> pkts,
 			InterestPacket interest, double payable){
 		if(pkts.size()==0) return 0;
 		double quality=calcDataQuality(pkts, interest);
-		double minCost=Integer.MAX_VALUE;
+		double pktsCost=0;
+		double pktsReward=0;
 		for(DataPacket pkt: pkts){
-			if(pkt.getCost()<minCost) minCost=pkt.getCost();
+			pktsCost+=pkt.getCost();
+			pktsReward+=pkt.getReward();
 		}
-		return quality*payable-minCost;		
+		double avgReward= pktsReward/pkts.size();
+		double avgCost=pktsCost/pkts.size();
+		return quality*avgReward- avgCost+NO_OF_PKTS_FACTOR*pkts.size();		
 	}
 	
-	private double getAvgCost(List<DataPacket> pkts){
-		if(pkts.size()==0) return 0;
-		double totalCost=0;
-		for(DataPacket pkt: pkts){
-			totalCost+=pkt.getCost();
-		}
-		return totalCost/pkts.size();
-	}
 	/**
 	 * Matches data attributes to QoS contraints and returns a value between 0 and 1 representing data quality
 	 * @param pkts
@@ -276,8 +240,8 @@ public class MacroLearner {
 			entry.reset(diffApp.getTime());
 		interestEntry.getInterest().setPayment(interestEntry.getMaxGradient().getPayment());
 		interestEntry.setPayable(calcPayable(interestEntry.getInterest(),interestEntry.getMaxGradient().getPayment()));
-		diffApp.log(Level.INFO, "After updating gradient from interest:"+interestPkt);
-		diffApp.interestCachePrint();
+		diffApp.log(Level.FINE, "After updating gradient from interest:"+interestPkt);
+	//	diffApp.interestCachePrint();
 		interestPkt.setPayment(interestEntry.getPayable());
 		return true;
 	}

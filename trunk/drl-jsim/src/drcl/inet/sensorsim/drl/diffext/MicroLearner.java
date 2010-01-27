@@ -7,13 +7,11 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Level;
 
-import sun.reflect.ReflectionFactory.GetReflectionFactoryAction;
-
 import drcl.comp.ACATimer;
-import drcl.comp.Port;
 import drcl.inet.mac.EnergyContract;
 import drcl.inet.sensorsim.CurrentTargetPositionTracker;
 import drcl.inet.sensorsim.drl.CSVLogger;
+import drcl.inet.sensorsim.drl.EnergyStats;
 import drcl.inet.sensorsim.drl.SensorState;
 import drcl.inet.sensorsim.drl.SensorTask;
 import drcl.inet.sensorsim.drl.algorithms.AbstractAlgorithm;
@@ -54,12 +52,14 @@ public class MicroLearner {
     long lastSourceParticipation=-RECENT_WINDOW;
     int noOfPkts=0;
     int noOfSensedPkts=0;
-    double currentEnergy;
+    double initialEnergy;
     double lastReportedTime;
     int timesteps=0;
     double totalReward=0;
     double totalCost=0;
 	double lastTrackTime;
+	double averageDelay;
+	double totalEnergyUsed;
     
     public MicroLearner(DRLDiffApp app, MacroLearner mLearner){
     	this.mlearner=mLearner;
@@ -77,7 +77,7 @@ public class MicroLearner {
     	this.algorithm=AbstractAlgorithm.createInstance(taskList, diffApp);
     	  
        if (diffApp.nid != diffApp.sink_nid) {
-			currentEnergy = diffApp.getRemainingEnergy();
+    	    initialEnergy = diffApp.getRemainingEnergy();
 			currentTask= taskList.get(0);
 			currentState=getMatchingState(false, false);
 			taskTimer = diffApp.setTimeout("performTask", TIMER_INTERVAL);
@@ -129,17 +129,12 @@ public class MicroLearner {
 	}
 
 	private void endTask(SensorTask task, SensorState state) {
-		/*try{
-	 	for (Iterator<DataPacket> iter = outboundMsgs.iterator(); iter.hasNext();) {
-	 		DataPacket msg = iter.next();
-	 		msg.addCostReward(currentTask.lastReward, currentTask.getLastCost(),diffApp.nid); 
-            mlearner.dataArriveAtUpPort(msg); 
-        }
-	 	if(noOfPkts>0) 
-	 		mlearner.computeReinforcements();  //compute reinforcements for arriving data at this timestep
-		}finally{*/
-			outboundMsgs.clear();
-		//}
+		outboundMsgs.clear();
+		if (diffApp.nid != diffApp.sink_nid) {
+			double currEnergy = diffApp.getRemainingEnergy();
+			EnergyStats.update((int) diffApp.nid, initialEnergy - currEnergy,
+					currEnergy > 0, diffApp.getTime());
+		}
 	}
 
     public SensorState getMatchingState(boolean successfulDiffusion, boolean successfulSample) {
@@ -173,7 +168,6 @@ public class MicroLearner {
             }
             public synchronized double computeCost() {
             	double energyConsumed=ENERGY_LISTEN+ noOfPkts*ENERGY_DIFFUSE; 
-            	currentEnergy=currentEnergy-energyConsumed;
             	return energyConsumed; //RX +TX
             }
             public synchronized double computePrice() {
@@ -188,7 +182,6 @@ public class MicroLearner {
             public void execute() {
                 noOfPkts=0;
                 GoToSleep();
-                currentEnergy=currentEnergy-ENERGY_SLEEP;
             }
 
             public synchronized double computeCost() {
@@ -219,8 +212,7 @@ public class MicroLearner {
 		protected void execute() {
 			noOfSensedPkts=0;
 			WakeUp();                
-            currentEnergy=currentEnergy-ENERGY_SAMPLE;			
-		}
+     	}
 		public boolean isAvailable() {
 			return true;
 		}
@@ -348,7 +340,12 @@ public class MicroLearner {
 		TaskEntry taskEntry= diffApp.activeTasksList.get(dataPkt.getTaskId());
 		if ((diffApp.getTime() - lastTrackTime+0.1) >= taskEntry.getInterest().getDataInterval()) {
 			lastTrackTime = diffApp.getTime();
+			averageDelay=(averageDelay*totalTrackingPkts+(lastTrackTime-dataPkt.getTimestamp()))/(totalTrackingPkts+1);
 			totalTrackingPkts++;
+			EnergyStats.markAsReporting();
+			totalEnergyUsed=EnergyStats.getTotalEnergy();
+			CSVLogger.log("Delay", ""+averageDelay ,false,algorithm.getAlgorithm());
+			CSVLogger.log("Delay", ""+averageDelay ,false,algorithm.getAlgorithm());
 			diffApp.log(Level.INFO, "Tracking event with pkt:" + dataPkt);
 			double[] target_location = new double[2];
 			target_location[0] = (Double) TupleUtils.getAttributeValue(
@@ -362,6 +359,10 @@ public class MicroLearner {
 			diffApp.log(Level.INFO, "Tracked position:"
 					+ doubleArrToString(target_location) + "  Actual position:"
 					+ doubleArrToString(curr));
+			double dist = Math.sqrt(Math.pow(Math.abs(target_location[0]- curr[0]), 2)
+	                  + Math.pow(Math.abs(target_location[1] - curr[1]), 2));
+			CSVLogger.log("target"+targetNid,target_location[0] + "," + target_location[1]
+						+ "," + curr[0] + "," + curr[1] + "," + dist,false,algorithm.getAlgorithm());	
 		}
 		
 	}
