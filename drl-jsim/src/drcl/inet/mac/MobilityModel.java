@@ -73,13 +73,13 @@ public class MobilityModel extends drcl.net.Module implements drcl.comp.ActiveCo
     private static final String QUERY_PORT_ID   = ".query";    // connect to the channel component
     
     /** the port which should be connected to the mobility tracker. */
-    protected Port reportPort = addPort(REPORT_PORT_ID, false);
+    public Port reportPort = addPort(REPORT_PORT_ID, false);
     
     /** the config port */
-    protected Port configPort = addPort(CONFIG_PORT_ID, false); 
+    public Port configPort = addPort(CONFIG_PORT_ID, false); 
     
     /** the query port which should be connected to the WireleePhy component. */
-    protected Port queryPort  = addPort(QUERY_PORT_ID, false);
+    public Port queryPort  = addPort(QUERY_PORT_ID, false);
     
     // parameters same as those in NodePositionTracker
     
@@ -167,6 +167,11 @@ public class MobilityModel extends drcl.net.Module implements drcl.comp.ActiveCo
 
     /** Installs a trajectory array. */
     public void installTrajectory(double[][] trajectory_)  {      // the trajectory point array derived from SDF file 
+    	String mobility=System.getProperties().getProperty("target.mobile", "true");
+    	if(!Boolean.parseBoolean(mobility)){
+    		System.out.println("MOBILITY NOT TURNED ON..");
+    		return;
+    	}
         trajectory   = trajectory_;             // set the trajectory ( arry of states in SDF file ) 
         nTrajectory  = trajectory.length;
         nCurrentTraj = -1;         
