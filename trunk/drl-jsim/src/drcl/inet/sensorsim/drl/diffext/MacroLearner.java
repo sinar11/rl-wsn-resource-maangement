@@ -20,7 +20,7 @@ public class MacroLearner {
 	static final double MAX_DATA_QUALITY=1.0;
 	private static final double MIN_DATA_QUALITY=0.0;
 	private static final double EXPLORATION_FACTOR = 0.05;
-	private static final double NO_OF_PKTS_FACTOR = 0.01;
+	private static final double NO_OF_PKTS_FACTOR = 0.1;
 	
 	DRLDiffApp diffApp;
 	
