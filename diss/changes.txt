@@ -1,0 +1,10 @@
+Fri Jul 10 16:06:00 CDT 2009
+1) Modified utaexample.tex to include the word `Page' in the table of contents on the same line as the word `Chapter'.
+2) Removed 'Publication No.' line from Abstract.
+3) Removed signature page.
+4) Moved title page to the front.
+
+
+Thu Dec 10 13:20:40 CST 2009
+1) Made one of the subsection titles very long to demonstrate how to force it to be single-spaced in the table of contents.
+2) no bolding of titles in the front matter or text
