@@ -15,7 +15,6 @@ and hence offers opportunity for a wide range of
 applications. Most popular areas for WSN
 applications are health, military, environment,
 home and security.
-%
 \section{Scope and Challenges}
 \label{scope-challenges}
 Due to tight integration with the physical world,
@@ -41,25 +40,24 @@ A complete middleware solution should provide a
 holistic view of the network, services for data
 collection, aggregation and control while
 efficiently and adaptively managing system
-resources as per application's requirements. \\ 
-%%
-%% Resource management (DIRL+COIN)
+resources as per application's requirements. \\
+% % % Resource management (DIRL+COIN)
 WSN nodes are remarkably constrained in terms of
 their resources viz. energy, computational power
 and radio bandwidth. WSNs normally operate in
 uncertain and dynamic environments where the state
-of the system changes considerably over time.
-For example, in data collection applications, uncertainty exists due to
-intermittent links or traffic conditions. Moreover,
-the network itself is dynamic due to such events as
-node mobility and depleted battery. WSN
-applications need to cope with such dynamicity and
-uncertainty inherent in sensor networks, while
-simultaneously trying to achieve application's
-requirements for QoS and optimization goal.
-Consequently, adaptive resource management is a key
-to any successful middleware
-solution enabling such applications.\\ 
+of the system changes considerably over time. For
+example, in data collection applications,
+uncertainty exists due to intermittent links or
+traffic conditions. Moreover, the network itself is
+dynamic due to such events as node mobility and
+depleted battery. WSN applications need to cope
+with such dynamics and uncertainty inherent in
+sensor networks, while simultaneously trying to
+achieve application's requirements for QoS and
+optimization goal. Consequently, adaptive resource
+management is a key to any successful middleware
+solution enabling such applications.\\
 Resource management includes initial
 sensor-selection and task allocation as well as
 runtime adaptation of allocated task/resources.
@@ -72,7 +70,7 @@ applications. This problem of resource
 management/adaptation can be described as follows:
 \\ \emph{Given application structure, QoS
 requirements and current system state, what is the
-best way of allocating tasks to resources so that 
+best way of allocating tasks to resources so that
 given system-wide, application-driven, global
 parameters can be optimized.}\\ In the above, the
 application structure is in the form of underlying
@@ -111,33 +109,33 @@ tasks on each sensor node in the system, so that
 energy usage among all sensor nodes is minimized
 while fulfilling the coverage and latency
 requirements of the application.\\
-%%
-%% Sparse WSN
-Most sensor network applications studied today consists of a large number of sensor nodes 
-deployed over a geographical area. Sensors use
-multi-hop communication to send data acquired from
-the external environment to a sink node or to an
-Access Point (AP) in the infrastructure. However,
-several applications do not require fine-grained sensing. Examples of such
-applications include monitoring of weather
-conditions in large areas, air quality in urban
-scenarios, terrain conditions for agriculture, and
-so on. In this case, it is possible to consider a
-\emph{sparse wireless sensor network}, i.e., a WSN
-where the density of nodes is so low that they
-cannot communicate with each other through
-multi-hop paths, or even directly. In order to make
-communication feasible, data collection in sparse
-WSNs can be accomplished by means of \emph{mobile
-data collectors} (MDCs). MDCs are special mobile
-nodes responsible for data gathering and/or
-dissemination. They are assumed to be powerful in
-terms of data storage and processing capabilities,
-and are not energy constrained. However, the data
-collection paradigm in sparse WSNs with MDCs is
-different, and introduces significant challenges
-including contact detection and energy
-conservation. \\
+% % % Sparse WSN
+Most sensor network applications studied today
+consists of a large number of sensor nodes deployed
+over a geographical area. Sensors use multi-hop
+communication to send data acquired from the
+external environment to a sink node or to an Access
+Point (AP) in the infrastructure. However, several
+applications do not require fine-grained sensing.
+Examples of such applications include monitoring of
+weather conditions in large areas, air quality in
+urban scenarios, terrain conditions for
+agriculture, and so on. In this case, it is
+possible to consider a \emph{sparse wireless sensor
+network}, i.e., a WSN where the density of nodes is
+so low that they cannot communicate with each other
+through multi-hop paths, or even directly. In order
+to make communication feasible, data collection in
+sparse WSNs can be accomplished by means of
+\emph{mobile data collectors} (MDCs). MDCs are
+special mobile nodes responsible for data gathering
+and/or dissemination. They are assumed to be
+powerful in terms of data storage and processing
+capabilities, and are not energy constrained.
+However, the data collection paradigm in sparse
+WSNs with MDCs is different, and introduces
+significant challenges including contact detection
+and energy conservation. \\
 Communication between an MDC and each sensor node
 takes place in two phases. First, sensor node
 discovers the presence of the MDC in its
@@ -161,7 +159,6 @@ the MDC contacts can be affected by delays or can
 change their rate. Hence robust and flexible
 mechanisms have to be defined in order to adapt to
 operating conditions autonomously.\\
-%
 % % Communication Paradigm
 Support for a scalable and robust communication
 paradigm is another important characteristic of a
@@ -172,11 +169,125 @@ data dissemination. Middleware should allow
 application specific in-network processing and data
 filtering to enable application assisted routing,
 aggregation, data fusion and collaborative
-information processing. %
+information processing.
 \section{Contributions}
-\label{contributions}\subsection{Adaptive Resource Management Using Distributed Independent Reinforcement Learning}\label{intro:dirl}
-\subsection{Ensuring Global Optimization With Multi-Tier Reinforcement Learning}\label{intro:coin}\subsection{Resource-aware Data Collection in Sparse Wireless Sensor Networks}\label{intro:dirl-sparse}
-
+\label{contributions}
+We next introduce our contributions in this
+dissertation addressing the issues of developing a
+dynamic, adaptive and autonomous middleware for WSN
+management. %
+\subsection{Adaptive Resource Management Using Distributed Independent Reinforcement Learning}\label{intro:dirl}
+Our first contribution is a Distributed Independent
+Reinforcement Learning (DIRL) based scheme for WSN
+resource management. The main idea of DIRL is to
+allow each individual sensor node to self-schedule
+its tasks and allocate its resources by learning
+their usefulness (utility) in any given state while
+honouring application defined constraints and
+maximizing total amount of reward over time. DIRL
+is based on Q-learning [17], a form of model-free
+reinforcement learning. Q-learning is quite simple,
+demands minimal computational resources and doesn’t
+require a model of the environment in order to
+operate. Hence it is ideal for implementation on
+resource-constrained sensor nodes. DIRL uses
+classic exploration and exploitation strategy as
+used in most RL based approaches to learn utilities
+of various tasks. DIRL addresses structural credit
+assignment (propagation of reward spatially across
+states in order to define notion of similar states)
+problem by using weighted hamming distance between
+two states. Here, the application state is
+represented in the form of system and application
+variables each carrying an associated weight. DIRL
+employs independent learning where each agent
+applies the learning algorithm in a classic sense
+(like single agent system) ignoring the presence of
+other agents. The main advantage of using
+independent learning in DIRL is that no
+communication is required for co-ordination between
+sensor nodes and each node selfishly tries to
+maximize its own rewards. %
+\subsection{Ensuring Global Optimization With Multi-Tier Reinforcement Learning}\label{intro:coin}
+DIRL works well when each node in WSN application
+is acting of its own and doesn’t need to co-operate
+or compete with other nodes. In other words, if all
+nodes are acting independently and their actions do
+not affect others, then any increase in a node’s
+utility cannot decrease anyone else’s utility and
+hence will always increase world (system-wide)
+utility which is merely sum of all node’s utilities
+over all times. Such a system is sub-world factored
+and will eventually attain a Pareto-optimal point
+and hence towards our system-wide optimization
+goal. But most of the real-world WSN applications
+need some sort of co-operation among sensor nodes
+and hence nodes cannot work independently. In this
+case, increase in utility of individual node may
+result in reduction of other node’s utility and
+hence may not increase world utility. It is also
+possible that such system can lead to phenomena
+like Tragedy of the Commons (TOC) or Braes’
+Paradox, wherein individual’s selfishness leads to
+significantly lower world utility. Such phenomena
+can be avoided by carefully designing agent’s
+utility functions as well as constraints under
+which agent performs task selection. In other
+words, we need to make sure that individual’s
+utility is ‘aligned’ with the world utility, i.e.
+any increase in agent’s private utility because of
+its action will also result in increase of world
+utility. COllective INtelligence (COIN) theory
+provides principles on designing such private (individual node) as well as
+global utility functions such that
+they are aligned. We follow these principles todesign a multi-tier reinforcement learning basedframework for WSN resource management.\\Our design goal is to create a system using a
+bottom-up approach where each sensor node is
+responsible for task selection, rather than
+top-down approach (where some central entity
+dictates nodes what task to execute) used by many
+other middleware solutions [Heinzelman04, Yu04].
+Main advantages of bottom-up approach are
+pro-active and real-time adaptation, no centralized
+processing requirement for task allocation and
+minimal communication overhead. But principal
+challenge of bottom-up approach is how to make sure
+that system is actually meeting the global
+application goals and is not just acting randomly
+or creating chaos. We resolve this issue by using
+two-layer learning: micro-learning as used by
+individual nodes to self-schedule their tasks and
+macro-learning as used by each data-stream subworld
+to steer the system towards application goal by
+setting/updating rewards for micro-learners.
+%
+\subsection{Resource-aware Data Collection in Sparse Wireless Sensor Networks}\label{intro:dirl-sparse}
+Next we explore the issue of energy-aware resource
+allocation in sparse WSNs with Mobile Data
+Collectors (MDCs). We define discovery and data
+transfer protocols for energy-efficient data
+collection in sparse WSNs with MDCs, and propose an
+adaptive strategy exploiting our Distributed
+Independent Reinforcement Learning scheme. We
+design a generic adaptive data collection (ADC)
+framework that can be applied to wide range of
+applications while minimizing energy consumption.
+The principal idea is to learn underlying pattern
+of MDCs' arrival and tune sensor node's duty cycle
+accordingly. Through extensive simulations, we show
+that our framework is highly efficient in terms of
+low duty cycle, high discovery rate and high energy
+and data transfer efficiency.%
 \subsection{Design of Adaptive Middleware Using Directed Diffusion}\label{intro:diffusion}
 %
 \section{Organization of Dissertation}\label{organization}
+In chapter 2, we review existing literature and provide some necessary background
+on a few related topics that have been used in
+this dissertation. Chapter 3 describes our
+preliminary DIRL scheme for resource management
+in WSN. We present our extended multi-tier
+reinforcement learning based framework
+using COIN and DIRL in Chapter 4. In chapter 5, we
+explore application of DIRL to sparse WSN for
+energy-aware MDC discovery. Chapter 6 provides a
+detail design of our complete adaptive and
+autonomous middleware.
