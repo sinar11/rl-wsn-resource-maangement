@@ -1,0 +1,96 @@
+In wireless sensor networks, resource-constrained
+nodes are expected to operate in highly dynamic and
+often unattended environments. Hence, support for
+intelligent, autonomous, adaptive and distributed
+sensor management is an essential ingredient of a
+middleware solution for development of scalable and
+dynamic wireless sensor network applications. We
+present reinforcement learning based sensor
+management framework to enable autonomous
+self-learning/adaptive applications with inherent
+support for efficient resource management. Our
+design goal is to create a system using a bottom-up
+approach where each sensor node is responsible
+for its resource allocation/task selection
+while optimizing global system-wide
+parameters like total energy usage, network lifetime
+etc.\\
+We first present Distributed Independent
+Reinforcement Learning (DIRL), a Q-learning based
+scheme that learns the utility of performing
+various tasks over time using mostly local
+information at nodes and uses the utility value
+along with application constraints for task
+management by optimizing parameters like total
+energy usage. We next extend above scheme to create
+a two-tier reinforcement learning based framework
+where first tier learning (micro-learning) enables
+individual sensor nodes to self-schedule their
+tasks using local information allowing for a
+real-time adaptation as in DIRL. Second tier
+learning (macro-learning) governs the
+micro-learners by setting their utility functions
+in order to steer the system towards application’s
+global optimization goal (e.g. maximize network
+lifetime etc). We exemplify the effectiveness of
+our framework by designing a tracking/surveillance
+application on top of it. Finally, we present
+results of simulation studies to compare
+performance of our scheme against other existing
+approaches. In general for applications requiring
+autonomous adaptation, we show that our two-tier
+reinforcement learning based scheme on average is
+about 50\% more efficient than micro-learning alone
+and many fold more efficient than traditional
+resource management schemes like static scheduling,
+while maintaining necessary accuracy/performance. \\
+We also address the issue of efficient data
+collection in sparse wireless sensor networks.
+Sparse WSNs are being effectively used in several
+monitoring applications in farms, battle-fields,
+urban traffic and the environment. We investigate
+data collection, a crucial task in sparse WSNs by
+means of special nodes called Mobile Data
+Collectors (MDCs), which visit sensor nodes to
+gather data. As contact times are not known a
+priori, the discovery of an incoming MDC by the
+static sensor node is a critical task. Ideally, a
+discovery strategy should be able to correctly
+predict contacts in order to minimize energy
+consumption. Discovery becomes more challenging as
+MDCs participating in various applications exhibit
+different mobility patterns and hence requires
+unique design of discovery strategy for each
+application. In this paper, we propose an adaptive
+discovery strategy that exploits state-based model
+free reinforcement learning to create a generic
+framework that can be effectively applied to
+various applications while minimizing energy
+consumption. The principal idea is to learn
+underlying pattern of MDCs' arrival and tune sensor
+node's duty cycle accordingly. We carry out an
+extensive simulation analysis to demonstrate the
+energy efficiency and effectiveness of the proposed
+framework. Simulation results show that our
+solution provides superior performance in terms of
+both discovery efficiency and energy conservation
+and can be directly applied to demonstrated
+applications of sparse WSNs.\\ 
+Finally, we investigate development of a complete
+and generalized sensor management framework
+by using directed diffusion and our multi-layer
+reinforcement learning scheme. The goals of this
+work are two-fold: to incorporate effective and proven task (interest) and data dissemination techniques
+of directed diffusion in a resource management
+framework; and to improve efficiency and autonomous
+adaptation of directed diffusion in sensor
+selection and scheduling. Our studies demonstrate
+how individual node level as well as neighborhood
+and global level learning can help optimize the
+system in a generic manner while maintaining
+robust, localized and distributed sensing as
+provided by directed diffusion. Using performance
+analysis it is shown that the proposed approach for
+adaptive management and task scheduling results in
+up to 100\% increase in system lifetime compared to
+traditional directed diffusion.
