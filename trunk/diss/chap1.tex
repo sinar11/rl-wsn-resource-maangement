@@ -67,14 +67,22 @@ of resources [5,14,28], but there are only few that
 have actually tried to resolve the issue of
 enabling adaptive resource management for WSN
 applications. This problem of resource
-management/adaptation can be described as follows:
-\\ \emph{Given application structure, QoS
-requirements and current system state, what is the
+management/adaptation (see Figure
+\ref{fig:res-management-problem}) can be described
+as follows: \\ 
+\emph{Given application structure, QoS requirements and current system state, what is the
 best way of allocating tasks to resources so that
 given system-wide, application-driven, global
-parameters can be optimized.}\\ In the above, the
-application structure is in the form of underlying
-tasks and their interactions. QoS requirements
+parameters can be optimized.}
+%
+\begin{figure}[tbp]
+\centerline{\includegraphics[width=4in]{figures/res-management-problem.eps}}
+\caption{Resource management problem in WSN} 
+\label{fig:res-management-problem}
+\end{figure}
+%
+In the above, the application structure is in the
+form of underlying tasks and their interactions. QoS requirements
 include such constraints as latency, reliability,
 coverage etc. while the current state of the system
 is defined by parameters like mobility, energy
@@ -82,9 +90,9 @@ availability, and neighboring nodes. The parameters
 to be optimized include energy, bandwidth, and
 network lifetime. Without loss of generality, we
 illustrate the resource management problem using a
-simplified object/entity tracking application.
-Object tracking application can be considered to
-consist of following tasks: 1) sample- sense the
+simplified object/entity tracking application
+(see Figure \ref{fig:res-management-intro}).
+Object tracking application can be considered to consist of following tasks: 1) sample- sense the
 environment (e.g. signal strength of a moving
 object). 2) transmit (Tx)- transmit a message to
 next hop towards the base-stations. 3) receive
@@ -109,6 +117,11 @@ tasks on each sensor node in the system, so that
 energy usage among all sensor nodes is minimized
 while fulfilling the coverage and latency
 requirements of the application.\\
+\begin{figure}[tbp]
+\centerline{\includegraphics[width=4in]{figures/res-management-intro.eps}}
+\caption{Resource management for object tracking application} 
+\label{fig:res-management-intro}
+\end{figure}
 % % % Sparse WSN
 Most sensor network applications studied today
 consists of a large number of sensor nodes deployed
