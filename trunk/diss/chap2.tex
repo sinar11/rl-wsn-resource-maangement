@@ -198,23 +198,35 @@ the system.
 Pro-active middleware can be further classified
 into the following:
 \begin{itemize}
-  \item \emph{Data-centric}: Middleware in this category provides the abstraction of the
-  whole sensor network as a virtual
-  distributed database. User issues queries using
-  some easy-to-use interface to extract data of
-  interest. The main focus of this type
-  of middleware is on efficient evaluation of
-  query plans using in-network query processing.
-  Middleware normally only uses predefined
-  static task schedules. Cougar \cite{Yao02} is
-  the first work considering WSN as a
-  database. TinyDB \cite{Madden02} hides the
-  complexity of TinyOS by building
-  query-processing system on top of it.
-  TinyDB allows users to extract data of interest
-  of the sensor nodes using a SQL-like interface.
-  SINA\cite{Srisathapornphat01} and DsWare\cite{Son03}
-  \item  
+  \item \emph{Data-centric}: Middleware in this
+  category provides the abstraction of the   whole
+  sensor network as a virtual   distributed
+  database. Idea is to enable   utilization of
+  higher level declarative   programming
+  language/interface upon the   distributed nodes
+  without having to deal with the network issues.
+  User dispatches queries using some easy-to-use
+  interface to extract data of interest. The main
+  focus of this type of middleware is on efficient
+  evaluation of query plans using in-network query
+  processing. Such middleware normally only uses
+  predefined static task schedules and normally
+  doesn't handle adaptive task/resource management.
+  Also the approach provides only approximate
+  values and lacks support for real-time
+  applications that need spatio-temporal
+  relationships between events\cite{Hadem06}.This
+  type of middleware are not expressive enough
+  to implement arbitrary distributed algorithms.
+  Cougar \cite{Yao02} is the first work considering WSN as a database. TinyDB \cite{Madden02} hides the complexity of TinyOS by building
+  query-processing system on top of it. TinyDB
+  allows users to extract data of interest of the
+  sensor nodes using a SQL-like interface.
+  SINA\cite{Srisathapornphat01} and
+  DsWare\cite{Son03} are other two approaches
+  falling into this category of middleware using
+  database abstraction.
+  \item  \emph{Code Management}:
 \end{itemize}
 \subsection{}
 There are many proposed middleware solutions for WSNs that have ad-
