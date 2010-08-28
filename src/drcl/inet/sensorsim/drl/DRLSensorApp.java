@@ -86,6 +86,8 @@ public class DRLSensorApp extends SensorApp implements drcl.comp.ActiveComponent
     
 	private long currStream=-1;
 
+	private int noOfNodes;
+
 	private static boolean globalLogged=false;
         
     public DRLSensorApp() throws Exception{
@@ -102,6 +104,11 @@ public class DRLSensorApp extends SensorApp implements drcl.comp.ActiveComponent
         addPort(TrackPortId,false);
         addPort(ActualPosPortId,false);        
     }
+    
+    public void setNoOfNodes(int noOfNodes) {
+		this.noOfNodes = noOfNodes;
+		CSVLogger.noOfNodes=noOfNodes;
+	}
     
     public void setDestId(long destid){
         this.destId=destid;
@@ -522,6 +529,15 @@ public class DRLSensorApp extends SensorApp implements drcl.comp.ActiveComponent
     }
     
     public void collectStats(){
+    	if(!globalLogged){
+    		log(Level.INFO,"*******************GLOBAL STATS**************");
+            for(int i=0; i< globalRewardManager.getGlobalRewards().size();i++){
+                CSVLogger.log("reward",""+globalRewardManager.getGlobalRewards().get(i),false,algorithm.getAlgorithm());            
+            }
+            CSVLogger.logGlobal("global-stats", globalRewardManager.stats(),
+    				algorithm.getAlgorithm());
+            globalLogged=true;
+        }
         log(Level.INFO,"*******************STATS**************");
         //nid,noOfEventsMissed,totalEvents,noOfPktsDropped,totalPkts,task1Id,task1,task2Id,task2,task3Id,task3,totalCost,totalReward,trPackets
         String stats=nid+","+noOfEventsMissed+","+totalEvents+","+noOfPktsDropped+","
@@ -540,15 +556,7 @@ public class DRLSensorApp extends SensorApp implements drcl.comp.ActiveComponent
         CSVLogger.log("stats",stats,algorithm.getAlgorithm());
         CSVLogger.log("Qvalues",QValues,algorithm.getAlgorithm());
         CSVLogger.log("ExpPrices",expPrices,algorithm.getAlgorithm());
-        if(!globalLogged){
-        	
-        for(int i=0; i< globalRewardManager.getGlobalRewards().size();i++){
-            CSVLogger.log("reward",""+globalRewardManager.getGlobalRewards().get(i),false,algorithm.getAlgorithm());            
-        }
         
-        log(Level.INFO,"GlobalRewardManager:"+globalRewardManager.stats());
-        globalLogged=true;
-        }
     }
     
     class MacroLearner{

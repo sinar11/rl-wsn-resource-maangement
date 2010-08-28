@@ -148,8 +148,8 @@ public class BDGlobalRewardManager implements GlobalRewardManager{
 	}
 	
 	public String stats(){
-		return "RewardUpdates="+rewardUpdates+",positiveUpdates="+positiveUpdates
-			+",effectiveCost="+effectiveCost+",totalCost="+totalCost+",globalReward="+totalReward/totalCost+", noOfTracks="+noOfTracks;
+		return "RewardUpdates,"+rewardUpdates+",positiveUpdates,"+positiveUpdates
+			+",effectiveCost,"+effectiveCost+",totalCost,"+totalCost+",globalReward,"+totalReward/totalCost+", noOfTracks,"+noOfTracks;
 	}
 
 }

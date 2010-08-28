@@ -11,7 +11,7 @@ import drcl.util.random.UniformDistribution;
 public abstract class AbstractAlgorithm {
 	
 	public enum Algorithm{
-    	DIRL, COIN, RANDOM, TEAM, SORA, ORACLE
+    	DIRL, COIN, RANDOM, TEAM, SORA, ORACLE, DIRLWoLF
     }
     
 	//exploration factors for algorithms using exploration
@@ -67,7 +67,9 @@ public abstract class AbstractAlgorithm {
 			 return new TEAMAlgorithm(taskList, app);
 		 }else if(algo.equals(Algorithm.SORA)){
 			 return new SORAAlgorithm(taskList, app);
-		 } 
+		 }else if(algo.equals(Algorithm.DIRLWoLF)){
+			 return new DIRLWoLFAlgorithm(taskList, app);
+		 }
 		 else throw new RuntimeException("No implementation found for alogrithm:"+algo);
 	 }
 
