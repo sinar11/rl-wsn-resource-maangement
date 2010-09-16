@@ -28,7 +28,7 @@ mkdir drcl.inet.sensorsim.SeismicProp seismic_Prop
 
 # create the sensor node position tracker
 mkdir drcl.inet.sensorsim.SensorNodePositionTracker nodetracker
-! nodetracker setGrid 600.0 100.0 500.0 100.0
+! nodetracker setGrid 800.0 100.0 700.0 100.0
 
 # connect the sensor channel to the sensor node position tracker
 connect chan/.tracker@ -and nodetracker/.channel@
@@ -43,7 +43,7 @@ mkdir drcl.inet.mac.Channel channel
 # create the node position tracker
 mkdir drcl.inet.mac.NodePositionTracker tracker
 #                 maxX  minX  maxY   minY  dX   dY
-! tracker setGrid 600.0 100.0 500.0 100.0 100.0 100.0
+! tracker setGrid 800.0 100.0 700.0 100.0 100.0 100.0
 
 connect channel/.tracker@ -and tracker/.channel@
 
@@ -152,7 +152,7 @@ for {set i 0} {$i < [expr $sink_id + 1]} {incr i} {
 	! /aodvtest/channel attachPort $i [! wphy getPort .channel]
 	
 #                                maxX maxY maxZ minX minY minZ dX dY dZ
-    	! mobility setTopologyParameters 600.0 500.0 0.0 100.0 100.0 0.0 100.0 100.0 0.0
+    	! mobility setTopologyParameters 800.0 700.0 0.0 100.0 100.0 0.0 100.0 100.0 0.0
 
 	! mac  disable_MAC_TRACE_ALL
 
@@ -321,7 +321,7 @@ for {set i [expr $sink_id + 1]} {$i < [expr $node_num - $target_node_num]} {incr
 	! /aodvtest/channel attachPort $i [! wphy getPort .channel]
 	
 #                                maxX maxY maxZ minX minY minZ dX dY dZ
-    	! mobility setTopologyParameters 600.0 500.0 0.0 100.0 100.0 0.0 100.0 100.0 0.0
+    	! mobility setTopologyParameters 800.0 700.0 0.0 100.0 100.0 0.0 100.0 100.0 0.0
 
 	! mac  disable_MAC_TRACE_ALL
 
@@ -394,7 +394,7 @@ for {set i 0} {$i < $target_node_num} {incr i} {
 }
 
 # set the position of sink nodes
-! n0/mobility setPosition 0.0 550.0 350.0 0.0
+! n0/mobility setPosition 0.0 650.0 450.0 0.0
 
 # set the position of target nodes
 # Max. speed is the first argument of setPosition.
@@ -414,19 +414,19 @@ for {set i 0} {$i < $target_node_num} {incr i} {
 ! n8/mobility setPosition 0.0 270.0 325.0 0.0
 ! n9/mobility setPosition 0.0 330.0 350.0 0.0
 ! n10/mobility setPosition 0.0 440.0 460.0 0.0
-! n11/mobility setPosition 0.0 460.0 260.0 0.0
-! n12/mobility setPosition 0.0 230.0 230.0 0.0
-! n13/mobility setPosition 0.0 340.0 340.0 0.0
-! n14/mobility setPosition 0.0 425.0 325.0 0.0
-! n15/mobility setPosition 0.0 400.0 300.0 0.0
-! n16/mobility setPosition 0.0 380.0 400.0 0.0
-! n17/mobility setPosition 0.0 420.0 420.0 0.0
-! n18/mobility setPosition 0.0 300.0 380.0 0.0
-! n19/mobility setPosition 0.0 500.0 300.0 0.0
-! n20/mobility setPosition 0.0 500.0 400.0 0.0
-! n21/mobility setPosition 0.0 450.0 400.0 0.0
-! n22/mobility setPosition 0.0 250.0 275.0 0.0
-! n23/mobility setPosition 0.0 350.0 450.0 0.0
+! n11/mobility setPosition 0.0 500.0 300.0 0.0
+! n12/mobility setPosition 0.0 500.0 350.0 0.0
+! n13/mobility setPosition 0.0 550.0 500.0 0.0
+! n14/mobility setPosition 0.0 600.0 550.0 0.0
+! n15/mobility setPosition 0.0 550.0 450.0 0.0
+! n16/mobility setPosition 0.0 600.0 450.0 0.0
+! n17/mobility setPosition 0.0 550.0 400.0 0.0
+! n18/mobility setPosition 0.0 650.0 600.0 0.0
+! n19/mobility setPosition 0.0 600.0 650.0 0.0
+! n20/mobility setPosition 0.0 700.0 700.0 0.0
+! n21/mobility setPosition 0.0 650.0 700.0 0.0
+! n22/mobility setPosition 0.0 750.0 600.0 0.0
+! n23/mobility setPosition 0.0 550.0 650.0 0.0
 
 ! n0/wphy setInitialEnergy 100
 
@@ -465,7 +465,7 @@ script {run n24} -at 2.7 -on $sim
 
 # Sinks subscribing to interests
 #                         taskId longMin longMax latMin latMax duration interval data_interval refreshPeriod payment)
-script {! n0/app subscribe 10 100.0 300.0 200.0 400.0 200000.0 53.0 5.0 2000.0 10} -at 3.0 -on $sim
+script {! n0/app subscribe 10 100.0 300.0 200.0 400.0 200000.0 53.0 5.0 3000.0 10} -at 3.0 -on $sim
 
 set np 7; # number of points
 set t [java::new {double[][]} $np]
