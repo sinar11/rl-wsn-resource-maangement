@@ -465,7 +465,7 @@ script {run n24} -at 2.7 -on $sim
 
 # Sinks subscribing to interests
 #                         taskId longMin longMax latMin latMax duration interval data_interval refreshPeriod payment)
-script {! n0/app subscribe 10 100.0 300.0 200.0 400.0 200000.0 53.0 5.0 2000.0 10} -at 3.0 -on $sim
+script {! n0/app subscribe 10 100.0 300.0 200.0 400.0 200000.0 53.0 5.0 3000.0 10} -at 3.0 -on $sim
 
 set np 7; # number of points
 set t [java::new {double[][]} $np]
@@ -478,7 +478,7 @@ $t set 5 [java::new {double[]} 4 "10000 300.0 300.0 0"]
 $t set 6 [java::new {double[]} 4 "12000 300.0 300.0 0"]
 ! n24/mobility installTrajectory $t
 
-set end 18000.0
+set end 20000.0
 
 script {! n0/app collectStats} -at $end -on $sim
 script {! n1/app collectStats} -at $end -on $sim

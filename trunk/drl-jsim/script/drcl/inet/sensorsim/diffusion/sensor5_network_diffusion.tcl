@@ -7,7 +7,7 @@ source "script/test/include.tcl"
 cd [mkdir -q drcl.comp.Component /aodvtest]
 
 # TOTAL number of nodes (sensor nodes + target nodes)
-set node_num 25
+set node_num 7
 
 # Number of TARGET nodes ONLY
 set target_node_num 1
@@ -55,7 +55,7 @@ for {set i 0} {$i < [expr $sink_id + 1]} {incr i} {
 	
 	cd n$i
 
-	mkdir drcl.inet.sensorsim.drl.diffext.DRLDiffApp app
+	mkdir drcl.inet.sensorsim.diffusion.DiffApp app
 	! app setNid $i
 	! app setSinkNid $sink_id
 	! app setCoherentThreshold 1000.0
@@ -64,7 +64,7 @@ for {set i 0} {$i < [expr $sink_id + 1]} {incr i} {
 	! app setNoOfNodes $node_num
 
 	# create wireless agent layers
-	mkdir drcl.inet.sensorsim.drl.diffext.WirelessDiffAgent wireless_agent
+	mkdir drcl.inet.sensorsim.diffusion.WirelessDiffAgent wireless_agent
 
 	! wireless_agent setDebugEnabled 0
 
@@ -169,14 +169,13 @@ for {set i [expr $sink_id + 1]} {$i < [expr $node_num - $target_node_num]} {incr
 	
 	cd n$i
 
-	mkdir drcl.inet.sensorsim.drl.diffext.DRLDiffApp app
+	mkdir drcl.inet.sensorsim.diffusion.DiffApp app
 	! app setNid $i
 	! app setSinkNid $sink_id
 	! app setCoherentThreshold 1000.0
         ! app setDebugEnabled 1
 	! app setTargetName "Wheeled Vehicle"
-    ! app setNoOfNodes $node_num
-    
+
 	# create nodes
 	mkdir drcl.inet.sensorsim.SensorAgent agent
 
@@ -212,7 +211,7 @@ for {set i [expr $sink_id + 1]} {$i < [expr $node_num - $target_node_num]} {incr
 	! mobility setNid $i
 
 	# create wireless agent layers
-	mkdir drcl.inet.sensorsim.drl.diffext.WirelessDiffAgent wireless_agent
+	mkdir drcl.inet.sensorsim.diffusion.WirelessDiffAgent wireless_agent
 
 	! wireless_agent setDebugEnabled 0
 
@@ -238,7 +237,6 @@ for {set i [expr $sink_id + 1]} {$i < [expr $node_num - $target_node_num]} {incr
 	mkdir drcl.inet.mac.WirelessPhy wphy
 	! wphy setRxThresh 0.0
 	! wphy setCSThresh 0.0	
-    ! wphy setDebugEnabled 0
     ! wphy setInitialEnergy 25
     
 	mkdir drcl.inet.mac.FreeSpaceModel propagation 
@@ -400,34 +398,18 @@ for {set i 0} {$i < $target_node_num} {incr i} {
 # Max. speed is the first argument of setPosition.
 # In order to make the target nodes mobile with max. speed (e.g., 30) m/sec., 
 # set the first argument of setPosition to 30.0 
-! n24/mobility setPosition 0.0 251.0 270.0 0.0
+! n6/mobility setPosition 0.0 251.0 270.0 0.0
 
 # set the position of sensor nodes
 # should be made to read from a scenario file
 ! n1/mobility setPosition 0.0 450.0 250.0 0.0
 ! n2/mobility setPosition 0.0 450.0 450.0 0.0
 ! n3/mobility setPosition 0.0 350.0 350.0 0.0
-! n4/mobility setPosition 0.0 360.0 340.0 0.0
-! n5/mobility setPosition 0.0 250.0 250.0 0.0
-! n6/mobility setPosition 0.0 250.0 450.0 0.0
-! n7/mobility setPosition 0.0 150.0 350.0 0.0
-! n8/mobility setPosition 0.0 270.0 325.0 0.0
-! n9/mobility setPosition 0.0 330.0 350.0 0.0
-! n10/mobility setPosition 0.0 440.0 460.0 0.0
-! n11/mobility setPosition 0.0 460.0 260.0 0.0
-! n12/mobility setPosition 0.0 230.0 230.0 0.0
-! n13/mobility setPosition 0.0 340.0 340.0 0.0
-! n14/mobility setPosition 0.0 425.0 325.0 0.0
-! n15/mobility setPosition 0.0 400.0 300.0 0.0
-! n16/mobility setPosition 0.0 380.0 400.0 0.0
-! n17/mobility setPosition 0.0 420.0 420.0 0.0
-! n18/mobility setPosition 0.0 300.0 380.0 0.0
-! n19/mobility setPosition 0.0 500.0 300.0 0.0
-! n20/mobility setPosition 0.0 500.0 400.0 0.0
-! n21/mobility setPosition 0.0 450.0 400.0 0.0
-! n22/mobility setPosition 0.0 250.0 275.0 0.0
-! n23/mobility setPosition 0.0 350.0 450.0 0.0
+! n4/mobility setPosition 0.0 250.0 250.0 0.0
+! n5/mobility setPosition 0.0 150.0 350.0 0.0
 
+#! n4/wphy setInitialEnergy 50
+#! n2/wphy setInitialEnergy 50
 ! n0/wphy setInitialEnergy 100
 
 puts "simulation begins..."
@@ -443,29 +425,11 @@ script {run n3} -at 0.6 -on $sim
 script {run n4} -at 0.7 -on $sim
 script {run n5} -at 0.8 -on $sim
 script {run n6} -at 0.9 -on $sim
-script {run n7} -at 1.0 -on $sim
-script {run n8} -at 1.1 -on $sim
-script {run n9} -at 1.2 -on $sim
-script {run n10} -at 1.3 -on $sim
-script {run n11} -at 1.4 -on $sim
-script {run n12} -at 1.5 -on $sim
-script {run n13} -at 1.6 -on $sim
-script {run n14} -at 1.7 -on $sim
-script {run n15} -at 1.8 -on $sim
-script {run n16} -at 1.9 -on $sim
-script {run n17} -at 2.0 -on $sim
-script {run n18} -at 2.1 -on $sim
-script {run n19} -at 2.2 -on $sim
-script {run n20} -at 2.3 -on $sim
-script {run n21} -at 2.4 -on $sim
-script {run n22} -at 2.5 -on $sim
-script {run n23} -at 2.6 -on $sim
-script {run n24} -at 2.7 -on $sim
 
 
 # Sinks subscribing to interests
-#                         taskId longMin longMax latMin latMax duration interval data_interval refreshPeriod payment)
-script {! n0/app subscribe 10 100.0 300.0 200.0 400.0 200000.0 53.0 5.0 2000.0 10} -at 3.0 -on $sim
+#                         longMin longMax latMin latMax duration interval data_interval refreshPeriod)
+script {! n0/app subscribe 100.0 300.0 200.0 400.0 12000.0 53.0 5.0 1000.0} -at 1.5 -on $sim
 
 set np 7; # number of points
 set t [java::new {double[][]} $np]
@@ -476,9 +440,9 @@ $t set 3 [java::new {double[]} 4 "6000 250.0 250.0 0"]
 $t set 4 [java::new {double[]} 4 "8000 275.0 300.0 0"]
 $t set 5 [java::new {double[]} 4 "10000 300.0 300.0 0"]
 $t set 6 [java::new {double[]} 4 "12000 300.0 300.0 0"]
-! n24/mobility installTrajectory $t
+! n9/mobility installTrajectory $t
 
-set end 18000.0
+set end 10000.0
 
 script {! n0/app collectStats} -at $end -on $sim
 script {! n1/app collectStats} -at $end -on $sim
@@ -486,24 +450,7 @@ script {! n2/app collectStats} -at $end -on $sim
 script {! n3/app collectStats} -at $end -on $sim
 script {! n4/app collectStats} -at $end -on $sim
 script {! n5/app collectStats} -at $end -on $sim
-script {! n6/app collectStats} -at $end -on $sim
-script {! n7/app collectStats} -at $end -on $sim
-script {! n8/app collectStats} -at $end -on $sim
-script {! n9/app collectStats} -at $end -on $sim
-script {! n10/app collectStats} -at $end -on $sim
-script {! n11/app collectStats} -at $end -on $sim
-script {! n12/app collectStats} -at $end -on $sim
-script {! n13/app collectStats} -at $end -on $sim
-script {! n14/app collectStats} -at $end -on $sim
-script {! n15/app collectStats} -at $end -on $sim
-script {! n16/app collectStats} -at $end -on $sim
-script {! n17/app collectStats} -at $end -on $sim
-script {! n18/app collectStats} -at $end -on $sim
-script {! n19/app collectStats} -at $end -on $sim
-script {! n20/app collectStats} -at $end -on $sim
-script {! n21/app collectStats} -at $end -on $sim
-script {! n22/app collectStats} -at $end -on $sim
-script {! n23/app collectStats} -at $end -on $sim
+
 
 script {! $sim info} -at $end -on $sim
  

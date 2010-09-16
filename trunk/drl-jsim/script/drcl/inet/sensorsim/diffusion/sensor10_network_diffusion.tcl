@@ -55,15 +55,16 @@ for {set i 0} {$i < [expr $sink_id + 1]} {incr i} {
 	
 	cd n$i
 
-	mkdir drcl.inet.sensorsim.drl.diffext.DRLDiffApp app
+	mkdir drcl.inet.sensorsim.diffusion.DiffApp app
 	! app setNid $i
 	! app setSinkNid $sink_id
 	! app setCoherentThreshold 1000.0
 	! app setDebugEnabled 1
 	! app setTargetName "Wheeled Vehicle"
+	! app setNoOfNodes $node_num
 
 	# create wireless agent layers
-	mkdir drcl.inet.sensorsim.drl.diffext.WirelessDiffAgent wireless_agent
+	mkdir drcl.inet.sensorsim.diffusion.WirelessDiffAgent wireless_agent
 
 	! wireless_agent setDebugEnabled 0
 
@@ -168,7 +169,7 @@ for {set i [expr $sink_id + 1]} {$i < [expr $node_num - $target_node_num]} {incr
 	
 	cd n$i
 
-	mkdir drcl.inet.sensorsim.drl.diffext.DRLDiffApp app
+	mkdir drcl.inet.sensorsim.diffusion.DiffApp app
 	! app setNid $i
 	! app setSinkNid $sink_id
 	! app setCoherentThreshold 1000.0
@@ -210,7 +211,7 @@ for {set i [expr $sink_id + 1]} {$i < [expr $node_num - $target_node_num]} {incr
 	! mobility setNid $i
 
 	# create wireless agent layers
-	mkdir drcl.inet.sensorsim.drl.diffext.WirelessDiffAgent wireless_agent
+	mkdir drcl.inet.sensorsim.diffusion.WirelessDiffAgent wireless_agent
 
 	! wireless_agent setDebugEnabled 0
 
@@ -236,7 +237,6 @@ for {set i [expr $sink_id + 1]} {$i < [expr $node_num - $target_node_num]} {incr
 	mkdir drcl.inet.mac.WirelessPhy wphy
 	! wphy setRxThresh 0.0
 	! wphy setCSThresh 0.0	
-    ! wphy setDebugEnabled 0
     ! wphy setInitialEnergy 25
     
 	mkdir drcl.inet.mac.FreeSpaceModel propagation 
@@ -404,17 +404,15 @@ for {set i 0} {$i < $target_node_num} {incr i} {
 # should be made to read from a scenario file
 ! n1/mobility setPosition 0.0 450.0 250.0 0.0
 ! n2/mobility setPosition 0.0 450.0 450.0 0.0
-! n3/mobility setPosition 0.0 350.0 450.0 0.0
-! n4/mobility setPosition 0.0 350.0 350.0 0.0
+! n3/mobility setPosition 0.0 350.0 350.0 0.0
+! n4/mobility setPosition 0.0 360.0 340.0 0.0
 ! n5/mobility setPosition 0.0 250.0 250.0 0.0
-! n6/mobility setPosition 0.0 250.0 350.0 0.0
-! n7/mobility setPosition 0.0 150.0 250.0 0.0
-! n8/mobility setPosition 0.0 150.0 450.0 0.0
-#! n8/mobility setPosition 0.0 170.0 370.0 0.0
+! n6/mobility setPosition 0.0 250.0 450.0 0.0
+! n7/mobility setPosition 0.0 150.0 350.0 0.0
+! n8/mobility setPosition 0.0 270.0 325.0 0.0
 
-#! n4/wphy setInitialEnergy 50
-#! n2/wphy setInitialEnergy 50
 ! n0/wphy setInitialEnergy 100
+
 
 puts "simulation begins..."
 set sim [attach_simulator .]
@@ -433,33 +431,24 @@ script {run n7} -at 1.0 -on $sim
 script {run n8} -at 1.1 -on $sim
 script {run n9} -at 1.2 -on $sim
 
-script {! n1/app getRemainingEnergy} -at 1.4 -on $sim
-script {! n2/app getRemainingEnergy} -at 1.4 -on $sim
-script {! n3/app getRemainingEnergy} -at 1.4 -on $sim
-script {! n4/app getRemainingEnergy} -at 1.4 -on $sim
-script {! n5/app getRemainingEnergy} -at 1.4 -on $sim
-script {! n6/app getRemainingEnergy} -at 1.4 -on $sim
-script {! n7/app getRemainingEnergy} -at 1.4 -on $sim
-script {! n8/app getRemainingEnergy} -at 1.4 -on $sim
 
 # Sinks subscribing to interests
-#                         taskId longMin longMax latMin latMax duration interval data_interval refreshPeriod payment)
-script {! n0/app subscribe 10 100.0 300.0 200.0 400.0 11000.0 53.0 5.0 1000.0 10} -at 1.5 -on $sim
+#                         longMin longMax latMin latMax duration interval data_interval refreshPeriod)
+script {! n0/app subscribe 100.0 300.0 200.0 400.0 12000.0 53.0 5.0 1000.0} -at 1.5 -on $sim
 
-#script {! n9/mobility setPosition 0.0 101.0 320.0 0.0} -at 500.0 -on $sim
-#script {! n9/mobility setPosition 0.0 251.0 200.0 0.0} -at 1000.0 -on $sim
-#script {! n9/mobility setPosition 0.0 111.0 310.0 0.0} -at 1.0 -on $sim
-#script {! n9/mobility setPosition 0.0 251.0 270.0 0.0} -at 2500.0 -on $sim
-set np 5; # number of points
+set np 7; # number of points
 set t [java::new {double[][]} $np]
-$t set 0 [java::new {double[]} 4 "0 100.0 250.0 0"]
-$t set 1 [java::new {double[]} 4 "2000 100.0 400.0 0"]
+$t set 0 [java::new {double[]} 4 "0 100.0 300.0 0"]
+$t set 1 [java::new {double[]} 4 "2000 150.0 300.0 0"]
 $t set 2 [java::new {double[]} 4 "4000 200.0 250.0 0"]
-$t set 3 [java::new {double[]} 4 "6000 200.0 350.0 0"]
-$t set 4 [java::new {double[]} 4 "8000 300.0 350.0 0"]
-#! n9/mobility installTrajectory $t
+$t set 3 [java::new {double[]} 4 "6000 250.0 250.0 0"]
+$t set 4 [java::new {double[]} 4 "8000 275.0 300.0 0"]
+$t set 5 [java::new {double[]} 4 "10000 300.0 300.0 0"]
+$t set 6 [java::new {double[]} 4 "12000 300.0 300.0 0"]
+! n9/mobility installTrajectory $t
 
-set end 10000.0
+set end 12000.0
+
 script {! n0/app collectStats} -at $end -on $sim
 script {! n1/app collectStats} -at $end -on $sim
 script {! n2/app collectStats} -at $end -on $sim
@@ -470,14 +459,7 @@ script {! n6/app collectStats} -at $end -on $sim
 script {! n7/app collectStats} -at $end -on $sim
 script {! n8/app collectStats} -at $end -on $sim
 
-script {! n1/app printEnergy} -at $end -on $sim
-script {! n2/app printEnergy} -at $end -on $sim
-script {! n3/app printEnergy} -at $end -on $sim
-script {! n4/app printEnergy} -at $end -on $sim
-script {! n5/app printEnergy} -at $end -on $sim
-script {! n6/app printEnergy} -at $end -on $sim
-script {! n7/app printEnergy} -at $end -on $sim
-script {! n8/app printEnergy} -at $end -on $sim
+
 
 script {! $sim info} -at $end -on $sim
  
