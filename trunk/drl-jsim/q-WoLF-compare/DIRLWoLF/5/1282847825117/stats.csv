@@ -1,0 +1,4 @@
+0,noOfEventsMissed,0,totalEvents,0,noOfPktsDropped,0,totalPkts,169,taskId,2,noOfExecutions,0,taskId,1,noOfExecutions,0,taskId,0,noOfExecutions,0,totalCost,0.0,totalReward,0.0,effectiveCost,0.006133681320169423,169
+1,noOfEventsMissed,50,totalEvents,203,noOfPktsDropped,258,totalPkts,274,taskId,2,noOfExecutions,1361,taskId,1,noOfExecutions,503,taskId,0,noOfExecutions,135,totalCost,0.04877326148437453,totalReward,1.4270997385156263,effectiveCost,0.006133681320169423
+2,noOfEventsMissed,372,totalEvents,446,noOfPktsDropped,0,totalPkts,0,taskId,2,noOfExecutions,1596,taskId,1,noOfExecutions,258,taskId,0,noOfExecutions,145,totalCost,0.05117330277572768,totalReward,0.011060697224272317,effectiveCost,0.006133681320169423
+3,noOfEventsMissed,61,totalEvents,299,noOfPktsDropped,0,totalPkts,0,taskId,2,noOfExecutions,1203,taskId,1,noOfExecutions,638,taskId,0,noOfExecutions,158,totalCost,0.05736557399988922,totalReward,0.14279242600011083,effectiveCost,0.006133681320169423
