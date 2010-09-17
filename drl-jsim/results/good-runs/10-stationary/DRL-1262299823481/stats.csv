@@ -1,0 +1,9 @@
+0,interests=56,dataPkts=1563,reinf=0,task-Sleep,0,task-Diffuse,0,totalTracks=1433,lastTrackTime9001.207197999996,averageDelay=0.05705209204051901
+1,interests=84,dataPkts=968,reinf=95,task-Sleep,619,task-Diffuse,1380
+2,interests=84,dataPkts=977,reinf=88,task-Sleep,711,task-Diffuse,1288
+3,interests=113,dataPkts=1377,reinf=161,task-Sleep,456,task-Diffuse,1543
+4,interests=113,dataPkts=1399,reinf=164,task-Sleep,469,task-Diffuse,1530
+5,interests=76,dataPkts=125,reinf=58,task-10-0,1180,task-Sleep,540,task-Diffuse,279
+6,interests=76,dataPkts=314,reinf=35,task-Sleep,1039,task-Diffuse,960
+7,interests=21,dataPkts=102,reinf=8,task-10-0,157,task-Sleep,1474,task-Diffuse,368
+8,interests=95,dataPkts=107,reinf=114,task-10-0,1472,task-Sleep,438,task-Diffuse,89

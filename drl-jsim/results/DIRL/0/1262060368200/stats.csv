@@ -1,0 +1,9 @@
+0,interests=64,dataPkts=1509,reinf=0,task-Sleep,0,task-Diffuse,0,totalTracks=1508
+1,interests=102,dataPkts=613,reinf=33,task-Sleep,1357,task-Diffuse,1042
+2,interests=102,dataPkts=968,reinf=52,task-Sleep,1092,task-Diffuse,1307
+3,interests=134,dataPkts=1027,reinf=51,task-Sleep,1029,task-Diffuse,1370
+4,interests=134,dataPkts=1186,reinf=52,task-Sleep,937,task-Diffuse,1462
+5,interests=92,dataPkts=338,reinf=69,task-10-0,924,task-Sleep,932,task-Diffuse,543
+6,interests=92,dataPkts=455,reinf=32,task-Sleep,1455,task-Diffuse,944
+7,interests=25,dataPkts=0,reinf=27,task-10-0,690,task-Sleep,1498,task-Diffuse,211
+8,interests=115,dataPkts=16,reinf=70,task-10-0,1226,task-Sleep,962,task-Diffuse,211
