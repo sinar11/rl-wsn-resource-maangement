@@ -48,11 +48,8 @@ public class DRLDiffApp extends drcl.inet.sensorsim.SensorApp implements drcl.co
 	/** Period between two successive times to check if any entries in the interest cache need to be purged. */
 	public static final double INTEREST_CACHE_PURGE_INTERVAL = 120.0 ; /* secs. */
 	
-	/** Size of the window of N events used for judging whether a neighbor needs to be negatively reinforced or not. Negatively reinforce that neighbor from which no new events have been received within a window of N events */
-	public static final int N_WINDOW = 5 ;
-
 	/** Decay computed gradients at a rate represented by DECAY_FACTOR **/
-	public static final double DECAY_FACTOR = 0.0;
+	public static final double DECAY_FACTOR = 0.05;
 	
 	/** Name of the target that a sink node is interested in (and a sensor node capable of) detecting */
 	public String TargetName ;
@@ -61,8 +58,8 @@ public class DRLDiffApp extends drcl.inet.sensorsim.SensorApp implements drcl.co
 	public static final int DATA_PKT = 1 ;
 	public static final int REINFORCEMENT_PKT = 2 ;
 	public static final int BROADCAST_DEST=-1;
-	public static final double REINFORCE_WINDOW=10*MicroLearner.TIMER_INTERVAL; //20 TIMESTEPS
-	public static final double REINFORCE_SUPRESS_MARGIN= 0.10;
+	public static final double REINFORCE_WINDOW=20*MicroLearner.TIMER_INTERVAL; //20 TIMESTEPS
+	public static final double REINFORCE_SUPRESS_MARGIN= 0.20;
 	public static final boolean TRACE_ON=true;
 	
 	public static enum NodeState { SLEEPING, AWAKE};
