@@ -12,7 +12,7 @@ import drcl.inet.sensorsim.drl.algorithms.AbstractAlgorithm;
  */
 
 public class DIRLSensorState implements SensorState{
-    public static final double SNR_WEIGHT = 0.01;
+    public static final double SNR_WEIGHT = 0.0075;
      
     protected int stateId;
     protected double snr=-1;
@@ -39,7 +39,7 @@ public class DIRLSensorState implements SensorState{
     }
 
     public String toString(){
-        return stateId+":"+snr+","+hasNeighbours+","+successInRecentRX+","+successInRecentSampling+","+streamId;
+        return stateId+":"+snr+",hasNeighbours="+hasNeighbours+",successInRecentRX="+successInRecentRX+",successInRecentSampling="+successInRecentSampling+","+streamId;
     }
     private double getHammingDistance(DIRLSensorState s) {
         double dist=0;
@@ -47,7 +47,7 @@ public class DIRLSensorState implements SensorState{
         if(s.successInRecentRX!=this.successInRecentRX) dist+=1;
         if(s.successInRecentSampling!=this.successInRecentSampling) dist+=1;
         //if(s.streamId!=this.streamId) dist+=1;
-        dist+= SNR_WEIGHT*Math.abs(s.snr-this.snr);
+        if(Math.abs(s.snr-this.snr)>200) dist+=1;
         return dist;
     }
 
