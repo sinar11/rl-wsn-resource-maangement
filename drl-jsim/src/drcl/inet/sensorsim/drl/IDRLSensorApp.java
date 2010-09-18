@@ -6,4 +6,5 @@ public interface IDRLSensorApp {
 
 	public void log(Level level, String s);
 	public int getNoOfStates();
+	public int getNid();
 }

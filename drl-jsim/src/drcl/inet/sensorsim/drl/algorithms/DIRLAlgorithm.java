@@ -5,6 +5,7 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 
+import drcl.inet.sensorsim.drl.CSVLogger;
 import drcl.inet.sensorsim.drl.IDRLSensorApp;
 import drcl.inet.sensorsim.drl.SensorState;
 import drcl.inet.sensorsim.drl.SensorTask;
@@ -18,7 +19,9 @@ public class DIRLAlgorithm extends AbstractAlgorithm{
 	 
 	public SensorTask getNextTaskToExecute(SensorState currentState, SensorTask currentTask) {
 		SensorTask nextTask=null;
-		if (Math.random() < calcExplorationFactor(currentState, currentTask)) { // exploration choosen
+		double expFactor=calcExplorationFactor(currentState, currentTask);
+		CSVLogger.log("Exp"+app.getNid(),""+expFactor,false,Algorithm.DIRL);	
+		if (Math.random() < expFactor) { // exploration choosen
 			nextTask = getRandomTaskToExecute();
 		}else	
 			nextTask = determineBestTaskToExecute(currentState);
@@ -29,8 +32,8 @@ public class DIRLAlgorithm extends AbstractAlgorithm{
 	        double maxQ=Double.NEGATIVE_INFINITY;
 	        List<SensorTask> bestTasks=new ArrayList<SensorTask>();
 	        
-	        for(Iterator it=taskList.values().iterator();it.hasNext();){
-	            SensorTask task= (SensorTask)it.next();
+	        for(Iterator<SensorTask> it=taskList.values().iterator();it.hasNext();){
+	            SensorTask task= it.next();
 	            double utility= task.getQvalue(currentState);//*task.getExpectedPrice(); 
 	            if(task.isAvailable()){
 	                if(utility>maxQ){
@@ -62,8 +65,9 @@ public class DIRLAlgorithm extends AbstractAlgorithm{
 	public void reinforcement(SensorTask currentTask, SensorState prevState,
 			SensorState currentState) {
 		if (currentTask != null) {
-			currentTask.updateQValue(prevState,
+			double delta=currentTask.updateQValue(prevState,
 					determineBestTaskToExecute(currentState).getQvalue(currentState));
+			CSVLogger.log("Delta"+app.getNid(),""+delta,false,Algorithm.DIRL);			
 		}		
 	}
 }

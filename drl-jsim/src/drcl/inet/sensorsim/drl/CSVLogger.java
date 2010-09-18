@@ -32,7 +32,7 @@ public class CSVLogger {
     	this.filename=filename;
     	String dir="results"+File.separator+algorithm+File.separator+noOfNodes+File.separator+currentRun;
     	if(global) 
-    		dir="results"+File.separator+"global"+File.separator; //+noOfNodes;
+    		dir="results"+File.separator+"global"+File.separator+noOfNodes;
             
         new File(dir).mkdirs();
         
@@ -74,8 +74,7 @@ public class CSVLogger {
 		if(logger==null){
             logger= new CSVLogger(type, algorithm, noOfNodes,true);
         }
-        logger.log(new Date()+","+algorithm+","+log,true);
-		
+        logger.log(new Date()+","+algorithm+","+log,true);	
 		
 	}
     

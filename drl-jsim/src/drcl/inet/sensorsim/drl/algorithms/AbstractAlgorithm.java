@@ -11,12 +11,12 @@ import drcl.util.random.UniformDistribution;
 public abstract class AbstractAlgorithm {
 	
 	public enum Algorithm{
-    	DIRL, COIN, RANDOM, TEAM, SORA, ORACLE, DIFFUSION
+    	DIRL, COIN, RANDOM, TEAM, SORA, ORACLE, DIRLWoLF, DIFFUSION
     }
     
 	//exploration factors for algorithms using exploration
-	public static final double MAX_EPSILON=0.25;    // MAX exploration factor
-	public static final double MIN_EPSILON=0.0;    // MIN exploration factor
+	public static final double MAX_EPSILON=0.3;    // MAX exploration factor
+	public static final double MIN_EPSILON=0.1;    // MIN exploration factor
 	
 	
 	 protected UniformDistribution uniformDist;
@@ -72,11 +72,18 @@ public abstract class AbstractAlgorithm {
 			 return new TEAMAlgorithm(taskList, app);
 		 }else if(algo.equals(Algorithm.SORA)){
 			 return new SORAAlgorithm(taskList, app);
-		 } 
+		 }else if(algo.equals(Algorithm.DIRLWoLF)){
+			 return new DIRLWoLFAlgorithm(taskList, app);
+		 }
 		 else throw new RuntimeException("No implementation found for alogrithm:"+algo);
 	 }
 
 	public abstract void reinforcement(SensorTask currentTask, SensorState prevState,
 			SensorState currentState);
+
+	public String getStats() {
+		// TODO Auto-generated method stub
+		return null;
+	}
 	 
 }

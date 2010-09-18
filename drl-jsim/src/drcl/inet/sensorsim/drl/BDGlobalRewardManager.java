@@ -12,7 +12,7 @@ public class BDGlobalRewardManager implements GlobalRewardManager{
 	static final double REWARD_PER_TRACK=0.005;
 	private static final double SNR_WEIGHT = 0.0005;
 	private static final double COST_WEIGHT = 5.0;
-	private static final double MAX_SNR = 500;
+	private static final double MAX_SNR = 400;
 	private static final double MIN_REWARD = 0.25;
 	
 	Hashtable<Long,List<WLReward>> pendingRwdsForNodes= new Hashtable<Long,List<WLReward>>();
@@ -119,12 +119,12 @@ public class BDGlobalRewardManager implements GlobalRewardManager{
 				double stReward= (glReward-stream.pktsReward)/stream.nodes.size();
 				if(stReward<0) stReward=0;
 				if (stream.streamId == bestStream.streamId) {
-					addToPendingRwds(stream, stReward);
+					addToPendingRwds(stream, stReward, algorithm);
 				} else {
-					addToPendingRwds(stream, -stream.cost/totalCost);
+					addToPendingRwds(stream, -stream.cost/totalCost, algorithm);
 				}
 			} else if (algorithm.equals(Algorithm.TEAM)) {
-				addToPendingRwds(stream, (glReward-stream.pktsReward)/stream.nodes.size());
+				addToPendingRwds(stream, (glReward-stream.pktsReward)/stream.nodes.size(), algorithm);
 			}
 			stream.pktIds.clear();
 			stream.pktsReward=0;
@@ -166,7 +166,7 @@ public class BDGlobalRewardManager implements GlobalRewardManager{
     }
 	//private static double GlobalReward()
 	
-	private void addToPendingRwds(Stream stream, double d) {
+	private void addToPendingRwds(Stream stream, double d, Algorithm algorithm) {
 		if(Math.abs(d)<MIN_REWARD) return;   //not significant change
 		else rewardUpdates++;
 		DRLSensorApp.log.info("Reward:"+d+" to stream:"+stream.nodes);
@@ -174,7 +174,8 @@ public class BDGlobalRewardManager implements GlobalRewardManager{
 		else{
 			System.out.println("-ve reward:"+d+" to stream:"+stream.nodes);
 		}
-	
+		CSVLogger.log("Delta-Macro",""+d,false,algorithm);
+		
 		for(long nid : stream.nodes){
 			List<WLReward> rwds= pendingRwdsForNodes.get(nid);
 			if(rwds==null) rwds= new ArrayList<WLReward>();
@@ -194,7 +195,7 @@ public class BDGlobalRewardManager implements GlobalRewardManager{
 	public String stats(){
 		/*return "RewardUpdates="+rewardUpdates+",positiveUpdates="+positiveUpdates
 			+",effectiveCost="+effectiveCost+",totalCost="+totalCost+",globalReward="+totalReward/totalCost+", noOfTracks="+noOfTracks;*/
-		return rewardUpdates+","+positiveUpdates+","+effectiveCost+","+totalCost+","+totalGlobalReward/globalRewards.size()+","+noOfTracks;
+		return "rewardUpdates,"+rewardUpdates+",positiveUpdates"+positiveUpdates+",effectiveCost,"+effectiveCost+",totalCost,"+totalCost+",reward,"+totalGlobalReward/globalRewards.size()+",noOfTracks,"+noOfTracks;
 	}
 
 }

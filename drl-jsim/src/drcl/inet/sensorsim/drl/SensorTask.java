@@ -43,8 +43,10 @@ public abstract class SensorTask {
         this.expectedPrice=price;
     }
     
-    public void updateQValue(SensorState lastState, double QforBestAction){
-        Qvalues[lastState.getStateId()]= (1-ALPHA)*Qvalues[lastState.getStateId()]+ ALPHA*(lastReward + GAMMA * QforBestAction);
+    public double updateQValue(SensorState lastState, double QforBestAction){
+    	double prevQ= Qvalues[lastState.getStateId()];
+        Qvalues[lastState.getStateId()]= (1-ALPHA)*prevQ+ ALPHA*(lastReward + GAMMA * QforBestAction);
+        return (Qvalues[lastState.getStateId()]-prevQ);
     }
     
     public void executeTask(){
@@ -100,5 +102,16 @@ public abstract class SensorTask {
 
     public int getId() {
         return id;
-    }    
+    }
+
+	@Override
+	public boolean equals(Object obj) {
+		if(obj instanceof SensorTask){
+			SensorTask other=(SensorTask)obj;
+			if(this.id==other.id) return true;			
+		}
+		return false;
+	}    
+    
+    
 }
