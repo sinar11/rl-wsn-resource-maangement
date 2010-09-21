@@ -82,7 +82,7 @@ public class SensorApp extends drcl.net.Module {
 
     ////////////////////////////
     //localization/directed diffusion related
-    public static final int NUM_TARGET_NODES = 2 ;
+    public static final int NUM_TARGET_NODES = 5 ;
 
     protected double X_shift =  0;
     protected double Y_shift =  0;

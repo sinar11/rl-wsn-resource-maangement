@@ -12,18 +12,15 @@ import java.util.logging.Logger;
 import drcl.comp.ACATimer;
 import drcl.comp.Port;
 import drcl.data.DoubleObj;
-import drcl.data.XYData;
 import drcl.inet.mac.EnergyContract;
-import drcl.inet.sensorsim.CPUBase;
 import drcl.inet.sensorsim.CurrentTargetPositionTracker;
 import drcl.inet.sensorsim.SensorApp;
 import drcl.inet.sensorsim.SensorAppAgentContract;
 import drcl.inet.sensorsim.SensorAppWirelessAgentContract;
 import drcl.inet.sensorsim.SensorPacket;
-import drcl.inet.sensorsim.drl.GlobalRewardManager.WLReward;
+import drcl.inet.sensorsim.drl.GlobalRewardManagerMBean.WLReward;
 import drcl.inet.sensorsim.drl.algorithms.AbstractAlgorithm;
 import drcl.inet.sensorsim.drl.algorithms.AbstractAlgorithm.Algorithm;
-import drcl.util.random.UniformDistribution;
 
 
 /*
@@ -81,19 +78,16 @@ public class DRLSensorApp extends SensorApp implements drcl.comp.ActiveComponent
     double totalReward=0;
     double totalCost=0;
     String[] tasks;
-    GlobalRewardManager globalRewardManager;
+    GlobalRewardManagerMBean globalRewardManager;
     //List<Double> globalRewards= new ArrayList<Double>(500);
     
 	private long currStream=-1;
 
 	private int noOfNodes;
-
-	private static boolean globalLogged=false;
-        
+	    
     public DRLSensorApp() throws Exception{
         super();
         globalRewardManager= Factory.getGlobalRewardManagerInstance();
-       
         prepareTaskList();
         for(Integer i : taskList.keySet()){
             SensorTask task=taskList.get(i);
@@ -111,6 +105,7 @@ public class DRLSensorApp extends SensorApp implements drcl.comp.ActiveComponent
 	}
     
     public void setDestId(long destid){
+    	log(Level.INFO,"Setting destination:"+destid);
         this.destId=destid;
     }
     
@@ -137,6 +132,12 @@ public class DRLSensorApp extends SensorApp implements drcl.comp.ActiveComponent
             cancelTimeout(myTimer);
     }
 
+    //work-around to shutdown java
+    public void shutdown(){
+    	System.out.println("SHUTTING DOWN..");
+    	System.exit(0);
+    }
+    
     protected void _resume() {
         if(nid!=sink_nid)
             myTimer=setTimeout("performTask", TIMER_INTERVAL);
@@ -256,13 +257,13 @@ public class DRLSensorApp extends SensorApp implements drcl.comp.ActiveComponent
             
             executions+=element.getNoOfExecutions()+",";
         }
-        CSVLogger.log("executions-"+nid,executions,false,algorithm.getAlgorithm());
+        //CSVLogger.log("executions-"+nid,executions,false,algorithm.getAlgorithm());
         double avgRew=(totalReward/totalExecutions);
         /*synchronized(DRLSensorApp.class){
         	double avgRew=
             globalRewards.[totalExecutions]+=avgRew;
         }*/
-        CSVLogger.log("reward-"+nid,new Double(avgRew).toString(),false,algorithm.getAlgorithm());
+        //CSVLogger.log("reward-"+nid,new Double(avgRew).toString(),false,algorithm.getAlgorithm());
         /*
 		 * energyPort.exportEvent("Energy Node:" + nid, new DoubleObj(
 		 * currentEnergy), null);
@@ -314,13 +315,16 @@ public class DRLSensorApp extends SensorApp implements drcl.comp.ActiveComponent
         double cost=0;
         double snr;
         long pktId;
+        long targetId;
+        double[] targetLocation;
+        
         public void addReward(long node, double reward, double cost){
         	this.reward+=reward;
         	this.nodes.add(node);
         	this.cost+=cost;
         }
         public String toString(){
-        	return "R="+reward+",C="+cost+",N="+nodes+",sId="+streamId+",SNR="+snr;
+        	return "tId="+targetId+",R="+reward+",C="+cost+",N="+nodes+",sId="+streamId+",SNR="+snr;
         }
         public int getSize(){
         	return toString().length();
@@ -398,7 +402,7 @@ public class DRLSensorApp extends SensorApp implements drcl.comp.ActiveComponent
         if((nid!=sink_nid) && (currentTask==null || !currentTask.getTaskId().equals(SAMPLE))){
             noOfEventsMissed++;
             if(currentTask!=null)
-            //log("Sensor event missed, executing task:"+currentTask);
+            log(Level.FINE,"Sensor event missed, executing task:"+currentTask);
             return;
         }
         lastSeenDataSize = msg.getDataSize();
@@ -407,9 +411,10 @@ public class DRLSensorApp extends SensorApp implements drcl.comp.ActiveComponent
         double target_Y = msg.getTargetY() ;
         double target_Z = msg.getTargetZ() ;
         int target_SeqNum = msg.getTargetSeqNum() ;
+        long targetId= msg.getTargetNid();
         
         noOfSensedEvents++;
-        //log("Received sensed event:"+noOfSensedEvents+" SNR:"+lastSeenSNR);
+        log(Level.FINE,"Received sensed event:"+noOfSensedEvents+" SNR:"+lastSeenSNR);
         if ( nid == sink_nid )
         {
             Port snrPort = (Port) getPort(SNR_PORT_ID + (int)(target_nid - first_target_nid));
@@ -424,6 +429,11 @@ public class DRLSensorApp extends SensorApp implements drcl.comp.ActiveComponent
 			te.pktId = target_SeqNum;
 			te.snr = msg.getSNR();
 			te.streamId = nid;
+			te.targetId=targetId;
+			double[] target_location = new double[2];
+			target_location[0] = round_digit(msg.getTargetX() - X_shift, 4);
+			target_location[1] = round_digit(msg.getTargetY() - Y_shift, 4);
+			te.targetLocation=target_location;
 			msg.body = te;
 			currStream = nid;
 
@@ -442,7 +452,7 @@ public class DRLSensorApp extends SensorApp implements drcl.comp.ActiveComponent
 		totalPkts++;
 		if ((nid != sink_nid)
 				&& (currentTask == null || !currentTask.getTaskId().equals(
-						ROUTE))) {
+						ROUTE)  )) {
 			log(Level.FINE,"Dropped pkt..,currently executing:" + currentTask);
 			noOfPktsDropped++;
 			return;
@@ -450,7 +460,7 @@ public class DRLSensorApp extends SensorApp implements drcl.comp.ActiveComponent
 		SensorPacket spkt = (SensorPacket) ((SensorPacket) data_).clone();
 		noOfRx++;
 		TrackingEvent tevent = (TrackingEvent) spkt.getBody();
-		log(Level.FINER,"Received sensor packet data:" + tevent);
+		log(Level.FINE,"Received sensor packet data:" + tevent);
 
 		if (nid != sink_nid) {
 			
@@ -499,12 +509,13 @@ public class DRLSensorApp extends SensorApp implements drcl.comp.ActiveComponent
 				Port actualPort=getPort(ActualPosPortId);
 				actualPort.exportEvent("Target:"+targetNid, new XYData(targetNid,currX,currY),"Track");
 				*/
-				double dist = Math.sqrt(Math.pow(Math.abs(target_location[0]
+				/*double dist = Math.sqrt(Math.pow(Math.abs(target_location[0]
 						- currX), 2)
 						+ Math.pow(Math.abs(target_location[1] - currY), 2));
+				
 				CSVLogger.log("target"+targetNid, getTime() + "," + spkt.getMaxSnr()
 						+ "," + target_location[0] + "," + target_location[1]
-						+ "," + currX + "," + currY + "," + dist, true,algorithm.getAlgorithm());
+						+ "," + currX + "," + currY + "," + dist, true,algorithm.getAlgorithm());*/
 				/*
 				 * snrPort.exportEvent(SNR_EVENT, target_location, null); //
 				 * uncomment this line if you want to display the location of
@@ -528,17 +539,19 @@ public class DRLSensorApp extends SensorApp implements drcl.comp.ActiveComponent
         return info;
     }
     
+    public void collectGlobalStats() {
+		log(Level.INFO, "*******************GLOBAL STATS**************");
+		for (int i = 0; i < globalRewardManager.getGlobalRewards().size(); i++) {
+			CSVLogger.log("reward", ""
+					+ globalRewardManager.getGlobalRewards().get(i), false,
+					algorithm.getAlgorithm());
+		}
+		CSVLogger.logGlobal("global-stats", globalRewardManager.getStats(),
+				algorithm.getAlgorithm());
+	}
+    
     public void collectStats(){
-    	if(!globalLogged){
-    		log(Level.INFO,"*******************GLOBAL STATS**************");
-            for(int i=0; i< globalRewardManager.getGlobalRewards().size();i++){
-                CSVLogger.log("reward",""+globalRewardManager.getGlobalRewards().get(i),false,algorithm.getAlgorithm());            
-            }
-            CSVLogger.logGlobal("global-stats", globalRewardManager.stats(),
-    				algorithm.getAlgorithm());
-            globalLogged=true;
-        }
-        log(Level.INFO,"*******************STATS**************");
+    	log(Level.INFO,"*******************STATS**************");
         //nid,noOfEventsMissed,totalEvents,noOfPktsDropped,totalPkts,task1Id,task1,task2Id,task2,task3Id,task3,totalCost,totalReward,trPackets
         String stats=nid+","+noOfEventsMissed+","+totalEvents+","+noOfPktsDropped+","
                     +totalPkts;
@@ -553,10 +566,11 @@ public class DRLSensorApp extends SensorApp implements drcl.comp.ActiveComponent
         stats+=","+totalCost+","+totalReward+","+globalRewardManager.getEffectiveCost();
         if(totalTrackingPkts>0)
             stats+=","+totalTrackingPkts;
-        CSVLogger.log("stats",stats,algorithm.getAlgorithm());
+        globalRewardManager.updateTaskExecutions(taskList);
+        /*CSVLogger.log("stats",stats,algorithm.getAlgorithm());
         CSVLogger.log("Qvalues",QValues,algorithm.getAlgorithm());
         CSVLogger.log("ExpPrices",expPrices,algorithm.getAlgorithm());
-        
+        */
     }
     
     class MacroLearner{

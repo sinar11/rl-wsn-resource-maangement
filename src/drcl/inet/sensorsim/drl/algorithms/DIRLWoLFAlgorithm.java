@@ -51,7 +51,7 @@ public class DIRLWoLFAlgorithm extends AbstractAlgorithm{
 	        double max=Double.NEGATIVE_INFINITY;
 	        List<SensorTask> bestTasks=new ArrayList<SensorTask>();
 	        double[] policyValues= policy.get(currentState.getStateId());
-	        
+	        //choose best task as an available task with highest policy value for current state
 	        for(int i=0;i<policyValues.length;i++){
 	        	SensorTask task= this.taskList.get(i);
 	        	if(task==null) continue;
@@ -89,6 +89,9 @@ public class DIRLWoLFAlgorithm extends AbstractAlgorithm{
 		return stats;
 	}
 	
+	/**
+	 * Called after a task finishes execution and system moves on to next state (currentState) from the prevState
+	 */
 	@Override
 	public void reinforcement(SensorTask currentTask, SensorState prevState,
 			SensorState currentState) {
@@ -111,7 +114,7 @@ public class DIRLWoLFAlgorithm extends AbstractAlgorithm{
 			}
 			double delta=determineDelta(prevState,currentTask);
 			policyValues[currentTask.getId()]= policyValues[currentTask.getId()] + delta;
-			CSVLogger.log("Delta"+app.getNid(), ""+delta,false, Algorithm.DIRLWoLF);
+			//CSVLogger.log("Delta"+app.getNid(), ""+delta,false, Algorithm.DIRLWoLF);
 			log(Level.FINE,"isWinning:"+isWinning+", ***task:"+currentTask.getTaskId()+" ***state:"+prevState.getStateId()+" ***policy="+print(policyValues)+" and ***avgPolicy="+print(avgPolicyValues)+" ***delta="+delta);
 		}		
 	}
@@ -139,7 +142,7 @@ public class DIRLWoLFAlgorithm extends AbstractAlgorithm{
 		}
 	}
 	
-	//returns true if passed task has highest Q value for passed state 
+	//returns true if given task has highest Q value for given state 
 	private boolean hasMaxQValue(SensorState s, SensorTask a) {
 		double maxQ = Double.NEGATIVE_INFINITY;
 		List<SensorTask> bestTasks = new ArrayList<SensorTask>();

@@ -1,13 +1,15 @@
-package drcl.inet.sensorsim.drl;
+/*package drcl.inet.sensorsim.drl;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.Map;
 
 import drcl.inet.sensorsim.drl.DRLSensorApp.TrackingEvent;
 import drcl.inet.sensorsim.drl.algorithms.AbstractAlgorithm.Algorithm;
 
-public class WLRewardManager implements GlobalRewardManager {
+public class WLRewardManager implements GlobalRewardManagerMBean {
 	static final double REWARD_PER_TRACK=0.01;
 	private static final double SNR_WEIGHT = 0.01;
 	private static final double MAX_SNR = 250;
@@ -22,7 +24,8 @@ public class WLRewardManager implements GlobalRewardManager {
 	double effectiveCost=0;
 	double totalCost=0;
 	private long noOfTracks=0;
-
+	Map<Integer,Integer> taskExecutions= new HashMap<Integer, Integer>();
+	
 	public Hashtable<Long, List<WLReward>> getPendingRwdsForNodes() {
 		return pendingRwdsForNodes;
 	}
@@ -150,5 +153,11 @@ public class WLRewardManager implements GlobalRewardManager {
 		return "RewardUpdates="+rewardUpdates+",positiveUpdates="+positiveUpdates
 			+",effectiveCost="+effectiveCost+",totalCost="+totalCost+",globalReward="+totalReward/totalCost+", noOfTracks="+noOfTracks;
 	}
-
+	public void updateTaskExecutions(Hashtable<Integer, SensorTask> taskList) {
+		for(Integer id: taskList.keySet()){
+			int curr= taskExecutions.get(id);
+			taskExecutions.put(id, curr+taskList.get(id).noOfExecutions);
+		}
+	}
 }
+*/

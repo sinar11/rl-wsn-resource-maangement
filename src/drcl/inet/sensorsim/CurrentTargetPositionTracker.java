@@ -4,6 +4,7 @@
 package drcl.inet.sensorsim;
 
 import java.util.HashMap;
+import java.util.Map;
 
 /*
  * @author Kunal
@@ -12,7 +13,7 @@ import java.util.HashMap;
 public class CurrentTargetPositionTracker {
 
     protected static CurrentTargetPositionTracker instance;
-    protected HashMap targetPositions= new HashMap();
+    protected HashMap<Long, double[]> targetPositions= new HashMap<Long, double[]>();
     
     public static synchronized CurrentTargetPositionTracker getInstance(){
         if(instance==null){
@@ -26,6 +27,10 @@ public class CurrentTargetPositionTracker {
     }
     
     public double[] getTargetPosition(long nodeId){
-        return (double[]) targetPositions.get(new Long(nodeId));
+        return  targetPositions.get(nodeId);
     }
+    
+    public Map<Long, double[]> getTargetPositions() {
+		return targetPositions;
+	}
 }
