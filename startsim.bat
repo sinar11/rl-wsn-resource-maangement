@@ -1,0 +1,10 @@
+start /wait /max run-all.bat script/drl_sensor_network-%1.tcl
+start /wait /max run-all.bat script/drl_sensor_network-%1.tcl
+start /wait /max run-all.bat script/drl_sensor_network-%1.tcl
+start /wait /max run-all.bat script/drl_sensor_network-%1.tcl
+start /wait /max run-all.bat script/drl_sensor_network-%1.tcl
+start /wait /max run-all.bat script/drl_sensor_network-%1.tcl 
+start /wait /max run-all.bat script/drl_sensor_network-%1.tcl
+start /wait /max run-all.bat script/drl_sensor_network-%1.tcl
+start /wait /max run-all.bat script/drl_sensor_network-%1.tcl
+start /wait /max run-all.bat script/drl_sensor_network-%1.tcl
