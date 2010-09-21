@@ -58,6 +58,7 @@ for {set i 0} {$i < [expr $sink_id + 1]} {incr i} {
 	! app setNid $i
 	! app setSinkNid $sink_id
 	! app setCoherentThreshold 1000.0
+	! app setNoOfNodes $node_num
 
 	# create wireless agent layers
 	mkdir drcl.inet.sensorsim.WirelessAgent wireless_agent
@@ -463,6 +464,7 @@ script {! n10/app collectStats} -at $end -on $sim
 script {! n11/app collectStats} -at $end -on $sim
 script {! n12/app collectStats} -at $end -on $sim
 script {! n13/app collectStats} -at $end -on $sim
+script {! n0/app collectGlobalStats} -at $end -on $sim
 
-
+script {! n0/app shutdown} -at $end -on $sim
 $sim resumeTo $end 

@@ -1,13 +1,16 @@
-#Kunal 5 node schen
+# Sample tcl file of a wireless sensor network simulation.
+# Author: Ahmed Sobeih
+# Date: 12/23/2003
+
 source "script/test/include.tcl"
 
 cd [mkdir -q drcl.comp.Component /aodvtest]
 
 # TOTAL number of nodes (sensor nodes + target nodes)
-set node_num 5
+set node_num 11
 
 # Number of TARGET nodes ONLY
-set target_node_num 1
+set target_node_num 2
 # Hence, number of SENSORS = node_num - target_node_num
 set sink_id 0
 
@@ -24,7 +27,7 @@ mkdir drcl.inet.sensorsim.SeismicProp seismic_Prop
 
 # create the sensor node position tracker
 mkdir drcl.inet.sensorsim.SensorNodePositionTracker nodetracker
-! nodetracker setGrid 600.0 100.0 500.0 100.0
+! nodetracker setGrid 300.0 100.0 250.0 100.0
 
 # connect the sensor channel to the sensor node position tracker
 connect chan/.tracker@ -and nodetracker/.channel@
@@ -39,7 +42,7 @@ mkdir drcl.inet.mac.Channel channel
 # create the node position tracker
 mkdir drcl.inet.mac.NodePositionTracker tracker
 #                 maxX  minX maxY minY  dX   dY
-! tracker setGrid 600.0 100.0 500.0 100.0 60.0 60.0
+! tracker setGrid 300.0 100.0 250.0 100.0 60.0 60.0
 
 connect channel/.tracker@ -and tracker/.channel@
 
@@ -55,6 +58,7 @@ for {set i 0} {$i < [expr $sink_id + 1]} {incr i} {
 	! app setNid $i
 	! app setSinkNid $sink_id
 	! app setCoherentThreshold 1000.0
+	! app setNoOfNodes $node_num
 
 	# create wireless agent layers
 	mkdir drcl.inet.sensorsim.WirelessAgent wireless_agent
@@ -136,7 +140,7 @@ for {set i 0} {$i < [expr $sink_id + 1]} {incr i} {
 	! /aodvtest/channel attachPort $i [! wphy getPort .channel]
 	
 #                                maxX maxY maxZ minX minY minZ dX dY dZ
-    	! mobility setTopologyParameters 600.0 500.0 0.0 100.0 100.0 0.0 60.0 60.0 0.0
+    	! mobility setTopologyParameters 300.0 250.0 0.0 100.0 100.0 0.0 60.0 60.0 0.0
 
 	! mac  disable_MAC_TRACE_ALL
 
@@ -169,7 +173,7 @@ for {set i [expr $sink_id + 1]} {$i < [expr $node_num - $target_node_num]} {incr
 	mkdir drcl.inet.sensorsim.SensorMobilityModel mobility
 
 	! phy setNid $i 
-	! phy setRadius 250.0
+	! phy setRadius 500.0
 
 	# connect phyiscal layers to sensor agents so that nodes can receive
 	connect phy/.toAgent@ -to agent/.fromPhy@
@@ -286,7 +290,7 @@ for {set i [expr $sink_id + 1]} {$i < [expr $node_num - $target_node_num]} {incr
 	! /aodvtest/channel attachPort $i [! wphy getPort .channel]
 	
 #                                    maxX maxY maxZ minX minY minZ dX dY dZ
-    ! mobility setTopologyParameters 600.0 500.0 0.0 100.0 100.0 0.0 60.0 60.0 0.0
+    ! mobility setTopologyParameters 300.0 250.0 0.0 100.0 100.0 0.0 60.0 60.0 0.0
 
 	! mac  disable_MAC_TRACE_ALL
 
@@ -315,7 +319,7 @@ if { $target_node_num == 0 } {
 		mkdir drcl.inet.sensorsim.SensorPhy phy 
 		! phy setRxThresh 0.0
 		! phy setNid $i 
-		! phy setRadius 80.0
+		! phy setRadius 100.0
 
 		# create mobility models
 		mkdir drcl.inet.sensorsim.SensorMobilityModel mobility
@@ -332,7 +336,7 @@ if { $target_node_num == 0 } {
 		! mobility setNid $i
 
 		# set the topology parameters
-		! mobility setTopologyParameters 600.0 500.0 0.0 100.0 100.0 0.0
+		! mobility setTopologyParameters 300.0 250.0 0.0 100.0 100.0 0.0
 
 		cd ..
 	}
@@ -350,9 +354,9 @@ for {set i [expr $sink_id + 1]} {$i < $node_num} {incr i} {
 set plot_ [mkdir drcl.comp.tool.Plotter .plot]
 #for {set i 0} {$i < $target_node_num} {incr i} {
 for {set i [expr $sink_id + 1]} {$i < [expr $node_num - $target_node_num]} {incr i} {
-	foreach task "0 1 2" {
+	foreach task "Route Sample Sleep" {
 		#connect -c n$i/app/.Qval$task@ -to $plot_/$task@$i
-		#connect -c n$i/app/.executions$task@ -to $plot_/$task@$i
+		connect -c n$i/app/$task@ -to $plot_/$task@$i
 	}
 	#connect -c n$i/app/.energy@ -to $plot_/6@$i
 	if { $testflag } {
@@ -360,48 +364,36 @@ for {set i [expr $sink_id + 1]} {$i < [expr $node_num - $target_node_num]} {incr
 	}
 }
 set position_ [mkdir drcl.comp.tool.Plotter .position]
-for {set i 0} {$i < $target_node_num} {incr i} {
-	connect -c n$sink_id/app/.snr$i@ -to $position_/$i@$i
-	if { $testflag } {
-		attach -c $testfile/in@ -to n$sink_id/app/.snr$i@
-	}
-}
+connect -c n$sink_id/app/.track@ -to $position_/track@
+connect -c n$sink_id/app/.actual@ -to $position_/actual@
+#for {set i 0} {$i < $target_node_num} {incr i} {
+	#connect -c n$sink_id/app/.snr$i@ -to $position_/$i@$i
+#	if { $testflag } {
+#		attach -c $testfile/in@ -to n$sink_id/app/.snr$i@
+#	}
+#}
 # set the position of sink nodes
-! n0/mobility setPosition 0.0 250.0 225.0 0.0
+! n0/mobility setPosition 0.0 250.0 100.0 0.0
 
-# set the position of target nodes
-# Max. speed is the first argument of setPosition.
-# In order to make the target nodes mobile with max. speed (e.g., 30) m/sec., 
 # set the first argument of setPosition to 30.0 
-#! n4/mobility setPosition 0.0 250.0 350.0 0.0
-set np 10; # number of points
-set t [java::new {double[][]} $np]
-$t set 0 [java::new {double[]} 4 "0 150.0 325.0 0"]
-$t set 1 [java::new {double[]} 4 "1000 175.0 320.0 0"]
-$t set 2 [java::new {double[]} 4 "2000 175.0 320.0 0"]
-$t set 3 [java::new {double[]} 4 "3000 225.0 275.0 0"]
-$t set 4 [java::new {double[]} 4 "4000 225.0 275.0 0"]
-$t set 5 [java::new {double[]} 4 "5000 275.0 300.0 0"]
-$t set 6 [java::new {double[]} 4 "6000 275.0 300.0 0"]
-$t set 7 [java::new {double[]} 4 "7000 325.0 325.0 0"]
-$t set 8 [java::new {double[]} 4 "8000 325.0 325.0 0"]
-$t set 9 [java::new {double[]} 4 "9000 370.0 340.0 0"]
-! n4/mobility installTrajectory $t
-
-#! n4/mobility setPosition 0.0 400.0 450.0 0.0
-#! n5/mobility setPosition 30.0 550.0 250.0 0.0
-#! n6/mobility setPosition 30.0 400.0 450.0 0.0
-
 # set the position of sensor nodes
 # should be made to read from a scenario file
-! n1/mobility setPosition 0.0 250.0 275.0 0.0
+! n1/mobility setPosition 0.0 225.0 125.0 0.0
 ! n1/app setDestId 0
-! n2/mobility setPosition 0.0 200.0 300.0 0.0
-! n2/app setDestId 1
-! n3/mobility setPosition 0.0 300.0 300.0 0.0
-! n3/app setDestId 1
-
-
+! n2/mobility setPosition 0.0 250.0 125.0 0.0
+! n2/app setDestId 0
+! n3/mobility setPosition 0.0 275.0 120.0 0.0
+! n3/app setDestId 0
+! n4/mobility setPosition 0.0 200.0 150.0 0.0
+! n4/app setDestId 1
+! n5/mobility setPosition 0.0 250.0 150.0 0.0
+! n5/app setDestId 2
+! n6/mobility setPosition 0.0 300.0 150.0 0.0
+! n6/app setDestId 3
+! n7/mobility setPosition 0.0 175.0 175.0 0.0
+! n7/app setDestId 4
+! n8/mobility setPosition 0.0 270.0 175.0 0.0
+! n8/app setDestId 5
 
 puts "simulation begins..."
 set sim [attach_simulator .]
@@ -412,23 +404,58 @@ $sim stop
 script {run n0} -at 0.3 -on $sim
 script {run n1} -at 0.5 -on $sim
 script {run n2} -at 0.5 -on $sim
-script {run n3} -at 0.5 -on $sim
+script {run n3} -at 0.8 -on $sim
 script {run n4} -at 0.8 -on $sim
+script {run n5} -at 0.8 -on $sim
+script {run n6} -at 1.0 -on $sim
+script {run n7} -at 1.0 -on $sim
+script {run n8} -at 1.0 -on $sim
+script {run n9} -at 10.0 -on $sim
+script {run n10} -at 10.0 -on $sim
 
-#script {! n4/mobility setPosition 0.0 100.0  475.0 0.0} -at 10.0 -on $sim
-#script {! n4/mobility setPosition 0.0 150.0  500.0 0.0} -at 1000.0 -on $sim
-#script {! n4/mobility setPosition 0.0 200.0  550.0 0.0} -at 2000.0 -on $sim
-#script {! n4/mobility setPosition 0.0 250.0  575.0 0.0} -at 3000.0 -on $sim
-#script {! n4/mobility setPosition 0.0 300.0  250.0 0.0} -at 4000.0 -on $sim
-#script {! n4/mobility setPosition 0.0 200.0  200.0 0.0} -at 5000.0 -on $sim
-#script {! n4/mobility setPosition 0.0 150.0  100.0 0.0} -at 6000.0 -on $sim
+# set the position of target nodes
+# Max. speed is the first argument of setPosition.
+# In order to make the target nodes mobile with max. speed (e.g., 30) m/sec., 
+#! n9/mobility setPosition 0.0 250.0  250.0 0.0
+set np 13; # number of points
+set t [java::new {double[][]} $np]
+$t set 0 [java::new {double[]} 4 "0 150.0 225.0 0"]
+$t set 1 [java::new {double[]} 4 "1000 175.0 150.0 0"]
+$t set 2 [java::new {double[]} 4 "2000 175.0 150.0 0"]
+$t set 3 [java::new {double[]} 4 "3000 200.0 240.0 0"]
+$t set 4 [java::new {double[]} 4 "4000 200.0 240.0 0"]
+$t set 5 [java::new {double[]} 4 "5000 225.0 185.0 0"]
+$t set 6 [java::new {double[]} 4 "6000 225.0 185.0 0"]
+$t set 7 [java::new {double[]} 4 "7000 250.0 250.0 0"]
+$t set 8 [java::new {double[]} 4 "8000 250.0 250.0 0"]
+$t set 9 [java::new {double[]} 4 "9000 275.0 160.0 0"]
+$t set 10 [java::new {double[]} 4 "10000 275.0 160.0 0"]
+$t set 11 [java::new {double[]} 4 "11000 300.0 250.0 0"]
+$t set 12 [java::new {double[]} 4 "12000 300.0 250.0 0"]
+#! n9/mobility installTrajectory $t
+#! n10/mobility installTrajectory $t
 
+
+script {! n9/mobility setPosition 0.1 175.0  230.0 0.0} -at 10.0 -on $sim
+script {! n10/mobility setPosition 0.1 275.0  240.0 0.0} -at 10.0 -on $sim
+
+#script {! n9/mobility setPosition 0.0 100.0  475.0 0.0} -at 10.0 -on $sim
 #script {! n2/app setDestId -1} -at 1500.0 -on $sim
 #script {! n2/app setDestId 1} -at 3000.0 -on $sim
+
 # collect statistics at the end
-set end 10000.0
+set end 12000.0
 script {! n0/app collectStats} -at $end -on $sim
 script {! n1/app collectStats} -at $end -on $sim
 script {! n2/app collectStats} -at $end -on $sim
 script {! n3/app collectStats} -at $end -on $sim
+script {! n4/app collectStats} -at $end -on $sim
+script {! n5/app collectStats} -at $end -on $sim
+script {! n6/app collectStats} -at $end -on $sim
+script {! n7/app collectStats} -at $end -on $sim
+script {! n8/app collectStats} -at $end -on $sim
+
+script {! n0/app collectGlobalStats} -at $end -on $sim
+
+script {! n0/app shutdown} -at $end -on $sim
 $sim resumeTo $end 
