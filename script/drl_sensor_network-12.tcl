@@ -7,10 +7,10 @@ source "script/test/include.tcl"
 cd [mkdir -q drcl.comp.Component /aodvtest]
 
 # TOTAL number of nodes (sensor nodes + target nodes)
-set node_num 10
+set node_num 12
 
 # Number of TARGET nodes ONLY
-set target_node_num 1
+set target_node_num 3
 # Hence, number of SENSORS = node_num - target_node_num
 set sink_id 0
 
@@ -27,7 +27,7 @@ mkdir drcl.inet.sensorsim.SeismicProp seismic_Prop
 
 # create the sensor node position tracker
 mkdir drcl.inet.sensorsim.SensorNodePositionTracker nodetracker
-! nodetracker setGrid 300.0 100.0 250.0 100.0
+! nodetracker setGrid 300.0 100.0 300.0 100.0
 
 # connect the sensor channel to the sensor node position tracker
 connect chan/.tracker@ -and nodetracker/.channel@
@@ -42,7 +42,7 @@ mkdir drcl.inet.mac.Channel channel
 # create the node position tracker
 mkdir drcl.inet.mac.NodePositionTracker tracker
 #                 maxX  minX maxY minY  dX   dY
-! tracker setGrid 300.0 100.0 250.0 100.0 60.0 60.0
+! tracker setGrid 300.0 100.0 300.0 100.0 60.0 60.0
 
 connect channel/.tracker@ -and tracker/.channel@
 
@@ -140,7 +140,7 @@ for {set i 0} {$i < [expr $sink_id + 1]} {incr i} {
 	! /aodvtest/channel attachPort $i [! wphy getPort .channel]
 	
 #                                maxX maxY maxZ minX minY minZ dX dY dZ
-    	! mobility setTopologyParameters 300.0 250.0 0.0 100.0 100.0 0.0 60.0 60.0 0.0
+    	! mobility setTopologyParameters 300.0 300.0 0.0 100.0 100.0 0.0 60.0 60.0 0.0
 
 	! mac  disable_MAC_TRACE_ALL
 
@@ -290,7 +290,7 @@ for {set i [expr $sink_id + 1]} {$i < [expr $node_num - $target_node_num]} {incr
 	! /aodvtest/channel attachPort $i [! wphy getPort .channel]
 	
 #                                    maxX maxY maxZ minX minY minZ dX dY dZ
-    ! mobility setTopologyParameters 300.0 250.0 0.0 100.0 100.0 0.0 60.0 60.0 0.0
+    ! mobility setTopologyParameters 300.0 300.0 0.0 100.0 100.0 0.0 60.0 60.0 0.0
 
 	! mac  disable_MAC_TRACE_ALL
 
@@ -336,7 +336,7 @@ if { $target_node_num == 0 } {
 		! mobility setNid $i
 
 		# set the topology parameters
-		! mobility setTopologyParameters 300.0 250.0 0.0 100.0 100.0 0.0
+		! mobility setTopologyParameters 300.0 300.0 0.0 100.0 100.0 0.0
 
 		cd ..
 	}
@@ -386,13 +386,13 @@ connect -c n$sink_id/app/.actual@ -to $position_/actual@
 ! n3/app setDestId 0
 ! n4/mobility setPosition 0.0 200.0 150.0 0.0
 ! n4/app setDestId 1
-! n5/mobility setPosition 0.0 250.0 150.0 0.0
+! n5/mobility setPosition 0.0 250.0 170.0 0.0
 ! n5/app setDestId 2
-! n6/mobility setPosition 0.0 300.0 150.0 0.0
+! n6/mobility setPosition 0.0 300.0 170.0 0.0
 ! n6/app setDestId 3
-! n7/mobility setPosition 0.0 175.0 175.0 0.0
+! n7/mobility setPosition 0.0 175.0 200.0 0.0
 ! n7/app setDestId 4
-! n8/mobility setPosition 0.0 270.0 175.0 0.0
+! n8/mobility setPosition 0.0 270.0 200.0 0.0
 ! n8/app setDestId 5
 
 puts "simulation begins..."
@@ -411,6 +411,8 @@ script {run n6} -at 1.0 -on $sim
 script {run n7} -at 1.0 -on $sim
 script {run n8} -at 1.0 -on $sim
 script {run n9} -at 10.0 -on $sim
+script {run n10} -at 10.0 -on $sim
+script {run n11} -at 10.0 -on $sim
 
 # set the position of target nodes
 # Max. speed is the first argument of setPosition.
@@ -432,9 +434,12 @@ $t set 10 [java::new {double[]} 4 "10000 275.0 160.0 0"]
 $t set 11 [java::new {double[]} 4 "11000 300.0 250.0 0"]
 $t set 12 [java::new {double[]} 4 "12000 300.0 250.0 0"]
 #! n9/mobility installTrajectory $t
+#! n10/mobility installTrajectory $t
 
 
-script {! n9/mobility setPosition 0.0 200.0  230.0 0.0} -at 10.0 -on $sim
+script {! n9/mobility setPosition 0.1 175.0  230.0 0.0} -at 10.0 -on $sim
+script {! n10/mobility setPosition 0.1 225.0  240.0 0.0} -at 10.0 -on $sim
+script {! n11/mobility setPosition 0.1 245.0  200.0 0.0} -at 10.0 -on $sim
 
 #script {! n9/mobility setPosition 0.0 100.0  475.0 0.0} -at 10.0 -on $sim
 #script {! n2/app setDestId -1} -at 1500.0 -on $sim
@@ -454,4 +459,5 @@ script {! n8/app collectStats} -at $end -on $sim
 
 script {! n0/app collectGlobalStats} -at $end -on $sim
 script {! n0/app shutdown} -at $end -on $sim
+
 $sim resumeTo $end 
