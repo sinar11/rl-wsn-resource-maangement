@@ -31,6 +31,8 @@ public interface GlobalRewardManagerMBean {
 
 	public void manage(long totalExecutions, Algorithm algorithm);
 	
+	public void updateTrackingStats(long timestep, Algorithm algorithm);
+	
 	public double getTotalCost();
 	
 	public void addToTotalCost(double cost);

@@ -23,6 +23,8 @@ public class GlobalRewardManager implements GlobalRewardManagerMBean{
 	Map<Integer,Integer> taskExecutions= new HashMap<Integer, Integer>();
 	
 	double totalTrackingError= 0;
+	int totalTrackCount=0;
+	
 	int rewardUpdates=0;
 	private static int positiveUpdates=0;
 	List<Double> globalRewards=new ArrayList<Double>(1000);
@@ -80,7 +82,7 @@ public class GlobalRewardManager implements GlobalRewardManagerMBean{
 	public synchronized void manage(long timestep, Algorithm algorithm) {
 		if (pendingData == null || pendingData.size() == 0) {
 			globalRewards.add(totalReward);
-			updateTrackingStats(timestep,algorithm);
+			//updateTrackingStats(timestep,algorithm);
 			return;
 		}
 
@@ -147,7 +149,7 @@ public class GlobalRewardManager implements GlobalRewardManagerMBean{
 			CSVLogger.log("Delta-Macro",timestep+","+toString(streamRewards),false,algorithm);
 		}
 		globalRewards.add(totalReward / this.totalCost);
-		updateTrackingStats(timestep,algorithm);
+		//updateTrackingStats(timestep,algorithm);
 		pendingData.clear();
 		targetEventMap.clear();
 	}
@@ -160,7 +162,7 @@ public class GlobalRewardManager implements GlobalRewardManagerMBean{
 		return buff.toString();
 	}
 
-	private void updateTrackingStats(long timestep, Algorithm algorithm){
+	public void updateTrackingStats(long timestep, Algorithm algorithm){
     	Map<Long,double[]> targetPositions=CurrentTargetPositionTracker.getInstance().getTargetPositions();
     	for (Long targetNid : targetPositions.keySet()) {
 			double currX = 0, currY = 0, trackX = 0, trackY = 0, snr = 0;
@@ -176,6 +178,7 @@ public class GlobalRewardManager implements GlobalRewardManagerMBean{
 			double dist = Math.sqrt(Math.pow(Math.abs(trackX - currX), 2)
 					+ Math.pow(Math.abs(trackY - currY), 2));
 			totalTrackingError+=dist;
+			totalTrackCount++;
 			CSVLogger.log("target" + targetNid, timestep + "," + snr + ","
 					+ trackX + "," + trackY + "," + currX + "," + currY + ","
 					+ dist, false, algorithm);
@@ -216,7 +219,7 @@ public class GlobalRewardManager implements GlobalRewardManagerMBean{
 		StringBuffer buff= new StringBuffer();
 		buff.append("RewardUpdates,"+rewardUpdates+",positiveUpdates,"+positiveUpdates);
 		buff.append(",effectiveCost,"+effectiveCost+",totalCost,"+totalCost+",globalReward,"+totalReward/totalCost);
-		buff.append(",avgTrackError,"+(totalTrackingError/globalRewards.size())+",noOfTracks,"+noOfTracks);
+		buff.append(",avgTrackError,"+(totalTrackingError/totalTrackCount)+",noOfTracks,"+noOfTracks);
 		for(Integer taskId: taskExecutions.keySet()){
 			buff.append(",task-"+taskId+","+taskExecutions.get(taskId));
 		}
