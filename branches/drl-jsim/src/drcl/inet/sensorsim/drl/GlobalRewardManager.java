@@ -64,8 +64,10 @@ public class GlobalRewardManager implements GlobalRewardManagerMBean{
 		return totalCost;
 	}
 	
-	public void addToTotalCost(double cost){
-		totalCost+=cost;
+	public void addToTotalCost(double cost, Algorithm algorithm){
+		if(algorithm==Algorithm.ORACLE) totalCost+=DRLSensorApp.ENERGY_SLEEP/100.0;
+		else
+			totalCost+=cost;
 	}
 	
 	public  synchronized void dataArrived(long timestep, TrackingEvent trEvent){
@@ -123,6 +125,9 @@ public class GlobalRewardManager implements GlobalRewardManagerMBean{
 			noOfTracks += bestStream.pktIds.size();
 			totalReward += glReward;
 			effectiveCost += bestStream.cost;
+			if(algorithm==Algorithm.ORACLE){
+				this.totalCost+=bestStream.cost;
+			}
 			// calc WL based on best stream
 			double[] streamRewards= new double[CSVLogger.noOfNodes];
 			for (Stream stream : allStreams) {

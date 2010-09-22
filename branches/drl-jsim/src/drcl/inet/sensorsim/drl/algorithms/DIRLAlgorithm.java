@@ -5,9 +5,11 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 
+import drcl.inet.sensorsim.drl.CSVLogger;
 import drcl.inet.sensorsim.drl.DRLSensorApp;
 import drcl.inet.sensorsim.drl.SensorState;
 import drcl.inet.sensorsim.drl.SensorTask;
+import drcl.inet.sensorsim.drl.algorithms.AbstractAlgorithm.Algorithm;
 
 public class DIRLAlgorithm extends AbstractAlgorithm{
 	
@@ -18,7 +20,9 @@ public class DIRLAlgorithm extends AbstractAlgorithm{
 	 
 	public SensorTask getNextTaskToExecute(SensorState currentState) {
 		SensorTask nextTask=null;
-		if (Math.random() < calcExplorationFactor()) { // exploration choosen
+		double expFactor=calcExplorationFactor();
+		CSVLogger.log("Exp"+app.getNid(),""+expFactor,false,Algorithm.DIRL);	
+		if (Math.random() < expFactor) { // exploration choosen
 			nextTask = getRandomTaskToExecute();
 		}else	
 			nextTask = determineBestTaskToExecute(currentState);
