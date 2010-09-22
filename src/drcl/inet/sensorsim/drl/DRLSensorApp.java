@@ -33,7 +33,7 @@ public class DRLSensorApp extends SensorApp implements drcl.comp.ActiveComponent
 
     public static Logger log= Logger.global;
     private static final double TIMER_INTERVAL =10;
-    private static final double MANAGE_REWARD_INTERVAL=50;
+    private static final double MANAGE_REWARD_INTERVAL=20*TIMER_INTERVAL;
     private static final double ENERGY_SAMPLE=8.41*0.00001;
     private static final double ENERGY_ROUTE=((2.45*0.001) + (5.97*0.001));	
     private static final double ENERGY_SLEEP=8.0*0.000001;
@@ -117,11 +117,10 @@ public class DRLSensorApp extends SensorApp implements drcl.comp.ActiveComponent
     	this.algorithm=AbstractAlgorithm.createInstance(taskList, this);
     	
         //lastMeasuredEnergy = 
-		myTimer = setTimeout("manageReward", MANAGE_REWARD_INTERVAL);
-		if (nid != sink_nid) {
-			currentEnergy = getRemainingEnergy();
-			myTimer = setTimeout("performTask", TIMER_INTERVAL);
-		}else{
+		setTimeout("manageReward", MANAGE_REWARD_INTERVAL);
+		currentEnergy = getRemainingEnergy();
+		myTimer = setTimeout("performTask", TIMER_INTERVAL);
+		if (nid == sink_nid) {
 			log(Level.INFO,"********ALGORITHM:" + algorithm + "*******************");
 		}
 			
@@ -139,8 +138,7 @@ public class DRLSensorApp extends SensorApp implements drcl.comp.ActiveComponent
     }
     
     protected void _resume() {
-        if(nid!=sink_nid)
-            myTimer=setTimeout("performTask", TIMER_INTERVAL);
+        myTimer=setTimeout("performTask", TIMER_INTERVAL);
     }
 
     protected void resetForNewTask(){
@@ -148,6 +146,11 @@ public class DRLSensorApp extends SensorApp implements drcl.comp.ActiveComponent
     }
     protected synchronized void timeout(Object data) {
 		if (data.equals("performTask")) {
+			if(nid==sink_nid){
+				globalRewardManager.updateTrackingStats(totalExecutions, algorithm.getAlgorithm());
+				myTimer = setTimeout("performTask", TIMER_INTERVAL);
+				return;
+			}
 			if (currentTask != null) {
 				currentTask.computeReward();
 				totalReward += currentTask.lastReward;
@@ -161,7 +164,6 @@ public class DRLSensorApp extends SensorApp implements drcl.comp.ActiveComponent
 			algorithm.reinforcement(currentTask, prevState, currentState);
 			
 			exportvalues();
-			
 			currentTask=algorithm.getNextTaskToExecute(currentState);
 			resetForNewTask();
 			if (currentTask != null)
@@ -169,7 +171,7 @@ public class DRLSensorApp extends SensorApp implements drcl.comp.ActiveComponent
 			myTimer = setTimeout("performTask", TIMER_INTERVAL);
 			
 		} else if (data.equals("manageReward")) {
-			setTimeout("manageReward", TIMER_INTERVAL);
+			setTimeout("manageReward", MANAGE_REWARD_INTERVAL);
 			if (nid == sink_nid) {
 				globalRewardManager.manage(totalExecutions,algorithm.getAlgorithm());
 			}else{
