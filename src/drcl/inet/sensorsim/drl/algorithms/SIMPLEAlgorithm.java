@@ -6,25 +6,27 @@ import drcl.inet.sensorsim.drl.DRLSensorApp;
 import drcl.inet.sensorsim.drl.SensorState;
 import drcl.inet.sensorsim.drl.SensorTask;
 
-public class ORACLEAlgorithm extends AbstractAlgorithm{
-	
-	protected ORACLEAlgorithm(Hashtable<Integer, SensorTask> taskList,
-			DRLSensorApp app) {
-		super(taskList, app);
+public class SIMPLEAlgorithm extends AbstractAlgorithm {
+
+	protected SIMPLEAlgorithm(Hashtable<Integer, SensorTask> taskList,
+			final DRLSensorApp app) {
+		super(taskList, app);		
 	}
 
-	 
-	public SensorTask getNextTaskToExecute(SensorState currentState) {
-		return taskList.get(0);
-	}
-	 
 	@Override
 	public Algorithm getAlgorithm() {
-		return Algorithm.ORACLE;
+		return Algorithm.SIMPLE;
+	}
+
+	@Override
+	public SensorTask getNextTaskToExecute(SensorState currentState) {
+		return taskList.get(0); //always use ROUTE
 	}
 
 	@Override
 	public void reinforcement(SensorTask currentTask, SensorState prevState,
 			SensorState currentState) {
+		//nothing to do
 	}
+
 }

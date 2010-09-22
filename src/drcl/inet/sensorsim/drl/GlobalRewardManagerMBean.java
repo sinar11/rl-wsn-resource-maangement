@@ -35,7 +35,7 @@ public interface GlobalRewardManagerMBean {
 	
 	public double getTotalCost();
 	
-	public void addToTotalCost(double cost);
+	public void addToTotalCost(double cost, Algorithm algorithm);
 
 	public void updateTaskExecutions(Hashtable<Integer, SensorTask> taskList);
 }

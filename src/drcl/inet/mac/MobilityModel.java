@@ -189,7 +189,11 @@ public class MobilityModel extends drcl.net.Module implements drcl.comp.ActiveCo
 
         removeDefaultDownPort(); 
         removeDefaultUpPort();  
-        
+        //Kunal: Setting seed if passed as JVM argument
+        String seedValue= System.getProperty("mobility.seed");
+        if(seedValue!=null){
+        	setSeed(Long.parseLong(seedValue));
+        }
     }
 
     /**
@@ -207,7 +211,11 @@ public class MobilityModel extends drcl.net.Module implements drcl.comp.ActiveCo
 
         removeDefaultDownPort(); 
         removeDefaultUpPort();  
-
+        //Kunal: Setting seed if passed as JVM argument
+        String seedValue= System.getProperty("mobility.seed");
+        if(seedValue!=null){
+        	setSeed(Long.parseLong(seedValue));
+        }
     }
     
     /**
