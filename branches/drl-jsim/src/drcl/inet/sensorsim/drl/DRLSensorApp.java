@@ -476,7 +476,9 @@ public class DRLSensorApp extends SensorApp implements drcl.comp.ActiveComponent
 		log(Level.FINE,"Received sensor packet data:" + tevent);
 
 		if (nid != sink_nid) {
-			
+			if(algorithm.getAlgorithm().equals(Algorithm.ORACLE) && this.currentTask.getTaskId().equals(SAMPLE)){
+	        	this.currentTask= taskList.get(0);
+	        }
 			 /*outboundMsgs.add(new SensorAppWirelessAgentContract.Message(SensorAppWirelessAgentContract.UNICAST_SENSOR_PACKET, 
 					 destId, spkt.getDataSize(),spkt.pktType,spkt.getMaxSnr(), eID, spkt.getTargetNid(),spkt.getTargetX(),
 					 spkt.getTargetY(),spkt.getTargetZ(),spkt.getTargetSeqNum(),spkt.getBody())) ;*/
