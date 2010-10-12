@@ -106,8 +106,8 @@ public class DataCacheEntry
 		DataStreamEntry bestStream= findBestStream(interest);
 		for(DataStreamEntry stream: dataStreams.values()){
 			if(stream.getSourceId()==nid) continue;
-			if(stream.equals(bestStream)){
-				if(stream.shouldReinforce(payable, margin)){
+			if(stream.getAvgWLReward()>0){//stream.equals(bestStream)){  //
+				if(/*payable>0 &&*/ stream.shouldReinforce(payable, margin)){
 					System.out.println(nid+":+VE Reinforcement:"+payable+"-"+stream);
 					pkts.add(new ReinforcementPacket(taskId,payable,nid,stream.getSourceId()));
 				}
@@ -136,7 +136,7 @@ public class DataCacheEntry
 			//	double cost= getAvgCost(pkts);
 				if(bestStream==null){
 					bestStream=stream;
-				}else if(stream.getAvgWLReward()>1.1*bestStream.getAvgWLReward()){
+				}else if(stream.getAvgWLReward()>bestStream.getAvgWLReward()){
 					bestStream=stream;
 				}/*else if(stream.getAvgPktReward()>=1.1*bestStream.getAvgPktReward()){
 					bestStream=stream;

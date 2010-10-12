@@ -111,6 +111,13 @@ public abstract class SensorTask {
 			if(this.id==other.id) return true;			
 		}
 		return false;
+	}
+
+	public void resetQValues() {
+		for(int i=0;i<Qvalues.length;i++){
+			Qvalues[i]=0;
+		}
+		
 	}    
     
     

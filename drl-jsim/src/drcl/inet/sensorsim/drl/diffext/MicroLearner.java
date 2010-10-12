@@ -319,14 +319,15 @@ public class MicroLearner {
 		//filtering of data for same task for this timestep, 
 		if(!shouldFilter(dataPkt)){
 			outboundMsgs.add(dataPkt);
-			dataPkt.addCostReward(currentTask.lastReward, currentTask.getLastCost(),diffApp.nid); 
+			dataPkt.addCostReward(diffApp.interestCache.get(dataPkt.getTaskId()).getMaxGradient().getPayment(), currentTask.getLastCost(),diffApp.nid); 
             mlearner.dataArriveAtUpPort(dataPkt); 
 		}
 		//Any other application specific data aggregation/filtering..
 	}
 
 	private boolean shouldFilter(DataPacket inData) {
-		
+		if(inData.isExplore())
+			return false;
 		for(DataPacket data:outboundMsgs){
 			if(data.getTaskId()==inData.getTaskId() && data.getSinkId()==inData.getSinkId()){
 				return true;
@@ -345,7 +346,7 @@ public class MicroLearner {
 			EnergyStats.markAsReporting();
 			totalEnergyUsed=EnergyStats.getTotalEnergy();
 			CSVLogger.log("Delay", ""+averageDelay ,false,algorithm.getAlgorithm());
-			CSVLogger.log("Delay", ""+averageDelay ,false,algorithm.getAlgorithm());
+			//CSVLogger.log("Delay", ""+averageDelay ,false,algorithm.getAlgorithm());
 			diffApp.log(Level.INFO, "Tracking event with pkt:" + dataPkt);
 			double[] target_location = new double[2];
 			target_location[0] = (Double) TupleUtils.getAttributeValue(
@@ -380,11 +381,16 @@ public class MicroLearner {
 	public void handleReinforcement(ReinforcementPacket reinforcementPkt) {
 		if(reinforcementPkt.getDestinationId()==diffApp.nid){  //if this is destined to me
 			lastDiffusionParticipation=timesteps;
-			SensorTask task= taskList.get(reinforcementPkt.getTaskId());
-			if(task!=null){
-				//task.expectedPrice=reinforcementPkt.getPayment();
-				task.expectedPrice=diffApp.interestCache.get(reinforcementPkt.getTaskId()).getMaxGradient().getPayment();
-			}
+			updateTaskExpectedPrice(reinforcementPkt.getTaskId());
+		}		
+	}
+
+	void updateTaskExpectedPrice(int taskId) {
+		SensorTask task= taskList.get(taskId);
+		if(task!=null){
+			//task.expectedPrice=reinforcementPkt.getPayment();
+			//task.resetQValues();
+			task.expectedPrice=diffApp.interestCache.get(taskId).getMaxGradient().getPayment();
 		}		
 	}
 
@@ -393,6 +399,7 @@ public class MicroLearner {
 	 * construct the event as a list of attribute-value pairs. **/
 	
 	public void handleSensorEvent(List<Tuple> event) {
+		if(diffApp.getRemainingEnergy()<=0) return;
 		if(diffApp.numSubscriptions==0 || !(currentTask instanceof ApplicationTask)) return;
 		
 		InterestCacheEntry interestEntry = diffApp.getMatchingInterest(event) ;
