@@ -5,27 +5,25 @@ import java.util.Collection;
 import java.util.List;
 import java.util.logging.Level;
 
-import drcl.inet.sensorsim.SensorAppWirelessAgentContract;
-import drcl.inet.sensorsim.diffusion.ActiveTasksEntry;
-import drcl.inet.sensorsim.diffusion.AttributeVector;
-import drcl.inet.sensorsim.diffusion.PositiveReinforcementPacket;
+
 import drcl.inet.sensorsim.drl.diffext.InterestPacket.CostParam;
 
 public class MacroLearner {
 
-	private static final double COST_UNIT_ENERGY = 1.0;
-	private static final double COST_REMAINING_ENERGY=0.5;
-	private static final double COST_PER_HOP = 0.001;
-	private static final double PROFIT_MARGIN=0.05;
+	private static final double MAX_LIFETIME=20000;
+	private static final double COST_COEF_ENERGY = 1/(MicroLearner.ENERGY_SAMPLE+MicroLearner.ENERGY_DIFFUSE);
+	private static final double COST_COEF_LIFETIME=1/MAX_LIFETIME;
+	private static final double COST_PER_HOP = 1.0;
+	//private static final double PROFIT_MARGIN=0.05;
 	static final double MAX_DATA_QUALITY=1.0;
-	private static final double MIN_DATA_QUALITY=0.0;
+	//private static final double MIN_DATA_QUALITY=0.0;
 	private static final double EXPLORATION_FACTOR = 0.05;
-	private static final double NO_OF_PKTS_FACTOR = 0.1;
+	private static final double NO_OF_PKTS_FACTOR =0.0;// 0.1;
 	
 	DRLDiffApp diffApp;
 	
 	public MacroLearner(DRLDiffApp diffApp) {
-		this.diffApp=diffApp;
+		this.diffApp=diffApp;		
 	}
 
 	public String toString(){
@@ -52,16 +50,17 @@ public class MacroLearner {
 			return;
 		}else{   			
 			long destination=-1;
-			if (Math.random() < EXPLORATION_FACTOR) { 
+			if (Math.random() < EXPLORATION_FACTOR || pkt.isExplore()) { 
 				//destination = interestEntry.getRandomGradient().getNeighbor(); // exploration choosen
 				destination = DRLDiffApp.BROADCAST_DEST;
+				//dataPacket.setExplore(true);
 			}else{	
 				GradientEntry gradient= interestEntry.getMaxGradient();
-				if(gradient.getPayment()<=0){
+				/*if(gradient.getPayment()<=0){
 					diffApp.log(Level.FINE,"Dropping packet as gradient's payment is zero or negative");
 					//diffApp.interestCachePrint();
 					return;
-				}
+				}*/
 				destination=gradient.getNeighbor();  // using neighbor with max gradient
 				//if(dataPacket.destination)
 			}
@@ -127,6 +126,7 @@ public class MacroLearner {
 				double clReward=calcTotalReward(pkts, interest, payable);
 				
 				double wlReward=totalReward-clReward;
+				
 				stream.updateStatsOnNewWLReward(wlReward);
 			}
 			//Determine stream with lowest cost and required quality and give reward equal to payable to that stream. All other streams should receive zero reward. 
@@ -142,17 +142,21 @@ public class MacroLearner {
 
 	private double calcTotalReward(List<DataPacket> pkts,
 			InterestPacket interest, double payable){
-		if(pkts.size()==0) return 0;
+		if(pkts==null || pkts.size()==0) return 0;
 		double quality=calcDataQuality(pkts, interest);
-		double pktsCost=0;
-		double pktsReward=0;
+		double minCost=Integer.MAX_VALUE;
+		double maxReward=Integer.MIN_VALUE;
 		for(DataPacket pkt: pkts){
-			pktsCost+=pkt.getCost();
-			pktsReward+=pkt.getReward();
+			if(pkt.getCost()<minCost){
+				minCost=pkt.getCost();
+			}
+			if(pkt.getReward()>maxReward){
+				maxReward=pkt.getReward();
+			}			
 		}
-		double avgReward= pktsReward/pkts.size();
-		double avgCost=pktsCost/pkts.size();
-		return quality*avgReward- avgCost+NO_OF_PKTS_FACTOR*pkts.size();		
+		//double avgReward= pktsReward/pkts.size();
+		//double avgCost=pktsCost/pkts.size();
+		return quality*maxReward- minCost+NO_OF_PKTS_FACTOR*pkts.size();		
 	}
 	
 	/**
@@ -261,6 +265,8 @@ public class MacroLearner {
 		}
 		interestEntry.getInterest().setPayment(interestEntry.getMaxGradient().getPayment());
 		interestEntry.setPayable(calcPayable(interestEntry.getInterest(), interestEntry.getMaxGradient().getPayment()));	
+		//System.out.println("Node:"+diffApp.nid);
+		//interestEntry.printInterestEntry();
 //		reinforceNeighborsIfRequired(interestEntry);
 	}
 	
@@ -273,8 +279,9 @@ public class MacroLearner {
 	public double calcPayable(InterestPacket interest, double payment){
 		if(diffApp.nid==diffApp.sink_nid) return payment;
 		double costOfParticipation= calcCostOfParticipation(interest);
-		double profit= (payment-costOfParticipation)*PROFIT_MARGIN;
-		return payment-(costOfParticipation+profit);		
+		diffApp.log(Level.INFO,"Cost of participation:"+costOfParticipation);
+		//double profit= (payment-costOfParticipation)*PROFIT_MARGIN;
+		return payment-costOfParticipation; //+profit);		
 	}
 	
 	public double calcCostOfParticipation(InterestPacket interest){
@@ -283,18 +290,29 @@ public class MacroLearner {
 		for(CostParam param: costParams){
 			switch(param.type){
 			case Energy:
-				myCost+= param.weight*MicroLearner.ENERGY_SAMPLE*COST_UNIT_ENERGY;
+				myCost+= param.weight*MicroLearner.ENERGY_DIFFUSE/COST_COEF_ENERGY;
 				break;
 			case NoOfHops:
 				myCost+= param.weight*COST_PER_HOP;
 				break;
 			case Lifetime:
-				myCost+= param.weight*COST_REMAINING_ENERGY*((diffApp.getMaxEnergy()-diffApp.getRemainingEnergy())/diffApp.getRemainingEnergy());
+				double diff=MAX_LIFETIME-calcCurrLifetime(diffApp.getRemainingEnergy());
+				myCost+= param.weight*COST_COEF_LIFETIME*Math.max(diff,0);
 				break;
 			default:
 				throw new RuntimeException("Type:"+param.type+" not supported");
 			}
 		}
 		return myCost;
+	}
+
+	private double calcCurrLifetime(double remainingEnergy) {
+		double lambda=1.0; //arrival rate (1 per sec)
+		double K_T= MicroLearner.TIMER_INTERVAL;
+		double K_E= MicroLearner.ENERGY_DIFFUSE;
+		double P_s= MicroLearner.ENERGY_SAMPLE;
+		double lifetime= remainingEnergy*(1+ lambda*K_T)/(P_s+lambda*K_E);
+		diffApp.log(Level.INFO,"Current Lifetime="+lifetime);
+		return lifetime;
 	}
 }

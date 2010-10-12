@@ -72,6 +72,8 @@ public class DataPacket
 	/** though can be useful to detect loop **/
 	private List<Long> trace;
 	
+	private boolean explore=false;
+	
 	public DataPacket(long sourceId, long sinkId, int taskId, List<Tuple> attributes, double timestamp)
 	{
 		this.sourceId=sourceId;
@@ -94,6 +96,7 @@ public class DataPacket
 		this.timestamp=pkt.timestamp;
 		this.reward=pkt.reward;
 		this.cost=pkt.cost;
+		this.explore=pkt.explore;
 		if(DRLDiffApp.TRACE_ON){
 			this.trace=new ArrayList<Long>(pkt.trace);
 		}
@@ -102,7 +105,7 @@ public class DataPacket
 	public String toString()
 	{
 		return "DataPacket[sourceId="+sourceId+",destinationId="+destinationId+",sinkId="+sinkId+",taskId="+taskId+",timestamp="+timestamp
-			+",cost="+cost+",reward="+reward+(DRLDiffApp.TRACE_ON?(",trace="+trace):"");	
+			+",cost="+cost+",reward="+reward+",explore="+explore+(DRLDiffApp.TRACE_ON?(",trace="+trace):"");	
 	}
 
 	@Override
@@ -143,7 +146,7 @@ public class DataPacket
 	}
 
 	public void addCostReward(double reward, double cost, long nodeId) {
-		this.reward+=reward; //add reward to running sum
+		this.reward=reward; //set this as the reward (no sum)
 		this.cost+=cost;  //add cost to current running sum
 		if(DRLDiffApp.TRACE_ON)
 			trace.add(nodeId);
@@ -190,5 +193,13 @@ public class DataPacket
 
 	public void setDestinationId(long destinationId) {
 		this.destinationId = destinationId;
+	}
+
+	public boolean isExplore() {
+		return explore;
+	}
+
+	public void setExplore(boolean explore) {
+		this.explore = explore;
 	}
 }

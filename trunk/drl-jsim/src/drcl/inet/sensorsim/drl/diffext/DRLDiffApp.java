@@ -49,7 +49,7 @@ public class DRLDiffApp extends drcl.inet.sensorsim.SensorApp implements drcl.co
 	public static final double INTEREST_CACHE_PURGE_INTERVAL = 120.0 ; /* secs. */
 	
 	/** Decay computed gradients at a rate represented by DECAY_FACTOR **/
-	public static final double DECAY_FACTOR = 0.05;
+	public static final double DECAY_FACTOR =0.05;
 	
 	/** Name of the target that a sink node is interested in (and a sensor node capable of) detecting */
 	public String TargetName ;
@@ -59,7 +59,7 @@ public class DRLDiffApp extends drcl.inet.sensorsim.SensorApp implements drcl.co
 	public static final int REINFORCEMENT_PKT = 2 ;
 	public static final int BROADCAST_DEST=-1;
 	public static final double REINFORCE_WINDOW=20*MicroLearner.TIMER_INTERVAL; //20 TIMESTEPS
-	public static final double REINFORCE_SUPRESS_MARGIN= 0.20;
+	public static final double REINFORCE_SUPRESS_MARGIN= 0.0;
 	public static final boolean TRACE_ON=true;
 	
 	public static enum NodeState { SLEEPING, AWAKE};
@@ -99,7 +99,7 @@ public class DRLDiffApp extends drcl.inet.sensorsim.SensorApp implements drcl.co
 	private int noOfSrcPkts=0;
 	private int noOfInterests=0;
 	private Double lifetime=null;
-
+	private String costParam;
 	private int noOfNodes;
 	   
 	public DRLDiffApp ()
@@ -231,6 +231,7 @@ public class DRLDiffApp extends drcl.inet.sensorsim.SensorApp implements drcl.co
 		double currentTime = getTime() ;
 		for(InterestCacheEntry entry:interestCache.values()){
 			entry.gradientListPurge(currentTime) ;
+			microLearner.updateTaskExpectedPrice(entry.getInterest().getTaskId());
 			/*if ( entry.IsGradientListEmpty() == true ){
 				it.remove();
 			}	*/		
@@ -446,7 +447,7 @@ public class DRLDiffApp extends drcl.inet.sensorsim.SensorApp implements drcl.co
 		if ( data_ instanceof SensorPacket )
 		{
 			SensorPacket spkt = (SensorPacket)data_ ;
-			if(nodeState.equals(NodeState.SLEEPING)){
+			if(nodeState.equals(NodeState.SLEEPING) && spkt.pktType!=DRLDiffApp.INTEREST_PKT){
 				log(Level.FINE,"Dropping packet as currenly asleep.."+spkt.getBody());
 				log(Level.FINE,"Current task:"+microLearner.currentTask+", current state:"+microLearner.currentState
 						+" time:"+microLearner.timesteps+" lastDiff:"+microLearner.lastDiffusionParticipation+" lastS:"+microLearner.lastSourceParticipation);
@@ -463,6 +464,7 @@ public class DRLDiffApp extends drcl.inet.sensorsim.SensorApp implements drcl.co
 					process=macroLearner.interestArriveAtDownPort(interestPkt);
 					if(process)
 						microLearner.handleInterestPkt(interestPkt);
+					interestCachePrint();
 					break ;
 				case DRLDiffApp.DATA_PKT :
 					noOfDataPkts++;
@@ -489,7 +491,7 @@ public class DRLDiffApp extends drcl.inet.sensorsim.SensorApp implements drcl.co
     	}
 
 	/** Initiates a sensing task by sending an INTEREST packet */
-	public void subscribe(int taskId, double longMin, double longMax, double latMin, double latMax, double duration, double interval, double dataInterval, double refreshPeriod, double payment)
+	public void subscribe(int taskId, double longMin, double longMax, double latMin, double latMax, double duration, double interval, double dataInterval, double refreshPeriod, double payment, String costParam)
 	{
 		/* constructs an interest */
 		List<Tuple> interest = new ArrayList<Tuple>() ;
@@ -503,9 +505,13 @@ public class DRLDiffApp extends drcl.inet.sensorsim.SensorApp implements drcl.co
 		if ( taskEntry == null ) /* if there is NOT a matching task entry */
 		{
 			List<CostParam> costParams= new ArrayList<CostParam>();
-			//costParams.add(new CostParam(CostParam.Type.NoOfHops,1));
-			costParams.add(new CostParam(CostParam.Type.Energy,0.5));
-			costParams.add(new CostParam(CostParam.Type.Lifetime,0.5));
+			if(costParam!=null){
+				this.costParam=costParam;
+				costParams.add(new CostParam(CostParam.Type.valueOf(costParam),1));
+			}else{
+			    //costParams.add(new CostParam(CostParam.Type.Energy,0.5));
+			     costParams.add(new CostParam(CostParam.Type.Lifetime,1.0));
+			}
 			InterestPacket intPkt = new InterestPacket(taskId,this.nid,interest,payment,getTime(),dataInterval,refreshPeriod, costParams) ;
 			intPkt.setDuration(duration);
 			List<Tuple> qosConstraints= new ArrayList<Tuple>();
@@ -594,6 +600,12 @@ public class DRLDiffApp extends drcl.inet.sensorsim.SensorApp implements drcl.co
 		}		
 	}
 
+	//work-around to shutdown java
+    public void shutdown(){
+    	System.out.println("SHUTTING DOWN..");
+    	System.exit(0);
+    }
+    
 	/** Handles a timeout event */
 	protected void timeout(Object data_) 
 	{
@@ -723,7 +735,7 @@ public class DRLDiffApp extends drcl.inet.sensorsim.SensorApp implements drcl.co
         	EnergyStats.NodeStat lowestLifeNode=EnergyStats.getNodeWithLowestLifetime();
         	String mobility=System.getProperties().getProperty("target.mobile", "true");
         	String stats= noOfNodes+","+nid+","+microLearner.totalTrackingPkts+","+microLearner.lastTrackTime+","+microLearner.averageDelay
-        		+","+microLearner.totalEnergyUsed+","+lowestLifeNode.toString()+","+Boolean.parseBoolean(mobility);
+        		+","+microLearner.totalEnergyUsed+","+lowestLifeNode.toString()+","+Boolean.parseBoolean(mobility)+","+this.costParam;
         	CSVLogger.logGlobal("sinkStats",stats,microLearner.algorithm.getAlgorithm());            
         }
         CSVLogger.log("Qvalues",QValues,microLearner.algorithm.getAlgorithm());
