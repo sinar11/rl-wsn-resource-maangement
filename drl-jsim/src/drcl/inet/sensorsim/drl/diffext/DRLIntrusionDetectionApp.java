@@ -214,29 +214,5 @@ public class DRLIntrusionDetectionApp extends DRLDiffApp {
 					+ dist, false, microLearner.algorithm.getAlgorithm());
 		}
 	}
-	
-	/*public double calcTotalReward(List<DataPacket> pkts,
-			InterestPacket interest, double payable){
-		if(pkts==null || pkts.size()==0) return 0;
-		double quality=calcDataQuality(pkts, interest);
-		double pktsReward=0, pktsCost=0, minCost=Integer.MAX_VALUE, maxReward=Integer.MIN_VALUE;
-	    int noOfPkts=0;
-		for(DataPacket pkt: pkts){
-			if(pkt.getTrace()!=null && pkt.getTrace().size()>1){
-				pktsReward+=pkt.getReward();
-				pktsCost=pkt.getCost();
-				noOfPkts++;
-			}else{  // for this neighborhood, calc max reward/min cost
-				if(pkt.getCost()<minCost){
-					minCost=pkt.getCost();
-				}
-				if(pkt.getReward()>maxReward){
-					maxReward=pkt.getReward();
-				}	
-			}
-		}
-		double avgReward= (noOfPkts>0)?pktsReward/noOfPkts:0 + maxReward;
-		double avgCost=(noOfPkts>0)?pktsCost/noOfPkts:0 + minCost;
-		return quality*avgReward- avgCost;
-	}*/
+
 }
