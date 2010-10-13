@@ -7,7 +7,7 @@ source "script/test/include.tcl"
 cd [mkdir -q drcl.comp.Component /aodvtest]
 
 # TOTAL number of nodes (sensor nodes + target nodes)
-set node_num 10
+set node_num 16
 
 # Number of TARGET nodes ONLY
 set target_node_num 1
@@ -55,7 +55,7 @@ for {set i 0} {$i < [expr $sink_id + 1]} {incr i} {
 	
 	cd n$i
 
-	mkdir drcl.inet.sensorsim.drl.diffext.DRLTrackingApp app
+	mkdir drcl.inet.sensorsim.drl.diffext.DRLIntrusionDetectionApp app
 	! app setNid $i
 	! app setSinkNid $sink_id
 	! app setCoherentThreshold 1000.0
@@ -169,7 +169,7 @@ for {set i [expr $sink_id + 1]} {$i < [expr $node_num - $target_node_num]} {incr
 	
 	cd n$i
 
-	mkdir drcl.inet.sensorsim.drl.diffext.DRLTrackingApp app
+	mkdir drcl.inet.sensorsim.drl.diffext.DRLIntrusionDetectionApp app
 	! app setNid $i
 	! app setSinkNid $sink_id
 	! app setCoherentThreshold 1000.0
@@ -349,7 +349,7 @@ if { $target_node_num == 0 } {
 		mkdir drcl.inet.sensorsim.SensorPhy phy 
 		! phy setRxThresh 0.0
 		! phy setNid $i
-		! phy setRadius 100.0
+		! phy setRadius 50.0
 
 		! phy setDebugEnabled 0
 
@@ -399,23 +399,34 @@ for {set i 0} {$i < $target_node_num} {incr i} {
 # Max. speed is the first argument of setPosition.
 # In order to make the target nodes mobile with max. speed (e.g., 30) m/sec., 
 # set the first argument of setPosition to 30.0 
-! n9/mobility setPosition 0.0 251.0 270.0 0.0
+! n15/mobility setPosition 0.0 251.0 350.0 0.0
 
 # set the position of sensor nodes
 # should be made to read from a scenario file
 ! n1/mobility setPosition 0.0 450.0 250.0 0.0
 ! n2/mobility setPosition 0.0 450.0 450.0 0.0
-! n3/mobility setPosition 0.0 350.0 350.0 0.0
-! n4/mobility setPosition 0.0 360.0 340.0 0.0
-! n5/mobility setPosition 0.0 300.0 300.0 0.0
-! n6/mobility setPosition 0.0 250.0 450.0 0.0
-! n7/mobility setPosition 0.0 150.0 350.0 0.0
-! n8/mobility setPosition 0.0 270.0 325.0 0.0
-#! n8/mobility setPosition 0.0 170.0 370.0 0.0
+! n3/mobility setPosition 0.0 350.0 400.0 0.0
+! n4/mobility setPosition 0.0 360.0 300.0 0.0
+! n5/mobility setPosition 0.0 350.0 200.0 0.0
+! n6/mobility setPosition 0.0 340.0 410.0 0.0
+! n7/mobility setPosition 0.0 350.0 310.0 0.0
+! n8/mobility setPosition 0.0 330.0 225.0 0.0
+! n9/mobility setPosition 0.0 255.0 440.0 0.0
+! n10/mobility setPosition 0.0 255.0 355.0 0.0
+! n11/mobility setPosition 0.0 275.0 230.0 0.0
+
+#Video sensors
+! n12/mobility setPosition 0.0 250.0 440.0 0.0
+! n12/app setSensorType Video
+! n12/wphy setInitialEnergy 100
+! n13/mobility setPosition 0.0 250.0 355.0 0.0
+! n13/app setSensorType Video
+! n13/wphy setInitialEnergy 100
+! n14/mobility setPosition 0.0 270.0 230.0 0.0
+! n14/app setSensorType Video
+! n14/wphy setInitialEnergy 100
 
 ! n0/wphy setInitialEnergy 100
-! n4/wphy setInitialEnergy 100
-! n8/wphy setInitialEnergy 100
 
 
 
@@ -435,39 +446,29 @@ script {run n6} -at 0.9 -on $sim
 script {run n7} -at 1.0 -on $sim
 script {run n8} -at 1.1 -on $sim
 script {run n9} -at 1.2 -on $sim
+script {run n10} -at 1.2 -on $sim
+script {run n11} -at 1.2 -on $sim
+script {run n12} -at 1.2 -on $sim
+script {run n13} -at 1.2 -on $sim
+script {run n14} -at 1.2 -on $sim
+
+#Start target node at 5000 sec, collect stats before this 
+
+set intruder 5000.0
+for {set n  0} {$n < [expr $node_num - $target_node_num ]} {incr n} {
+	script puts "! n$n/app collectStats" -at $intruder -on $sim
+}
+script {run n15} -at $intruder -on $sim
 
 # Sinks subscribing to interests
-#                         taskId longMin longMax latMin latMax duration interval data_interval refreshPeriod payment)
-script {! n0/app subscribe 10 100.0 300.0 200.0 400.0 25000.0 53.0 5.0 10000.0 5 Lifetime} -at 1.5 -on $sim
-#script {! n4/wphy setInitialEnergy 10} -at 5000.0 -on $sim
+#                         taskId longMin longMax latMin latMax duration confidence data_interval refreshPeriod payment)
+script {! n0/app subscribe 10 150.0 300.0 200.0 500.0 15000.0 0.2 1.0 10000.0 5 Lifetime} -at 1.5 -on $sim
 
-#script {! n9/mobility setPosition 0.0 101.0 320.0 0.0} -at 500.0 -on $sim
-#script {! n9/mobility setPosition 0.0 251.0 200.0 0.0} -at 1000.0 -on $sim
-#script {! n9/mobility setPosition 0.0 111.0 310.0 0.0} -at 1.0 -on $sim
-#script {! n9/mobility setPosition 0.0 251.0 270.0 0.0} -at 2500.0 -on $sim
-set np 7; # number of points
-set t [java::new {double[][]} $np]
-$t set 0 [java::new {double[]} 4 "0 100.0 300.0 0"]
-$t set 1 [java::new {double[]} 4 "2000 150.0 300.0 0"]
-$t set 2 [java::new {double[]} 4 "4000 200.0 250.0 0"]
-$t set 3 [java::new {double[]} 4 "6000 250.0 250.0 0"]
-$t set 4 [java::new {double[]} 4 "8000 275.0 300.0 0"]
-$t set 5 [java::new {double[]} 4 "10000 300.0 300.0 0"]
-$t set 6 [java::new {double[]} 4 "12000 300.0 300.0 0"]
-! n9/mobility installTrajectory $t
+set end 7000.0
 
-set end 25000.0
-
-script {! n0/app collectStats} -at $end -on $sim
-script {! n1/app collectStats} -at $end -on $sim
-script {! n2/app collectStats} -at $end -on $sim
-script {! n3/app collectStats} -at $end -on $sim
-script {! n4/app collectStats} -at $end -on $sim
-script {! n5/app collectStats} -at $end -on $sim
-script {! n6/app collectStats} -at $end -on $sim
-script {! n7/app collectStats} -at $end -on $sim
-script {! n8/app collectStats} -at $end -on $sim
-
+for {set n  0} {$n < [expr $node_num - $target_node_num ]} {incr n} {
+	script puts "! n$n/app collectStats" -at $end -on $sim
+}
 
 script {! $sim info} -at $end -on $sim
  
