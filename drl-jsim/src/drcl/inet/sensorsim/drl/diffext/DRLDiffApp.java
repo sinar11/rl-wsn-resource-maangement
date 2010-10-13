@@ -1,7 +1,6 @@
 
 package drcl.inet.sensorsim.drl.diffext ;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -13,22 +12,19 @@ import drcl.inet.mac.EnergyContract;
 import drcl.inet.sensorsim.SensorAppAgentContract;
 import drcl.inet.sensorsim.SensorAppWirelessAgentContract;
 import drcl.inet.sensorsim.SensorPacket;
-import drcl.inet.sensorsim.SensorPositionReportContract;
 import drcl.inet.sensorsim.SensorAppAgentContract.Message;
 import drcl.inet.sensorsim.drl.CSVLogger;
 import drcl.inet.sensorsim.drl.EnergyStats;
 import drcl.inet.sensorsim.drl.IDRLSensorApp;
 import drcl.inet.sensorsim.drl.SensorTask;
 import drcl.inet.sensorsim.drl.diffext.InterestPacket.CostParam;
-import drcl.inet.sensorsim.drl.diffext.Tuple.Operator;
-import drcl.inet.sensorsim.drl.diffext.Tuple.Type;
 
 
 /** This class implements the extension of directed diffusion using distributed RL
 *
 * @author Kunal Shah
 */
-public class DRLDiffApp extends drcl.inet.sensorsim.SensorApp implements drcl.comp.ActiveComponent, IDRLSensorApp
+public abstract class DRLDiffApp extends drcl.inet.sensorsim.SensorApp implements drcl.comp.ActiveComponent, IDRLSensorApp
 {
  	private static final long serialVersionUID = -8724996734345865474L;
 
@@ -45,6 +41,8 @@ public class DRLDiffApp extends drcl.inet.sensorsim.SensorApp implements drcl.co
 	/** A node may suppress a received interest if it recently (i.e., within RESEND_INTEREST_WINDOW secs.) resent a matching interest. */	
 	public static final double RESEND_INTEREST_WINDOW = 2.0 ;
 
+	static final double MAX_DATA_QUALITY=1.0;
+	
 	/** Period between two successive times to check if any entries in the interest cache need to be purged. */
 	public static final double INTEREST_CACHE_PURGE_INTERVAL = 120.0 ; /* secs. */
 	
@@ -66,8 +64,8 @@ public class DRLDiffApp extends drcl.inet.sensorsim.SensorApp implements drcl.co
 	 
 	public static final double DELAY = 1.0; 			/* fixed delay to keep arp happy */
 	
-	private static java.util.Random rand = new java.util.Random(7777) ;
-	private static int seqNum=0;
+	protected static java.util.Random rand = new java.util.Random(7777) ;
+	protected static int seqNum=0;
 	
 	int numSubscriptions ;
 	double initialEnergy; 
@@ -88,21 +86,29 @@ public class DRLDiffApp extends drcl.inet.sensorsim.SensorApp implements drcl.co
 	/** Timer used to periodically check if there are any pending reinforcements to be sent */
 	public DiffTimer reinforcementTimer ;
 
-	private MicroLearner microLearner;
+	protected MicroLearner microLearner;
 	
-	private MacroLearner macroLearner;
+	protected MacroLearner macroLearner;
 	
 	NodeState nodeState=NodeState.AWAKE;
     
-	private int noOfReinforcements=0;
-	private int noOfDataPkts=0;
-	private int noOfSrcPkts=0;
-	private int noOfInterests=0;
-	private Double lifetime=null;
-	private String costParam;
-	private int noOfNodes;
-	   
-	public DRLDiffApp ()
+	protected int noOfReinforcements=0;
+	protected int noOfDataPkts=0;
+	protected int noOfHeartBeats;
+	protected int noOfSrcPkts=0;
+	protected int noOfInterests=0;
+	protected Double lifetime=null;
+	protected String costParam;  
+	protected int noOfNodes;
+	double lastTrackTime;
+	double averageDelay;
+	double totalEnergyUsed;
+	int totalTrackingPkts=0;
+	int totalHeartBeatPkts=0;
+
+
+	
+	protected DRLDiffApp ()
 	{
 		super();
 		numSubscriptions = 0 ; 
@@ -315,37 +321,8 @@ public class DRLDiffApp extends drcl.inet.sensorsim.SensorApp implements drcl.co
 	}*/
 
 	/** Constructs a sensing event */
-	public List<Tuple> ConstructSensingEvent(SensorAppAgentContract.Message msg)
-	{
-		double locX, locY, snr;
-		long targetNid;
-		if (msg == null) {
-			/*
-			 * sensorLocX and sensorLocY are the X and Y coordinates of the
-			 * sensor node and must be obtained from the mobility model.
-			 */
-			SensorPositionReportContract.Message positionMsg = new SensorPositionReportContract.Message();
-			positionMsg = (SensorPositionReportContract.Message) mobilityPort
-					.sendReceive(positionMsg);
-			locX = positionMsg.getX();
-			locY = positionMsg.getY();
-			targetNid=this.nid;
-			snr=500;
-		}else{
-			locX = msg.getTargetX() ;
-		    locY = msg.getTargetY() ;
-		    targetNid=msg.getTargetNid();
-		    snr=msg.getSNR();
-		}
-		List<Tuple> event = new ArrayList<Tuple>() ;
-		event.add(new Tuple(Tuple.LONGITUDE_KEY, Type.FLOAT32_TYPE, Operator.IS, locX)) ;
-		event.add(new Tuple(Tuple.LATITUDE_KEY, Type.FLOAT32_TYPE, Operator.IS, locY)) ;
-		event.add(new Tuple(Tuple.TARGET_KEY, Type.STRING_TYPE, Operator.IS, TargetName)) ;
-		event.add(new Tuple(Tuple.TARGET_NID, Type.INT32_TYPE, Operator.IS, targetNid)) ;
-		event.add(new Tuple(Tuple.SNR, Type.FLOAT32_TYPE, Operator.IS, snr)) ;
-		return event ;
-	}
-
+	public abstract List<Tuple> ConstructSensingEvent(SensorAppAgentContract.Message msg);
+	
 	public double getRemainingEnergy(){
     	if (nid != sink_nid) {
 			double energy = ((EnergyContract.Message) wirelessPhyPort
@@ -384,59 +361,6 @@ public class DRLDiffApp extends drcl.inet.sensorsim.SensorApp implements drcl.co
 		}else return false ;		
 	}
 
-	/* Implements the data-driven local rule used to determine which neighbor needs to be reinforced. If the node must also reinforce at least one neighbor, it uses its data cache for this purpose. The same local rule choices apply. For example, this node might choose that neighbor from whom it first received the latest event matching the interest. 
-	public long CheckToForwardPositiveReinforcement(AttributeVector interest, float newInterval)
-	{		
-		DataCacheEntry dataEntry = dataCache_lookup(interest) ;
-		if ( dataEntry != null )	 if there is a matching data packet, return the index of the node from whom I first received the latest event matching the interest. 
-		{
-                        long source = dataEntry.getSource() ;                        
-
-			if ( dataCache_lookup(interest, newInterval, source) == null )  Obviously, we do not need to reinforce neighbors that are already sending traffic at the higher data rate. 
-			{
-				return source ;
-			}
-			else
-			{
-				return -1 ;
-			}
-		}
-
-		return -1 ;
-	}*/
-
-	/** Implements the data-driven local rule used to reinforce one particular neighbor in order to draw down real data. One example of such a rule is to reinforce any neighbor from which a node receives a previously unseen event (i.e., an event that does not exist in the data cache. *//*
-	public boolean CheckToSendPositiveReinforcement(ActiveTasksEntry taskEntry, DataPacket dataPkt)
-	{		
-		AttributeVector event = dataPkt.getEvent() ;
-		DataCacheEntry dataEntry = dataCache_lookup(event) ;
-		if ( dataEntry == null )	 if there is NOT a matching data packet (i.e., this data was not seen). 
-		{
-			 add the received message to the data cache 
-			dataCache_insert(new DataCacheEntry(dataPkt.getEvent(), dataPkt.getDataInterval(), dataPkt.getSource(), getTime())) ;
-
-			taskEntry.newEventsWindow_insert(dataPkt.getSource()) ;
-
-			Vector NeighborsToNegativelyReinforce = taskEntry.getListOfNeighborsToNegativelyReinforce() ;
-			for ( int i = 0 ; i < NeighborsToNegativelyReinforce.size() ; i++ )
-			{
-				Long neighborEntry = (Long)(NeighborsToNegativelyReinforce.elementAt(i)) ;
-				sendPacket(new NegativeReinforcementPacket(nid, neighborEntry.longValue(), taskEntry.getInterest(), taskEntry.getInterest().getFrequency()), DELAY * rand.nextDouble()) ;
-			}
-
-			if ( dataPkt.getDataInterval() != taskEntry.getDataInterval() )		 Obviously, we do not need to reinforce neighbors that are already sending traffic at the higher data rate. 
-			{
-				return true ;
-			}
-			else
-			{
-				return false ;
-			}
-		}
-
-		return false ;
-	}
-*/
 	public String toString(){
 		return "DRLDiffApp-"+nid;
 	}
@@ -467,11 +391,19 @@ public class DRLDiffApp extends drcl.inet.sensorsim.SensorApp implements drcl.co
 					interestCachePrint();
 					break ;
 				case DRLDiffApp.DATA_PKT :
-					noOfDataPkts++;
 					DataPacket dataPkt = (DataPacket)spkt.getBody() ;
+					if(dataPkt.isHeartBeat()){
+						noOfHeartBeats++;
+					}else{
+						noOfDataPkts++;
+					}
 					process=macroLearner.dataArriveAtDownPort(dataPkt);
 					if(process){
-						microLearner.handleDataPkt(dataPkt);
+						if(nid==sink_nid){
+							handleSinkData(dataPkt);							
+						}else{
+							microLearner.handleDataPkt(dataPkt);
+						}
 					}
 					break;
 				case DRLDiffApp.REINFORCEMENT_PKT :
@@ -490,32 +422,17 @@ public class DRLDiffApp extends drcl.inet.sensorsim.SensorApp implements drcl.co
 			super.recvSensorPacket(data_) ;
     	}
 
+	protected abstract void handleSinkData(DataPacket dataPkt);
+	
+
 	/** Initiates a sensing task by sending an INTEREST packet */
-	public void subscribe(int taskId, double longMin, double longMax, double latMin, double latMax, double duration, double interval, double dataInterval, double refreshPeriod, double payment, String costParam)
+	public void subscribe(int taskId, List<Tuple> interest, List<CostParam> costParams, List<Tuple> qosConstraints, double duration, double interval, double dataInterval, double refreshPeriod, double payment)
 	{
 		/* constructs an interest */
-		List<Tuple> interest = new ArrayList<Tuple>() ;
-		interest.add(new Tuple(Tuple.LONGITUDE_KEY, Type.FLOAT32_TYPE, Operator.GE, new Double(longMin) ) ) ;
-		interest.add(new Tuple(Tuple.LONGITUDE_KEY, Type.FLOAT32_TYPE, Operator.LE,new Double(longMax) ) ) ;
-		interest.add(new Tuple(Tuple.LATITUDE_KEY, Type.FLOAT32_TYPE, Operator.GE, new Double(latMin) ) ) ;
-		interest.add(new Tuple(Tuple.LATITUDE_KEY, Type.FLOAT32_TYPE, Operator.LE, new Double(latMax) ) ) ;
-		interest.add(new Tuple(Tuple.TARGET_KEY, Type.STRING_TYPE, Operator.IS, TargetName) ) ;
-		interest.add(new Tuple(Tuple.TARGET_NID, Type.INT32_TYPE, Operator.EQ_ANY, TargetName) ) ;
 		TaskEntry taskEntry = activeTasksList.get(taskId) ;
-		if ( taskEntry == null ) /* if there is NOT a matching task entry */
-		{
-			List<CostParam> costParams= new ArrayList<CostParam>();
-			if(costParam!=null){
-				this.costParam=costParam;
-				costParams.add(new CostParam(CostParam.Type.valueOf(costParam),1));
-			}else{
-			    //costParams.add(new CostParam(CostParam.Type.Energy,0.5));
-			     costParams.add(new CostParam(CostParam.Type.Lifetime,1.0));
-			}
+		if ( taskEntry == null ){ /* if there is NOT a matching task entry */
 			InterestPacket intPkt = new InterestPacket(taskId,this.nid,interest,payment,getTime(),dataInterval,refreshPeriod, costParams) ;
 			intPkt.setDuration(duration);
-			List<Tuple> qosConstraints= new ArrayList<Tuple>();
-			qosConstraints.add(new Tuple(Tuple.SNR,Type.FLOAT32_TYPE,Operator.GE, new Double(50)));
 			intPkt.setQosConstraints(qosConstraints);
 			taskEntry= new TaskEntry(taskId,intPkt,getTime(),refreshPeriod,true);
 			taskEntry.setPayment(payment);
@@ -529,17 +446,19 @@ public class DRLDiffApp extends drcl.inet.sensorsim.SensorApp implements drcl.co
 
 			/* sends the interest */
             sendPacket(intPkt, 0.0) ;
+		}else{
+            refreshInterest(taskEntry);
 		}
-		else
-		{
-            log(Level.INFO, "Sending INTEREST packet at time " + getTime()) ;
+	}
 
-			/* sends the interest */
-            InterestPacket newInterest= new InterestPacket(taskEntry.getInterest());
-            newInterest.setTimestamp(getTime());
-            //taskEntry.interest.setTimestamp(getTime());
-			sendPacket(newInterest, 0.0) ;
-		}
+	public void refreshInterest(TaskEntry taskEntry) {
+		log(Level.INFO, "Sending INTEREST packet at time " + getTime()) ;
+
+		/* sends the interest */
+        InterestPacket newInterest= new InterestPacket(taskEntry.getInterest());
+        newInterest.setTimestamp(getTime());
+        //taskEntry.interest.setTimestamp(getTime());
+		sendPacket(newInterest, 0.0) ;		
 	}
 
 	/** Sends a packet */
@@ -697,6 +616,46 @@ public class DRLDiffApp extends drcl.inet.sensorsim.SensorApp implements drcl.co
 		}    
 	}
 	
+	public double calcTotalReward(List<DataPacket> pkts,
+			InterestPacket interest, double payable){
+		if(pkts==null || pkts.size()==0) return 0;
+		double quality=calcDataQuality(pkts, interest);
+		double minCost=Integer.MAX_VALUE;
+		double maxReward=Integer.MIN_VALUE;
+		for(DataPacket pkt: pkts){
+			if(pkt.getCost()<minCost){
+				minCost=pkt.getCost();
+			}
+			if(pkt.getReward()>maxReward){
+				maxReward=pkt.getReward();
+			}			
+		}
+		//double avgReward= pktsReward/pkts.size();
+		//double avgCost=pktsCost/pkts.size();
+		return quality*maxReward- minCost;//+NO_OF_PKTS_FACTOR*pkts.size();		
+	}
+	
+	/**
+	 * Matches data attributes to QoS contraints and returns a value between 0 and 1 representing data quality
+	 * @param pkts
+	 * @param interestEntry
+	 * @return
+	 */
+	protected double calcDataQuality(List<DataPacket> pkts,
+			InterestPacket interest) {
+		List<Tuple> qosConstraints=interest.getQosConstraints();
+		if(qosConstraints==null || qosConstraints.size()==0) return MAX_DATA_QUALITY;
+		int passCount=0, totalCount=0;
+		for(DataPacket pkt:pkts){
+			//TODO how to get QoS attributes, should it be just part of normal data attributes?
+			if(TupleUtils.isMatching(qosConstraints, pkt.getAttributes())){
+				passCount++;
+			}
+			totalCount++;
+		}
+		return (passCount*MAX_DATA_QUALITY)/totalCount;
+	}
+	
 	public double getDelay(){
 		return DELAY * rand.nextDouble();
 	}
@@ -717,7 +676,7 @@ public class DRLDiffApp extends drcl.inet.sensorsim.SensorApp implements drcl.co
         log(Level.INFO,"*******************STATS**************");
         String QValues=nid+",";
         String expPrices=nid+",";
-        String nodeStats=noOfNodes+","+nid+","+noOfInterests+","+noOfDataPkts+","+noOfReinforcements; //+","+totalPkts;
+        String nodeStats=noOfNodes+","+nid+","+noOfInterests+","+noOfHeartBeats+","+noOfSrcPkts+","+noOfDataPkts+","+noOfReinforcements; //+","+totalPkts;
         
         for(Integer i : microLearner.taskList.keySet()){
             SensorTask task= (SensorTask)microLearner.taskList.get(i);
@@ -734,8 +693,8 @@ public class DRLDiffApp extends drcl.inet.sensorsim.SensorApp implements drcl.co
         if(nid==sink_nid){
         	EnergyStats.NodeStat lowestLifeNode=EnergyStats.getNodeWithLowestLifetime();
         	String mobility=System.getProperties().getProperty("target.mobile", "true");
-        	String stats= noOfNodes+","+nid+","+microLearner.totalTrackingPkts+","+microLearner.lastTrackTime+","+microLearner.averageDelay
-        		+","+microLearner.totalEnergyUsed+","+lowestLifeNode.toString()+","+Boolean.parseBoolean(mobility)+","+this.costParam;
+        	String stats= noOfNodes+","+nid+","+totalHeartBeatPkts+","+totalTrackingPkts+","+lastTrackTime+","+averageDelay
+        		+","+totalEnergyUsed+","+lowestLifeNode.toString()+","+Boolean.parseBoolean(mobility)+","+this.costParam;
         	CSVLogger.logGlobal("sinkStats",stats,microLearner.algorithm.getAlgorithm());            
         }
         CSVLogger.log("Qvalues",QValues,microLearner.algorithm.getAlgorithm());
@@ -755,5 +714,15 @@ public class DRLDiffApp extends drcl.inet.sensorsim.SensorApp implements drcl.co
         globalLogged=true;
         }*/
     }
+
+	public double getSamplingEnergy() {
+		return MicroLearner.ENERGY_SAMPLE; //default
+	}
 	
+	protected String doubleArrToString(double[] arr){
+		String s="[";
+		for(double d:arr) s+=d+" ";
+		s+="]";
+		return s;
+	}
 }

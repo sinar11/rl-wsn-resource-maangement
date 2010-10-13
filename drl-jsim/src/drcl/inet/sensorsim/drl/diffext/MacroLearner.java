@@ -2,9 +2,10 @@ package drcl.inet.sensorsim.drl.diffext;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
-
 
 import drcl.inet.sensorsim.drl.diffext.InterestPacket.CostParam;
 
@@ -15,10 +16,9 @@ public class MacroLearner {
 	private static final double COST_COEF_LIFETIME=1/MAX_LIFETIME;
 	private static final double COST_PER_HOP = 1.0;
 	//private static final double PROFIT_MARGIN=0.05;
-	static final double MAX_DATA_QUALITY=1.0;
 	//private static final double MIN_DATA_QUALITY=0.0;
 	private static final double EXPLORATION_FACTOR = 0.05;
-	private static final double NO_OF_PKTS_FACTOR =0.0;// 0.1;
+	
 	
 	DRLDiffApp diffApp;
 	
@@ -118,66 +118,48 @@ public class MacroLearner {
 			}
 			double payable= calcPayable(interest, payment);
 			
-			double totalReward=(diffApp.nid==diffApp.sink_nid)?payable:calcTotalReward(totalPkts, interest, payable);
-			Collection<DataStreamEntry> dataStreams=dataCacheEntry.getDataStreams();
-			for(DataStreamEntry stream: dataStreams){
-				if(stream.getNoOfPackets()==0) continue;
-				List<DataPacket> pkts=dataCacheEntry.getRecentDataAcceptSource(stream.getSourceId());
-				double clReward=calcTotalReward(pkts, interest, payable);
-				
-				double wlReward=totalReward-clReward;
-				
-				stream.updateStatsOnNewWLReward(wlReward);
+			Map<String,List<DataPacket>> dataGroupPkts= classifyDataIntoGroups(totalPkts);
+			for (List<DataPacket> pkts : dataGroupPkts.values()) {
+				double totalReward = (diffApp.nid == diffApp.sink_nid) ? payable
+						: diffApp.calcTotalReward(pkts, interest, payable);
+				Collection<DataStreamEntry> dataStreams = dataCacheEntry
+						.getDataStreams();
+				for (DataStreamEntry stream : dataStreams) {
+					if(stream.getNoOfPackets() == 0)
+						continue;
+					List<DataPacket> clampedPkts = getDataAcceptSource(pkts,stream.getSourceId());
+					double clReward = diffApp.calcTotalReward(clampedPkts, interest,
+							payable);
+					double wlReward = totalReward - clReward;
+					stream.updateStatsOnNewWLReward(wlReward);
+				}
+
 			}
-			//Determine stream with lowest cost and required quality and give reward equal to payable to that stream. All other streams should receive zero reward. 
-			/*DataStreamEntry bestStream=findBestStream(dataCacheEntry, interest);
-			for(DataStreamEntry stream: dataCacheEntry.getDataStreams()){
-				if(stream.equals(bestStream) && bestStream.getSourceId()!=diffApp.nid){
-					stream.updateStatsOnNewWLReward(payable);
-				}				
-			}		*/	
 		}
 		
 	}
-
-	private double calcTotalReward(List<DataPacket> pkts,
-			InterestPacket interest, double payable){
-		if(pkts==null || pkts.size()==0) return 0;
-		double quality=calcDataQuality(pkts, interest);
-		double minCost=Integer.MAX_VALUE;
-		double maxReward=Integer.MIN_VALUE;
-		for(DataPacket pkt: pkts){
-			if(pkt.getCost()<minCost){
-				minCost=pkt.getCost();
-			}
-			if(pkt.getReward()>maxReward){
-				maxReward=pkt.getReward();
-			}			
+	
+	private List<DataPacket> getDataAcceptSource(List<DataPacket> recentData, long sourceId) {
+		List<DataPacket> list= new ArrayList<DataPacket>();
+		for(DataPacket pkt:recentData){
+			if(pkt.getSourceId()!=sourceId)
+				list.add(pkt);			
 		}
-		//double avgReward= pktsReward/pkts.size();
-		//double avgCost=pktsCost/pkts.size();
-		return quality*maxReward- minCost+NO_OF_PKTS_FACTOR*pkts.size();		
+		return list;
 	}
 	
-	/**
-	 * Matches data attributes to QoS contraints and returns a value between 0 and 1 representing data quality
-	 * @param pkts
-	 * @param interestEntry
-	 * @return
-	 */
-	private double calcDataQuality(List<DataPacket> pkts,
-			InterestPacket interest) {
-		List<Tuple> qosConstraints=interest.getQosConstraints();
-		if(qosConstraints==null || qosConstraints.size()==0) return MAX_DATA_QUALITY;
-		int passCount=0, totalCount=0;
-		for(DataPacket pkt:pkts){
-			//TODO how to get QoS attributes, should it be just part of normal data attributes?
-			if(TupleUtils.isMatching(qosConstraints, pkt.getAttributes())){
-				passCount++;
+	private Map<String, List<DataPacket>> classifyDataIntoGroups(
+			List<DataPacket> pkts) {
+		Map<String,List<DataPacket>> groupData= new HashMap<String, List<DataPacket>>();
+		for(DataPacket pkt: pkts){
+			List<DataPacket> data= groupData.get(pkt.getGroupId()); 
+			if(data==null){
+				data= new ArrayList<DataPacket>();
+				groupData.put(pkt.getGroupId(), data);
 			}
-			totalCount++;
+			data.add(pkt);
 		}
-		return (passCount*MAX_DATA_QUALITY)/totalCount;
+		return groupData;
 	}
 
 	/**
@@ -310,9 +292,9 @@ public class MacroLearner {
 		double lambda=1.0; //arrival rate (1 per sec)
 		double K_T= MicroLearner.TIMER_INTERVAL;
 		double K_E= MicroLearner.ENERGY_DIFFUSE;
-		double P_s= MicroLearner.ENERGY_SAMPLE;
+		double P_s= diffApp.getSamplingEnergy();
 		double lifetime= remainingEnergy*(1+ lambda*K_T)/(P_s+lambda*K_E);
-		diffApp.log(Level.INFO,"Current Lifetime="+lifetime);
+		diffApp.log(Level.FINE,"Current Lifetime="+lifetime);
 		return lifetime;
 	}
 }

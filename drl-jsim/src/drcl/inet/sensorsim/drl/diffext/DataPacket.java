@@ -74,6 +74,10 @@ public class DataPacket
 	
 	private boolean explore=false;
 	
+	private boolean isHeartBeat=false;
+	
+	private String groupId;
+	
 	public DataPacket(long sourceId, long sinkId, int taskId, List<Tuple> attributes, double timestamp)
 	{
 		this.sourceId=sourceId;
@@ -97,6 +101,8 @@ public class DataPacket
 		this.reward=pkt.reward;
 		this.cost=pkt.cost;
 		this.explore=pkt.explore;
+		this.isHeartBeat=pkt.isHeartBeat;
+		this.groupId=pkt.groupId;
 		if(DRLDiffApp.TRACE_ON){
 			this.trace=new ArrayList<Long>(pkt.trace);
 		}
@@ -201,5 +207,25 @@ public class DataPacket
 
 	public void setExplore(boolean explore) {
 		this.explore = explore;
+	}
+
+	public boolean isHeartBeat() {
+		return isHeartBeat;
+	}
+
+	public void setHeartBeat(boolean isHeartBeat) {
+		this.isHeartBeat = isHeartBeat;
+	}
+
+	public List<Long> getTrace() {
+		return trace;
+	}
+
+	public String getGroupId() {
+		return groupId;
+	}
+
+	public void setGroupId(String groupId) {
+		this.groupId = groupId;
 	}
 }
