@@ -2,7 +2,7 @@ package drcl.inet.sensorsim.drl.diffext;
 
 import java.util.List;
 
-import drcl.inet.sensorsim.drl.diffext.Tuple.Type;
+import drcl.inet.sensorsim.drl.diffext.Tuple.Operator;
 
 public class TupleUtils {
 
@@ -58,5 +58,15 @@ public class TupleUtils {
 		if(quality>1) return 1;
 		if(quality<0) return 0;
 		return quality;*/
+	}
+
+	public static void updateAttribute(List<Tuple> attributes,
+			String attrKey, Operator operator, double d) {
+		for(Tuple attribute: attributes){
+			if(attrKey.equals(attribute.getKey()) && operator.equals(attribute.getOperator())){
+				attribute.setValue(d);
+				return;
+			}
+		}
 	}
 }

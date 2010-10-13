@@ -134,7 +134,7 @@ public class BDGlobalRewardManager implements GlobalRewardManager{
 		pendingData.clear();
 		}finally{
 			double currX=0, currY=0, trackX=0, trackY=0, snr=0;
-			long targetNid= (lastTrackEvent==null)? CurrentTargetPositionTracker.getInstance().getTargetNid():lastTrackEvent.targetNid;
+			long targetNid= lastTrackEvent.targetNid;
 			double[] curr = CurrentTargetPositionTracker.getInstance().getTargetPosition(targetNid);
 			currX = round_digit(curr[0], 4);
 			currY = round_digit(curr[1], 4);

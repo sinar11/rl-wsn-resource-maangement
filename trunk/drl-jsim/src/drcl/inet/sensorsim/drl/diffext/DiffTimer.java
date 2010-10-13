@@ -42,8 +42,9 @@ public class DiffTimer {
 	public static final int TIMEOUT_REFRESH_INTEREST	= 1 ; 
 	public static final int TIMEOUT_INTEREST_CACHE_PURGE	= 3 ; 
 	public static final int TIMEOUT_SEND_REINFORCEMENT = 4 ; 
-
-	static final String[] TIMEOUT_TYPES = {"DELAY_BROADCAST", "REFRESH_INTEREST", "SEND_DATA", "INTEREST_CACHE_PURGE", "DATA_CACHE_PURGE"} ; 
+	public static final int TIMEOUT_SEND_HEARTBEAT=5;
+	
+	static final String[] TIMEOUT_TYPES = {"DELAY_BROADCAST", "REFRESH_INTEREST", "SEND_DATA", "INTEREST_CACHE_PURGE", "DATA_CACHE_PURGE","SEND_HEARTBEAT"} ; 
 
 	/** The type of the timer */	 
 	int	EVT_Type ; 

@@ -35,12 +35,14 @@ public class Tuple implements Serializable{
 	public static final String TARGET_NID = "targetNid" ;		// INT_TYPE
 	public static final String TARGET_RANGE_KEY = "range" ; 	// FLOAT_TYPE, in sec.
 	public static final String SNR = "snr";
-		
+	public static final String CONFIDENCE="confidence";
+	public static final String GROUP_ID="groupId";
+	
 	final private String key;
 	final private Type type;
 	
 	final private Operator operator;
-	final private Object value;
+	private Object value;
 	
 	public Tuple(final String key,final Type type,final Operator operator,final Object value){
 		if(key==null || type==null) throw new NullPointerException("key and type cannot be null");
@@ -113,7 +115,11 @@ public class Tuple implements Serializable{
 	public Object getValue() {
 		return value;
 	}
-
+	
+	public void setValue(Object o){
+		this.value=o;
+	}
+	
 	public boolean matches(Tuple interestTuple) {
 		if(interestTuple==null) return false;
 		if(!interestTuple.key.equals(this.key)) return false;

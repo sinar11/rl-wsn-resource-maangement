@@ -9,8 +9,6 @@ import java.util.logging.Level;
 
 import drcl.comp.ACATimer;
 import drcl.inet.mac.EnergyContract;
-import drcl.inet.sensorsim.CurrentTargetPositionTracker;
-import drcl.inet.sensorsim.drl.CSVLogger;
 import drcl.inet.sensorsim.drl.EnergyStats;
 import drcl.inet.sensorsim.drl.SensorState;
 import drcl.inet.sensorsim.drl.SensorTask;
@@ -47,7 +45,6 @@ public class MicroLearner {
     List<SensorState> states= new LinkedList<SensorState>();
     int noOfStates=0;
     double totalPrice=0;
-    int totalTrackingPkts=0;
     long lastDiffusionParticipation=-RECENT_WINDOW; 
     long lastSourceParticipation=-RECENT_WINDOW;
     int noOfPkts=0;
@@ -57,10 +54,7 @@ public class MicroLearner {
     int timesteps=0;
     double totalReward=0;
     double totalCost=0;
-	double lastTrackTime;
-	double averageDelay;
-	double totalEnergyUsed;
-    
+	
     public MicroLearner(DRLDiffApp app, MacroLearner mLearner){
     	this.mlearner=mLearner;
     	this.diffApp=app;
@@ -311,7 +305,6 @@ public class MicroLearner {
 	public void handleDataPkt(DataPacket dataPkt) {
 		noOfPkts++;
 		if(diffApp.nid==diffApp.sink_nid){
-			handleSinkData(dataPkt);
 			return;
 		}
 		lastDiffusionParticipation=timesteps;
@@ -336,44 +329,6 @@ public class MicroLearner {
 		return false;
 	}
 
-	private void handleSinkData(DataPacket dataPkt) {
-		List<Tuple> attributes= dataPkt.getAttributes();
-		TaskEntry taskEntry= diffApp.activeTasksList.get(dataPkt.getTaskId());
-		if ((diffApp.getTime() - lastTrackTime+0.1) >= taskEntry.getInterest().getDataInterval()) {
-			lastTrackTime = diffApp.getTime();
-			averageDelay=(averageDelay*totalTrackingPkts+(lastTrackTime-dataPkt.getTimestamp()))/(totalTrackingPkts+1);
-			totalTrackingPkts++;
-			EnergyStats.markAsReporting();
-			totalEnergyUsed=EnergyStats.getTotalEnergy();
-			CSVLogger.log("Delay", ""+averageDelay ,false,algorithm.getAlgorithm());
-			//CSVLogger.log("Delay", ""+averageDelay ,false,algorithm.getAlgorithm());
-			diffApp.log(Level.INFO, "Tracking event with pkt:" + dataPkt);
-			double[] target_location = new double[2];
-			target_location[0] = (Double) TupleUtils.getAttributeValue(
-					attributes, Tuple.LONGITUDE_KEY);
-			target_location[1] = (Double) TupleUtils.getAttributeValue(
-					attributes, Tuple.LATITUDE_KEY);
-			long targetNid = (Long) TupleUtils.getAttributeValue(attributes,
-					Tuple.TARGET_NID);
-			double[] curr = CurrentTargetPositionTracker.getInstance()
-					.getTargetPosition(targetNid);
-			diffApp.log(Level.INFO, "Tracked position:"
-					+ doubleArrToString(target_location) + "  Actual position:"
-					+ doubleArrToString(curr));
-			double dist = Math.sqrt(Math.pow(Math.abs(target_location[0]- curr[0]), 2)
-	                  + Math.pow(Math.abs(target_location[1] - curr[1]), 2));
-			CSVLogger.log("target"+targetNid,target_location[0] + "," + target_location[1]
-						+ "," + curr[0] + "," + curr[1] + "," + dist,false,algorithm.getAlgorithm());	
-		}
-		
-	}
-	
-	private String doubleArrToString(double[] arr){
-		String s="[";
-		for(double d:arr) s+=d+" ";
-		s+="]";
-		return s;
-	}
 	/**
 	 * Updates the payment (expected price) of a task if get a reinforcement for this node
 	 * @param reinforcementPkt
@@ -413,7 +368,19 @@ public class MicroLearner {
 			noOfSensedPkts++;
 			lastSourceParticipation=timesteps;
 			DataPacket dataPkt=new DataPacket(diffApp.nid,interest.getSinkId(),interest.getTaskId(),event, diffApp.getTime());
-			
+			long targetNid=(Long)TupleUtils.getAttributeValue(event, Tuple.TARGET_NID);
+			String groupId=(String)TupleUtils.getAttributeValue(event, Tuple.GROUP_ID);
+			dataPkt.setGroupId(groupId);
+			if(targetNid<0){
+				dataPkt.setHeartBeat(true);
+			}else{  //remove heart beat packets from queue as we got real data..
+				/*for(Iterator<DataPacket> it=outboundMsgs.iterator();it.hasNext();){
+					DataPacket pkt=it.next();
+					if(pkt.isHeartBeat()) it.remove();					
+				}*/
+				diffApp.noOfSrcPkts++;
+				outboundMsgs.clear();
+			}
 			//filtering of data for same task for this timestep, 
 			if(!shouldFilter(dataPkt)){
 				outboundMsgs.add(dataPkt);
