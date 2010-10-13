@@ -202,7 +202,8 @@ public class MacroLearner {
 			shouldProcess=true;
 		}else{
 			gradientList=interestEntry.gradientList;	
-			interestEntry.setLastRefresh(interestPkt.getTimestamp());			
+			interestEntry.setLastRefresh(interestPkt.getTimestamp());	
+			interestEntry.setInterest(interestPkt);
 		}
 		GradientEntry gradientEntry=interestEntry.gradientListLookup(sourceId,diffApp.getTime());
 		if(gradientEntry==null){
