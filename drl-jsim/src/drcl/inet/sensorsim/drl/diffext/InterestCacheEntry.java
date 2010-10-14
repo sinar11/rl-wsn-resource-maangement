@@ -214,6 +214,10 @@ public class InterestCacheEntry
 		return interest;
 	}
 
+	public void setInterest(InterestPacket interest) {
+		this.interest = interest;
+	}
+
 	public double getLastRefresh() {
 		return lastRefresh;
 	}
