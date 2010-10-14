@@ -278,7 +278,7 @@ public class MicroLearner {
 	 */
 	public void handleInterestPkt(InterestPacket interestPkt) {
 		int taskId=interestPkt.getTaskId();
-		if(taskList.containsKey(taskId)){   //update task's payment
+		if(taskList.containsKey(taskId)){   //update task
 			SensorTask task= taskList.get(taskId);
 			task.expectedPrice=diffApp.interestCache.get(taskId).getMaxGradient().getPayment();
 			//task.expectedPrice=interestPkt.getPayment();
