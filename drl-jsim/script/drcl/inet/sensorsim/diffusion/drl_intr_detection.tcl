@@ -7,7 +7,7 @@ source "script/test/include.tcl"
 cd [mkdir -q drcl.comp.Component /aodvtest]
 
 # TOTAL number of nodes (sensor nodes + target nodes)
-set node_num 16
+set node_num 14
 
 # Number of TARGET nodes ONLY
 set target_node_num 1
@@ -238,7 +238,7 @@ for {set i [expr $sink_id + 1]} {$i < [expr $node_num - $target_node_num]} {incr
 	! wphy setRxThresh 0.0
 	! wphy setCSThresh 0.0	
     ! wphy setDebugEnabled 0
-    ! wphy setInitialEnergy 25
+    ! wphy setInitialEnergy 30
     
 	mkdir drcl.inet.mac.FreeSpaceModel propagation 
 
@@ -368,7 +368,7 @@ if { $target_node_num == 0 } {
 		! mobility setNid $i
 
 		# set the topology parameters
-		! mobility setTopologyParameters 600.0 500.0 0.0 100.0 100.0 0.0
+		! mobility setTopologyParameters 600.0 500.0 0.0 200.0 200.0 0.0
 
 		cd ..
 	}
@@ -399,32 +399,30 @@ for {set i 0} {$i < $target_node_num} {incr i} {
 # Max. speed is the first argument of setPosition.
 # In order to make the target nodes mobile with max. speed (e.g., 30) m/sec., 
 # set the first argument of setPosition to 30.0 
-! n15/mobility setPosition 0.0 251.0 350.0 0.0
+! n13/mobility setPosition 0.0 325.0 350.0 0.0
 
 # set the position of sensor nodes
 # should be made to read from a scenario file
-! n1/mobility setPosition 0.0 450.0 250.0 0.0
-! n2/mobility setPosition 0.0 450.0 450.0 0.0
-! n3/mobility setPosition 0.0 350.0 400.0 0.0
-! n4/mobility setPosition 0.0 360.0 300.0 0.0
-! n5/mobility setPosition 0.0 350.0 200.0 0.0
-! n6/mobility setPosition 0.0 340.0 410.0 0.0
-! n7/mobility setPosition 0.0 350.0 310.0 0.0
-! n8/mobility setPosition 0.0 330.0 225.0 0.0
-! n9/mobility setPosition 0.0 255.0 440.0 0.0
-! n10/mobility setPosition 0.0 255.0 355.0 0.0
-! n11/mobility setPosition 0.0 275.0 230.0 0.0
+! n1/mobility setPosition 0.0 450.0 200.0 0.0
+! n2/mobility setPosition 0.0 450.0 325.0 0.0
+! n3/mobility setPosition 0.0 450.0 450.0 0.0
+! n4/mobility setPosition 0.0 340.0 410.0 0.0
+! n5/mobility setPosition 0.0 340.0 340.0 0.0
+! n6/mobility setPosition 0.0 345.0 225.0 0.0
+! n7/mobility setPosition 0.0 375.0 440.0 0.0
+! n8/mobility setPosition 0.0 370.0 355.0 0.0
+! n9/mobility setPosition 0.0 375.0 240.0 0.0
 
 #Video sensors
-! n12/mobility setPosition 0.0 250.0 440.0 0.0
+! n10/mobility setPosition 0.0 350.0 440.0 0.0
+! n10/app setSensorType Video
+! n10/wphy setInitialEnergy 100
+! n11/mobility setPosition 0.0 350.0 355.0 0.0
+! n11/app setSensorType Video
+! n11/wphy setInitialEnergy 100
+! n12/mobility setPosition 0.0 360.0 230.0 0.0
 ! n12/app setSensorType Video
 ! n12/wphy setInitialEnergy 100
-! n13/mobility setPosition 0.0 250.0 355.0 0.0
-! n13/app setSensorType Video
-! n13/wphy setInitialEnergy 100
-! n14/mobility setPosition 0.0 270.0 230.0 0.0
-! n14/app setSensorType Video
-! n14/wphy setInitialEnergy 100
 
 ! n0/wphy setInitialEnergy 100
 
@@ -449,27 +447,26 @@ script {run n9} -at 1.2 -on $sim
 script {run n10} -at 1.2 -on $sim
 script {run n11} -at 1.2 -on $sim
 script {run n12} -at 1.2 -on $sim
-script {run n13} -at 1.2 -on $sim
-script {run n14} -at 1.2 -on $sim
 
-#Start target node at 5000 sec, collect stats before this 
 
-set intruder 5000.0
+#Start target node at 10000 sec, collect stats before this 
+
+set intruder 8000.0
 for {set n  0} {$n < [expr $node_num - $target_node_num ]} {incr n} {
 	script puts "! n$n/app collectStats" -at $intruder -on $sim
 }
-script {run n15} -at $intruder -on $sim
+script {run n13} -at $intruder -on $sim
 
 # Sinks subscribing to interests
 #                         taskId longMin longMax latMin latMax duration confidence data_interval refreshPeriod payment)
-script {! n0/app subscribe 10 150.0 300.0 200.0 500.0 15000.0 0.2 1.0 10000.0 5 Lifetime} -at 1.5 -on $sim
+script {! n0/app subscribe 10 150.0 400.0 200.0 500.0 15000.0 0.2 1.0 10000.0 5 Lifetime} -at 1000.1 -on $sim
 
-set end 7000.0
+set end 10000.0
 
 for {set n  0} {$n < [expr $node_num - $target_node_num ]} {incr n} {
 	script puts "! n$n/app collectStats" -at $end -on $sim
 }
 
 script {! $sim info} -at $end -on $sim
- 
+script {! n0/app shutdown} -at $end -on $sim 
 $sim resumeTo $end
