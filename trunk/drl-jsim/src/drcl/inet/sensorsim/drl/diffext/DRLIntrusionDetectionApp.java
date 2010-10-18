@@ -10,6 +10,8 @@ import drcl.inet.sensorsim.SensorAppAgentContract;
 import drcl.inet.sensorsim.SensorPositionReportContract;
 import drcl.inet.sensorsim.drl.CSVLogger;
 import drcl.inet.sensorsim.drl.EnergyStats;
+import drcl.inet.sensorsim.drl.demo.DRLDemoFactory;
+import drcl.inet.sensorsim.drl.demo.IDRLDemo;
 import drcl.inet.sensorsim.drl.diffext.InterestPacket.CostParam;
 import drcl.inet.sensorsim.drl.diffext.Tuple.Operator;
 import drcl.inet.sensorsim.drl.diffext.Tuple.Type;
@@ -25,7 +27,7 @@ public class DRLIntrusionDetectionApp extends DRLDiffApp {
 	 */
 	private static final long serialVersionUID = 4554418086492147581L;
 
-	private static final double HEART_BEAT_INTERVAL = MicroLearner.TIMER_INTERVAL;
+	//
 
 	private SensorType sensorType=SensorType.Motion;
 	
@@ -45,6 +47,12 @@ public class DRLIntrusionDetectionApp extends DRLDiffApp {
 		super(); 
 	}
 	
+	 protected String getMyType(){
+		 if(nid==sink_nid) return IDRLDemo.TYPE_SINK;
+		 else if(sensorType==SensorType.Motion) return IDRLDemo.TYPE_SENSOR;
+		 else return IDRLDemo.TYPE_VIDEO;
+	 }
+	 
 	public void setSensorType(String type){
 		this.sensorType= SensorType.valueOf(type);
 	}
@@ -54,11 +62,11 @@ public class DRLIntrusionDetectionApp extends DRLDiffApp {
 		else return super.getSamplingEnergy();
 	}
 	
-    protected void _start() {
+    /*protected void _start() {
     	super._start();
     	if(nid!=sink_nid)
     		setTimeout(new DiffTimer(DiffTimer.TIMEOUT_SEND_HEARTBEAT, null), HEART_BEAT_INTERVAL);
-    }
+    }*/
 			
 	/** Constructs a sensing event */
 	public List<Tuple> ConstructSensingEvent(SensorAppAgentContract.Message msg)
@@ -77,7 +85,6 @@ public class DRLIntrusionDetectionApp extends DRLDiffApp {
 			locX = positionMsg.getX();
 			locY = positionMsg.getY();
 			targetNid=-1;			
-			log(Level.FINE,"Sending heart-beat");
 		}else{
 			locX = msg.getTargetX() ;
 		    locY = msg.getTargetY() ;
@@ -94,7 +101,7 @@ public class DRLIntrusionDetectionApp extends DRLDiffApp {
 		if(groupId==null){
 			groupId=NodePositionGroupClassifier.getInstance().getNodeGroupIdentifier(nid, new double[]{locX,locY});
 		}
-		log(Level.FINE,"My groupId:"+groupId);
+		//log(Level.FINE,"My groupId:"+groupId);
 		event.add(new Tuple(Tuple.GROUP_ID, Type.STRING_TYPE,Operator.IS,groupId));
 		return event ;
 	}
@@ -125,7 +132,10 @@ public class DRLIntrusionDetectionApp extends DRLDiffApp {
 		super.subscribe(taskId, interest, costParams, qosConstraints, duration, dataInterval, dataInterval, refreshPeriod, payment);		
 	}
 
-	/** Handles a timeout event */
+	public boolean supportsHeartBeat(){
+		return true;
+	}
+	/** Handles a timeout event *//*
 	protected void timeout(Object data_){
 		if ( data_ instanceof DiffTimer )
 		{
@@ -141,7 +151,7 @@ public class DRLIntrusionDetectionApp extends DRLDiffApp {
 			}
 		}
 		super.timeout(data_);
-	}	
+	}	*/
 	
 	protected void handleSinkData(DataPacket dataPkt) {
 		List<Tuple> attributes = dataPkt.getAttributes();
@@ -153,6 +163,8 @@ public class DRLIntrusionDetectionApp extends DRLDiffApp {
 		 * Tuple.CONFIDENCE);
 		 */
 		double[] target_location = new double[2];
+		dataPkt.getTrace().add(nid);
+		//DRLDemoFactory.getDRLDemo().markActiveStream(dataPkt.getTrace());
 		
 		if (targetNid >= 0) { // if target is set, see if we just changed state
 								// and should send out new interest with higher
@@ -174,6 +186,8 @@ public class DRLIntrusionDetectionApp extends DRLDiffApp {
 						.getAttributes(), Tuple.LATITUDE_KEY, Operator.LE, target_location[1]+25);
 				TupleUtils.updateAttribute(taskEntry.getInterest()
 						.getAttributes(), Tuple.CONFIDENCE, Operator.GE, 0.8);
+				taskEntry.interest.getCostParameters().clear();
+				taskEntry.interest.getCostParameters().add(new CostParam(CostParam.Type.NoOfHops,1.0));
 				
 				double newPayment=taskEntry.getPayment()*2;
 				taskEntry.setPayment(newPayment);

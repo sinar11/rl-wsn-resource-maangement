@@ -1,5 +1,7 @@
 package drcl.inet.sensorsim.drl;
 
+import drcl.inet.sensorsim.drl.demo.DRLDemoFactory;
+
 
 public class EnergyStats {
 	static int noOfNodes;
@@ -23,13 +25,20 @@ public class EnergyStats {
 		double energyUsed;
 		boolean alive;
 		double lifetime;
-		NodeStat(int nid, double energyUsed){
+		double currEnergy;
+		public void setCurrEnergy(double currEnergy) {
+			this.currEnergy = currEnergy;
+		}
+		public double getCurrEnergy() {
+			return currEnergy;
+		}
+		public NodeStat(int nid, double energyUsed){
 			this.nid=nid;
 			this.energyUsed=energyUsed;
 			this.alive=true;
 		}
 		public String toString(){
-			return nid+":"+lifetime+":"+energyUsed;
+			return nid+","+lifetime+","+energyUsed;
 		}
 	}
 	
@@ -43,13 +52,15 @@ public class EnergyStats {
 		}
 	}
 	
-	public static void update(int nid, double energy, boolean isAlive, double time){
+	public static void update(int nid, double energy, double currEnergy, boolean isAlive, double time){
 		stats[nid].alive=isAlive;
 		if(isAlive){
 			stats[nid].lifetime=time;
 			totalEnergyUsed=totalEnergyUsed-stats[nid].energyUsed+energy;
-			stats[nid].energyUsed=energy;			
+			stats[nid].energyUsed=energy;		
+			stats[nid].currEnergy=currEnergy;
 		}
+		DRLDemoFactory.getDRLDemo().updateNodes(stats);
 	}
 
 	public static void markAsReporting(){

@@ -11,6 +11,8 @@ import drcl.inet.sensorsim.LEACH.WirelessLEACHAgent;
 import drcl.inet.sensorsim.MultiHop.MultiHopApp;
 import drcl.inet.sensorsim.OneHopTDMA.OneHopAppTDMA;
 import drcl.inet.sensorsim.OneHop.OneHopApp;
+import drcl.inet.sensorsim.drl.diffext.DRLDiffApp;
+import drcl.inet.sensorsim.drl.diffext.WirelessDiffAgent;
 import drcl.inet.data.RTEntry;
 import drcl.inet.data.RTKey;
 import drcl.data.BitSet;
@@ -45,7 +47,7 @@ public class SensorSimple {
 	public static final int MH_CSMA     = 3;
     public static final int MH_80211    = 4;
     public static final int LEACH       = 5;
-
+    public static final int DRL       = 6;
 
 	protected SensorMobilityModel mobility;
 
@@ -127,6 +129,13 @@ public class SensorSimple {
                 app = new LEACHApp();
                 app.setID("LEACHApp");
                 break;
+            /*case 6:
+            	//app = new DRLDiffApp();
+                app.setID("DRLDiffApp");
+                app.setIs_uAMPS(true);
+                ((DRLDiffApp)app).setNoOfNodes(env.getNn_());
+                ((DRLDiffApp)app).setTargetName("Wheeled Vehicle");
+                break;*/
             default:
                 app = new SensorApp();
                 app.setID("SensorApp");
@@ -151,7 +160,7 @@ public class SensorSimple {
             //so that neighbors can be located.
             ((MultiHopApp)app).SensorNodePositionPort.connect(env.nodetracker.multihopPort);
         }
-
+        
 
         //***********************************************************************
         //Creating the components required for the sensing stack
@@ -172,6 +181,11 @@ public class SensorSimple {
         //SensorMobilityModel Creation
         mobility = new SensorMobilityModel(); mobility.setID("mobility");
         sens.addComponent( mobility);
+        
+        if(AppType_==6){
+        	((DRLDiffApp)app).mobilityPort.connect(mobility.queryPort);
+        }
+        
         phy.setNid(nid);
         phy.setRadius(100.0);
 
@@ -200,6 +214,8 @@ public class SensorSimple {
         //task
         if (AppType_ == 5) {
             wireless_agent = new WirelessLEACHAgent("wireless_agent");
+        }else if(AppType_ == 6) {
+            wireless_agent = new WirelessDiffAgent("wireless_agent");
         }else {
             //otherwise use the commoon wireless agent layer
 		    wireless_agent = new WirelessAgent("wireless_agent");

@@ -1043,7 +1043,7 @@ public class DiffApp extends drcl.inet.sensorsim.SensorApp implements drcl.comp.
 		}else if(data_ instanceof CPUCheck){
 			if(nid==sink_nid) return;
 			double currEnergy= getEnergy();
-			EnergyStats.update((int) nid, initialEnergy-currEnergy,currEnergy>0, getTime());			
+			EnergyStats.update((int) nid, initialEnergy-currEnergy,currEnergy,currEnergy>0,getTime());			
 			WakeUp();		
 			setTimeout(data_, 5);
 		}else

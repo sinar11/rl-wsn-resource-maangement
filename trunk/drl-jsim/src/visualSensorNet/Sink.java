@@ -11,6 +11,8 @@ import drcl.inet.sensorsim.LEACH.WirelessLEACHAgent;
 import drcl.inet.sensorsim.MultiHop.SinkAppMH;
 import drcl.inet.sensorsim.OneHopTDMA.SinkAppTDMA;
 import drcl.inet.sensorsim.OneHop.SinkAppOH;
+import drcl.inet.sensorsim.drl.diffext.DRLDiffApp;
+import drcl.inet.sensorsim.drl.diffext.WirelessDiffAgent;
 
 /**
  * @author Gilles Tredan
@@ -132,6 +134,13 @@ public class Sink {
                 app.setID("SinkAppLEACH");
                 app.setIs_uAMPS(true);
                 break;
+           /* case 6:
+            	app = new DRLDiffApp();
+                app.setID("DRLDiffApp");
+                app.setIs_uAMPS(true);
+                ((DRLDiffApp)app).setNoOfNodes(env.getNn_());
+                ((DRLDiffApp)app).setTargetName("Wheeled Vehicle");
+                break;*/
             default:
                 System.out.println("Error: Unknown Sink Type");
                 System.exit(-1);
@@ -148,6 +157,8 @@ public class Sink {
         //task
         if (SinkType_ == 5) {
             wireless_agent = new WirelessLEACHAgent("wireless_agent");
+        }else if(SinkType_ == 6) {
+            wireless_agent = new WirelessDiffAgent("wireless_agent");
         }else {
             //otherwise use the commoon wireless agent layer
 		    wireless_agent = new WirelessAgent("wireless_agent");

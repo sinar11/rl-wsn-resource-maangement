@@ -32,10 +32,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 
-/** This class implements a data packet carrying the description of a detected event.
-*
+/** This class implements a data packet carrying the description of a detected event.*
+ * 
 * @author Kunal Shah
-* 
 */
 
 public class DataPacket
@@ -78,6 +77,8 @@ public class DataPacket
 	
 	private String groupId;
 	
+	private long streamId;
+	
 	public DataPacket(long sourceId, long sinkId, int taskId, List<Tuple> attributes, double timestamp)
 	{
 		this.sourceId=sourceId;
@@ -85,6 +86,7 @@ public class DataPacket
 		this.taskId=taskId;
 		this.attributes=attributes;
 		this.timestamp=timestamp;
+		this.streamId=sourceId;
 		if(DRLDiffApp.TRACE_ON){
 			trace= new ArrayList<Long>();			
 		}
@@ -103,13 +105,13 @@ public class DataPacket
 		this.explore=pkt.explore;
 		this.isHeartBeat=pkt.isHeartBeat;
 		this.groupId=pkt.groupId;
+		this.streamId=pkt.streamId;
 		if(DRLDiffApp.TRACE_ON){
 			this.trace=new ArrayList<Long>(pkt.trace);
 		}
 	}
 	
-	public String toString()
-	{
+	public String toString(){
 		return "DataPacket[sourceId="+sourceId+",destinationId="+destinationId+",sinkId="+sinkId+",taskId="+taskId+",timestamp="+timestamp
 			+",cost="+cost+",reward="+reward+",explore="+explore+(DRLDiffApp.TRACE_ON?(",trace="+trace):"");	
 	}
@@ -227,5 +229,9 @@ public class DataPacket
 
 	public void setGroupId(String groupId) {
 		this.groupId = groupId;
+	}
+
+	public long getStreamId() {
+		return streamId;
 	}
 }

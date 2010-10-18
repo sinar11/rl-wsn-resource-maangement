@@ -18,7 +18,7 @@ import drcl.inet.sensorsim.drl.diffext.DRLDiffApp.NodeState;
 public class MicroLearner {
 	public static final double TIMER_INTERVAL=5;
 	public static final long RECENT_WINDOW=10; // TIMESTEPS
-	
+	private static final double HEART_BEAT_INTERVAL = 2*TIMER_INTERVAL;
 	public static final double ENERGY_DIFFUSE=((2.45*0.001) + (5.97*0.001));	
 	public static final double ENERGY_LISTEN=8.41*0.00001;
 	public static final double ENERGY_SAMPLE=8.41*0.00001 + ENERGY_DIFFUSE;
@@ -76,6 +76,7 @@ public class MicroLearner {
 			currentState=getMatchingState(false, false);
 			taskTimer = diffApp.setTimeout("performTask", TIMER_INTERVAL);
 		}else{
+			initialEnergy=100;
 			diffApp.log(Level.INFO,"********ALGORITHM:" + algorithm + "*******************");
 			taskTimer = diffApp.setTimeout("reinforce", TIMER_INTERVAL);
 		}			
@@ -124,11 +125,14 @@ public class MicroLearner {
 
 	private void endTask(SensorTask task, SensorState state) {
 		outboundMsgs.clear();
+		double currEnergy;
 		if (diffApp.nid != diffApp.sink_nid) {
-			double currEnergy = diffApp.getRemainingEnergy();
-			EnergyStats.update((int) diffApp.nid, initialEnergy - currEnergy,
-					currEnergy > 0, diffApp.getTime());
-		}
+			currEnergy = diffApp.getRemainingEnergy();
+		}else
+			currEnergy=100;
+		EnergyStats.update((int) diffApp.nid, initialEnergy - currEnergy, currEnergy,
+				currEnergy > 0, diffApp.getTime());
+	
 	}
 
     public SensorState getMatchingState(boolean successfulDiffusion, boolean successfulSample) {
@@ -201,6 +205,12 @@ public class MicroLearner {
 			return mlearner.calcCostOfParticipation(interest);
 		}
 		public double computePrice() {
+			if(noOfSensedPkts==0 && diffApp.supportsHeartBeat()){
+				if (diffApp.getTime() - lastSourceParticipation > HEART_BEAT_INTERVAL) {
+					diffApp.log(Level.FINE, "Sending heart-beat");
+					handleSensorEvent(diffApp.ConstructSensingEvent(null));
+				}
+			}
 			return (noOfSensedPkts>0)?expectedPrice:0;
 		}
 		protected void execute() {
@@ -282,7 +292,7 @@ public class MicroLearner {
 			SensorTask task= taskList.get(taskId);
 			task.expectedPrice=diffApp.interestCache.get(taskId).getMaxGradient().getPayment();
 			//task.expectedPrice=interestPkt.getPayment();
-			return;  
+			//return;  
 		}
 		lastDiffusionParticipation=timesteps;
 		if(diffApp.canSatisfyInterest(interestPkt)){
@@ -322,7 +332,7 @@ public class MicroLearner {
 		if(inData.isExplore())
 			return false;
 		for(DataPacket data:outboundMsgs){
-			if(data.getTaskId()==inData.getTaskId() && data.getSinkId()==inData.getSinkId()){
+			if(data.getTaskId()==inData.getTaskId() && data.getSinkId()==inData.getSinkId() && data.getGroupId()==inData.getGroupId() && data.getStreamId()==inData.getStreamId()){
 				return true;
 			}
 		}
@@ -336,16 +346,21 @@ public class MicroLearner {
 	public void handleReinforcement(ReinforcementPacket reinforcementPkt) {
 		if(reinforcementPkt.getDestinationId()==diffApp.nid){  //if this is destined to me
 			lastDiffusionParticipation=timesteps;
-			updateTaskExpectedPrice(reinforcementPkt.getTaskId());
+			updateTaskExpectedPrice(reinforcementPkt);
 		}		
 	}
 
-	void updateTaskExpectedPrice(int taskId) {
-		SensorTask task= taskList.get(taskId);
+	void updateTaskExpectedPrice(ReinforcementPacket reinfPkt) {
+		SensorTask task= taskList.get(reinfPkt.getTaskId());
 		if(task!=null){
 			//task.expectedPrice=reinforcementPkt.getPayment();
 			//task.resetQValues();
-			task.expectedPrice=diffApp.interestCache.get(taskId).getMaxGradient().getPayment();
+			Double payment=reinfPkt.getStreamPayments().get(diffApp.nid);
+			//if reinforcement has payment for my stream (where I am source), use that to update expected price else use max gradient
+			if(payment==null)
+				payment=diffApp.interestCache.get(reinfPkt.getTaskId()).getMaxGradient().getPayment();
+			task.expectedPrice=(1-task.ALPHA)*task.expectedPrice+ task.ALPHA*payment;
+			//task.expectedPrice=
 		}		
 	}
 
@@ -373,13 +388,14 @@ public class MicroLearner {
 			dataPkt.setGroupId(groupId);
 			if(targetNid<0){
 				dataPkt.setHeartBeat(true);
+				diffApp.noOfHeartBeats++;
 			}else{  //remove heart beat packets from queue as we got real data..
 				/*for(Iterator<DataPacket> it=outboundMsgs.iterator();it.hasNext();){
 					DataPacket pkt=it.next();
 					if(pkt.isHeartBeat()) it.remove();					
 				}*/
 				diffApp.noOfSrcPkts++;
-				outboundMsgs.clear();
+				//outboundMsgs.clear();
 			}
 			//filtering of data for same task for this timestep, 
 			if(!shouldFilter(dataPkt)){

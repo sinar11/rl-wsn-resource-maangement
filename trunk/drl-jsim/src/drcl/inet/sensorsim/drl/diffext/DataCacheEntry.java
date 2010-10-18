@@ -49,8 +49,9 @@ public class DataCacheEntry
 	/** List of recently seen data (in current timestep) for task associated with this cache entry from all sources */
 	private List<DataPacket> recentData = new ArrayList<DataPacket>();
 	
-	/** State related to source nodes, one per each neighbor from which data is received for this task */
-	Map<Long,DataStreamEntry> dataStreams= new HashMap<Long,DataStreamEntry>();
+	/** State related to source nodes, one per each stream from which data is received for this task 
+	 * Each stream has unique combination of streamId and sourceId*/
+	List<DataStreamEntry> dataStreams= new ArrayList<DataStreamEntry>();
 	
 	/** A flag to track whether expected quality data has been achieved for this entry for current time step */ 
 	boolean qualityAchieved=false;
@@ -71,11 +72,14 @@ public class DataCacheEntry
 
 	public void addDataPacket(DataPacket data){
 		recentData.add(data);
-		DataStreamEntry entry= dataStreams.get(data.getSourceId());
-		if(entry==null){
-			entry= new DataStreamEntry(data.getSourceId());
-			dataStreams.put(data.getSourceId(),entry);
+		DataStreamEntry entry= new DataStreamEntry(data.getSourceId(),data.getStreamId());
+		int index=dataStreams.indexOf(entry);
+		if(index==-1){
+			dataStreams.add(entry);			
+		}else{
+			entry= dataStreams.get(index);
 		}
+		entry.setNodes(data.getTrace());
 		entry.updateStatsOnNewDataPkt(data.getReward(),data.getTimestamp());
 		//lastDataTimestamp=data.getTimestamp();
 	}
@@ -83,7 +87,7 @@ public class DataCacheEntry
 	/** Prints the data cache entry */
 	public void printDataEntry(){
 		System.out.println("DataCacheEntry[taskId="+taskId+",data size="+recentData.size()+"]") ;
-		for(DataStreamEntry stream: dataStreams.values()){
+		for(DataStreamEntry stream: dataStreams){
 			System.out.println(stream);
 		}
 	}
@@ -92,85 +96,58 @@ public class DataCacheEntry
 		return recentData.contains(dataPkt);
 	}
 	
-	public List<ReinforcementPacket> getPendingReinforcements(long nid, double currentTime, double margin, InterestPacket interest, double payable){
-		List<ReinforcementPacket> pkts= new ArrayList<ReinforcementPacket>();
+	public Collection<ReinforcementPacket> getPendingReinforcements(long nid, double currentTime, double margin, InterestPacket interest, double payable){
+		Map<Long,ReinforcementPacket> pkts= new HashMap<Long,ReinforcementPacket>();
 		if((currentTime-lastReinforcedTime)<DRLDiffApp.REINFORCE_WINDOW)
-			return pkts;	
+			return pkts.values();	
 		//if(recentData.size()==0) return pkts;
-		DataStreamEntry bestStream= findBestStream(interest);
-		for(DataStreamEntry stream: dataStreams.values()){
-			if(stream.getSourceId()==nid) continue;
-			if(stream.getAvgWLReward()>0 || stream.equals(bestStream)){  //
-				if(payable>0 && stream.shouldReinforce(payable, margin)){
+		//DataStreamEntry bestStream= findBestStream(interest);
+		for(DataStreamEntry stream: dataStreams){
+			if(stream.getSourceId()==nid || stream.getNoOfPackets()==0) continue;
+			populateReinforcements(pkts, nid, stream, payable, margin);
+			/*if(stream.getAvgWLReward()>0){  //|| stream.equals(bestStream)
 					System.out.println(nid+":+VE Reinforcement:"+payable+"-"+stream);
-					pkts.add(new ReinforcementPacket(taskId,payable,nid,stream.getSourceId()));
-				}
+					populateReinforcements(pkts, nid, stream, payable);
+				} 
 			}else if(stream.getNoOfPackets()>0){
-				System.out.println(nid+":-VE Reinforcement:"+stream+" bestStream:"+bestStream);
-				pkts.add(new ReinforcementPacket(taskId,0,nid,stream.getSourceId()));
-			}				
+				System.out.println(nid+":-VE Reinforcement:"+stream);//+" bestStream:"+bestStream);
+				populateReinforcements(pkts,nid,stream,0);
+			}	*/			
 		}
 		reset(currentTime);
-		return pkts;
+		return pkts.values();
 	}
 
-	/**
-	 * Determine stream with lowest cost and required quality
-	 * @param dataCacheEntry
-	 * @param interest
-	 * @return
-	 */
-	private DataStreamEntry findBestStream(InterestPacket interest){
-		//double minCost=Integer.MAX_VALUE;
-		DataStreamEntry bestStream=null;
-		for(DataStreamEntry stream: dataStreams.values()){
-			if(stream.getNoOfPackets()==0) continue;
-			List<DataPacket> pkts=getRecentDataForSource(stream.getSourceId());
-			if(calcDataQuality(pkts, interest)==DRLDiffApp.MAX_DATA_QUALITY){
-			//	double cost= getAvgCost(pkts);
-				if(bestStream==null){
-					bestStream=stream;
-				}else if(stream.getAvgWLReward()>bestStream.getAvgWLReward()){
-					bestStream=stream;
-				}/*else if(stream.getAvgPktReward()>=1.1*bestStream.getAvgPktReward()){
-					bestStream=stream;
-				}else if(stream.getTotalPktReward()>bestStream.getTotalPktReward()){
-					bestStream=stream;
-				}*/
-			}		
-		}
-		return bestStream;
-	}
-	
-	/**
-	 * Matches data attributes to QoS contraints and returns a value between 0 and 1 representing data quality
-	 * @param pkts
-	 * @param interestEntry
-	 * @return
-	 */
-	private double calcDataQuality(List<DataPacket> pkts,
-			InterestPacket interest) {
-		List<Tuple> qosConstraints=interest.getQosConstraints();
-		if(qosConstraints==null || qosConstraints.size()==0) return DRLDiffApp.MAX_DATA_QUALITY;
-		int passCount=0, totalCount=0;
-		for(DataPacket pkt:pkts){
-			//TODO how to get QoS attributes, should it be just part of normal data attributes?
-			if(TupleUtils.isMatching(qosConstraints, pkt.getAttributes())){
-				passCount++;
+	private void populateReinforcements(Map<Long,ReinforcementPacket> pkts, long nid, DataStreamEntry stream, double payable, double margin){
+		ReinforcementPacket reinf=pkts.get(stream.getSourceId());
+		double payment=0.0;
+		if(stream.getAvgWLReward()>0){
+			payment=stream.getCurrPayable()==null?payable:stream.getCurrPayable();
+			if(stream.shouldReinforce(payment, margin)){
+				System.out.println(nid+":+VE Reinforcement:"+payment+"-"+stream);
+			}else{
+				return;
 			}
-			totalCount++;
+		}else{
+			System.out.println(nid+":-VE Reinforcement:"+stream);
+			payment=0.0;
 		}
-		return (passCount*DRLDiffApp.MAX_DATA_QUALITY)/totalCount;
+		if(reinf==null){
+			reinf=new ReinforcementPacket(taskId,payable,nid,stream.getSourceId());
+			pkts.put(stream.getSourceId(),reinf);
+		}
+		reinf.addStreamPayment(stream.getStreamId(), payment);				
 	}
 	
-	private double getAvgCost(List<DataPacket> pkts){
-		if(pkts.size()==0) return 0;
-		double totalCost=0;
-		for(DataPacket pkt: pkts){
-			totalCost+=pkt.getCost();
+	public List<List<Long>> getRecentDataStreams(){
+		List<List<Long>> allStreams= new ArrayList<List<Long>>();
+		for(DataStreamEntry stream: dataStreams){
+			if(stream.getNoOfPackets()>0)
+				allStreams.add(stream.getNodes());			
 		}
-		return totalCost/pkts.size();
+		return allStreams;
 	}
+
 	public List<DataPacket> getRecentData() {
 		return recentData;
 	}
@@ -182,26 +159,18 @@ public class DataCacheEntry
 	public void setLastReinforcedTime(double lastReinforcedTime) {
 		this.lastReinforcedTime = lastReinforcedTime;
 	}
-	public List<DataPacket> getRecentDataForSource(long sourceId) {
-		List<DataPacket> list= new ArrayList<DataPacket>();
-		for(DataPacket pkt:recentData){
-			if(pkt.getSourceId()==sourceId)
-				list.add(pkt);			
-		}
-		return list;
-	}
-	
+		
 	public void reset(double currTime){
 		this.recentData.clear();		
 		this.qualityAchieved=false;
 		lastReinforcedTime=currTime;
-		for(DataStreamEntry stream: dataStreams.values()){
+		for(DataStreamEntry stream: dataStreams){
 			stream.resetStatsOnReinforcement(currTime);			
 		}
 	}
 
 	public Collection<DataStreamEntry> getDataStreams() {
-		return dataStreams.values();
+		return dataStreams;
 	}
 
 	public boolean isQualityAchieved() {
@@ -220,6 +189,16 @@ public class DataCacheEntry
 			this.pkt=pkt;
 			this.groupId=groupId;
 		}		
+	}
+
+	public void updateDataStreams(ReinforcementPacket pkt, double payable) {
+		Map<Long,Double> payments= pkt.getStreamPayments();
+		for(DataStreamEntry stream: dataStreams){
+			Double payment=payments.get(stream.getStreamId());
+			if(payment!=null){
+				stream.setCurrPayable(Math.min(payment,payable));
+			}
+		}
 	}
 	
 }
