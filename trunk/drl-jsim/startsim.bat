@@ -1,0 +1,10 @@
+start /wait /max run-all.bat script/drcl/inet/sensorsim/diffusion/drl%1_sensor_network_diffusion.tcl 1
+start /wait /max run-all.bat script/drcl/inet/sensorsim/diffusion/drl%1_sensor_network_diffusion.tcl 2
+start /wait /max run-all.bat script/drcl/inet/sensorsim/diffusion/drl%1_sensor_network_diffusion.tcl 3
+start /wait /max run-all.bat script/drcl/inet/sensorsim/diffusion/drl%1_sensor_network_diffusion.tcl 4
+start /wait /max run-all.bat script/drcl/inet/sensorsim/diffusion/drl%1_sensor_network_diffusion.tcl 5
+start /wait /max run-all.bat script/drcl/inet/sensorsim/diffusion/drl%1_sensor_network_diffusion.tcl 6
+start /wait /max run-all.bat script/drcl/inet/sensorsim/diffusion/drl%1_sensor_network_diffusion.tcl 7
+start /wait /max run-all.bat script/drcl/inet/sensorsim/diffusion/drl%1_sensor_network_diffusion.tcl 8
+start /wait /max run-all.bat script/drcl/inet/sensorsim/diffusion/drl%1_sensor_network_diffusion.tcl 9
+start /wait /max run-all.bat script/drcl/inet/sensorsim/diffusion/drl%1_sensor_network_diffusion.tcl 10
