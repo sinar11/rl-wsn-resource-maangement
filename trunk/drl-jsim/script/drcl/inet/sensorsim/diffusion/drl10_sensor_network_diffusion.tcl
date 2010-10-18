@@ -368,7 +368,7 @@ if { $target_node_num == 0 } {
 		! mobility setNid $i
 
 		# set the topology parameters
-		! mobility setTopologyParameters 600.0 500.0 0.0 100.0 100.0 0.0
+		! mobility setTopologyParameters 500.0 500.0 0.0 100.0 100.0 0.0
 
 		cd ..
 	}
@@ -381,7 +381,6 @@ for {set i [expr $sink_id + 1]} {$i < $node_num} {incr i} {
 
 	connect n$i/phy/.mobility@ -and n$i/mobility/.query@
 }
-
 ! n$sink_id/app createSnrPorts $node_num $target_node_num
 set plot_ [mkdir drcl.comp.tool.Plotter .plot]
 for {set i 0} {$i < $target_node_num} {incr i} {
@@ -405,8 +404,8 @@ for {set i 0} {$i < $target_node_num} {incr i} {
 # should be made to read from a scenario file
 ! n1/mobility setPosition 0.0 450.0 250.0 0.0
 ! n2/mobility setPosition 0.0 450.0 450.0 0.0
-! n3/mobility setPosition 0.0 350.0 350.0 0.0
-! n4/mobility setPosition 0.0 360.0 340.0 0.0
+! n3/mobility setPosition 0.0 360.0 330.0 0.0
+! n4/mobility setPosition 0.0 340.0 360.0 0.0
 ! n5/mobility setPosition 0.0 300.0 300.0 0.0
 ! n6/mobility setPosition 0.0 250.0 450.0 0.0
 ! n7/mobility setPosition 0.0 150.0 350.0 0.0
@@ -434,17 +433,17 @@ script {run n5} -at 0.8 -on $sim
 script {run n6} -at 0.9 -on $sim
 script {run n7} -at 1.0 -on $sim
 script {run n8} -at 1.1 -on $sim
-script {run n9} -at 1.2 -on $sim
+script {run n9} -at 10.0 -on $sim
 
 # Sinks subscribing to interests
+if { $argc > 0 } {
+       set costParam [lindex $argv 0]
+}
 #                         taskId longMin longMax latMin latMax duration interval data_interval refreshPeriod payment)
-script {! n0/app subscribe 10 100.0 300.0 200.0 400.0 25000.0 53.0 5.0 10000.0 5 Lifetime} -at 1.5 -on $sim
+script {! n0/app subscribe 10 100.0 500.0 100.0 500.0 25000.0 53.0 5.0 20000.0 5 $costParam} -at 1.5 -on $sim
 #script {! n4/wphy setInitialEnergy 10} -at 5000.0 -on $sim
 
-#script {! n9/mobility setPosition 0.0 101.0 320.0 0.0} -at 500.0 -on $sim
-#script {! n9/mobility setPosition 0.0 251.0 200.0 0.0} -at 1000.0 -on $sim
-#script {! n9/mobility setPosition 0.0 111.0 310.0 0.0} -at 1.0 -on $sim
-#script {! n9/mobility setPosition 0.0 251.0 270.0 0.0} -at 2500.0 -on $sim
+
 set np 7; # number of points
 set t [java::new {double[][]} $np]
 $t set 0 [java::new {double[]} 4 "0 100.0 300.0 0"]
@@ -454,9 +453,9 @@ $t set 3 [java::new {double[]} 4 "6000 250.0 250.0 0"]
 $t set 4 [java::new {double[]} 4 "8000 275.0 300.0 0"]
 $t set 5 [java::new {double[]} 4 "10000 300.0 300.0 0"]
 $t set 6 [java::new {double[]} 4 "12000 300.0 300.0 0"]
-! n9/mobility installTrajectory $t
+#! n9/mobility installTrajectory $t
 
-set end 25000.0
+set end 20000.0
 
 script {! n0/app collectStats} -at $end -on $sim
 script {! n1/app collectStats} -at $end -on $sim
@@ -470,5 +469,5 @@ script {! n8/app collectStats} -at $end -on $sim
 
 
 script {! $sim info} -at $end -on $sim
- 
+script {! n0/app shutdown} -at $end -on $sim
 $sim resumeTo $end
