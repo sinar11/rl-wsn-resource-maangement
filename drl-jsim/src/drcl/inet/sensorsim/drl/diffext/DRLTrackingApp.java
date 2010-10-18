@@ -76,8 +76,8 @@ public class DRLTrackingApp extends DRLDiffApp
 			this.costParam=costParam;
 			costParams.add(new CostParam(CostParam.Type.valueOf(costParam),1));
 		}else{
-		    //costParams.add(new CostParam(CostParam.Type.Energy,0.5));
-		     costParams.add(new CostParam(CostParam.Type.Lifetime,1.0));
+		     costParams.add(new CostParam(CostParam.Type.NoOfHops,0.5));
+		     costParams.add(new CostParam(CostParam.Type.Lifetime,0.5));
 		}
 		List<Tuple> qosConstraints= new ArrayList<Tuple>();
 		qosConstraints.add(new Tuple(Tuple.SNR,Type.FLOAT32_TYPE,Operator.GE, new Double(50)));
