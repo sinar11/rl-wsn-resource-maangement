@@ -1,6 +1,7 @@
 
 package drcl.inet.sensorsim.drl.diffext ;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -12,11 +13,14 @@ import drcl.inet.mac.EnergyContract;
 import drcl.inet.sensorsim.SensorAppAgentContract;
 import drcl.inet.sensorsim.SensorAppWirelessAgentContract;
 import drcl.inet.sensorsim.SensorPacket;
+import drcl.inet.sensorsim.SensorPositionReportContract;
 import drcl.inet.sensorsim.SensorAppAgentContract.Message;
 import drcl.inet.sensorsim.drl.CSVLogger;
 import drcl.inet.sensorsim.drl.EnergyStats;
 import drcl.inet.sensorsim.drl.IDRLSensorApp;
 import drcl.inet.sensorsim.drl.SensorTask;
+import drcl.inet.sensorsim.drl.demo.DRLDemoFactory;
+import drcl.inet.sensorsim.drl.demo.IDRLDemo;
 import drcl.inet.sensorsim.drl.diffext.InterestPacket.CostParam;
 
 
@@ -44,10 +48,10 @@ public abstract class DRLDiffApp extends drcl.inet.sensorsim.SensorApp implement
 	static final double MAX_DATA_QUALITY=1.0;
 	
 	/** Period between two successive times to check if any entries in the interest cache need to be purged. */
-	public static final double INTEREST_CACHE_PURGE_INTERVAL = 120.0 ; /* secs. */
+	public static final double INTEREST_CACHE_PURGE_INTERVAL = 500.0 ; /* secs. */
 	
 	/** Decay computed gradients at a rate represented by DECAY_FACTOR **/
-	public static final double DECAY_FACTOR =0.05;
+	public static final double DECAY_FACTOR =0.0;
 	
 	/** Name of the target that a sink node is interested in (and a sensor node capable of) detecting */
 	public String TargetName ;
@@ -62,7 +66,7 @@ public abstract class DRLDiffApp extends drcl.inet.sensorsim.SensorApp implement
 	
 	public static enum NodeState { SLEEPING, AWAKE};
 	 
-	public static final double DELAY = 1.0; 			/* fixed delay to keep arp happy */
+	public static final double DELAY = 10.0; 			/* fixed delay to keep arp happy */
 	
 	protected static java.util.Random rand = new java.util.Random(7777) ;
 	protected static int seqNum=0;
@@ -106,6 +110,8 @@ public abstract class DRLDiffApp extends drcl.inet.sensorsim.SensorApp implement
 	int totalTrackingPkts=0;
 	int totalHeartBeatPkts=0;
 
+	private InterestPacket pendingInterest;
+
 
 	
 	protected DRLDiffApp ()
@@ -122,13 +128,29 @@ public abstract class DRLDiffApp extends drcl.inet.sensorsim.SensorApp implement
 	}
 
 	 protected void _start() {
-		 if(nid==sink_nid)
+		 double[] loc;
+		 if(nid==sink_nid){
 				EnergyStats.init(noOfNodes);
-		 else
-			 this.initialEnergy=getRemainingEnergy();		 
+				loc= new double[]{550,350};
+				this.initialEnergy=100;
+				EnergyStats.update((int) nid, 0, initialEnergy,
+						initialEnergy > 0, getTime());
+		 }else{
+			 this.initialEnergy=getRemainingEnergy();
+			 SensorPositionReportContract.Message positionMsg = new SensorPositionReportContract.Message();
+			 positionMsg = (SensorPositionReportContract.Message) mobilityPort
+					.sendReceive(positionMsg);
+			 loc= new double[]{positionMsg.getX(),positionMsg.getY()};
+		 }
+		 DRLDemoFactory.getDRLDemo().addNode((int)nid,loc,initialEnergy, getMyType());		 
 		 microLearner._start();		 
 	 }
 
+	 protected String getMyType(){
+		 if(nid==sink_nid) return IDRLDemo.TYPE_SINK;
+		 else return IDRLDemo.TYPE_SENSOR;
+	 }
+	 
 	 protected void _stop()  {
 		 microLearner._stop();
 	 }
@@ -212,6 +234,8 @@ public abstract class DRLDiffApp extends drcl.inet.sensorsim.SensorApp implement
 				TaskEntry tentry=activeTasksList.get(entry.getTaskId());
 				payable= tentry.getPayment();
 				interest=tentry.getInterest();
+				if(microLearner.timesteps%5==0)
+					DRLDemoFactory.getDRLDemo().markActiveStream(entry.getRecentDataStreams());
 			}else{
 				InterestCacheEntry icentry=interestCacheLookup(entry.getTaskId());
 				payable= icentry.getPayable();
@@ -221,11 +245,21 @@ public abstract class DRLDiffApp extends drcl.inet.sensorsim.SensorApp implement
 		}
 	}
 	
+	public double getPayable(int taskId){
+		if(nid==sink_nid){
+			TaskEntry tentry=activeTasksList.get(taskId);
+			return tentry.getPayment();
+		}else{
+			InterestCacheEntry icentry=interestCacheLookup(taskId);
+			return icentry.getPayable();
+		}	
+	}
+	
 	public void sendReinforcements(DataCacheEntry entry, double payable,
 			InterestPacket interest) {
-		List<ReinforcementPacket> pendingReinforcements = entry
+		Collection<ReinforcementPacket> pendingReinforcements = entry
 				.getPendingReinforcements(nid, getTime(),
-						REINFORCE_SUPRESS_MARGIN * payable, interest, payable);
+						REINFORCE_SUPRESS_MARGIN , interest, payable);
 		for (ReinforcementPacket pkt : pendingReinforcements) {
 			sendPacket(pkt, getDelay());
 		}
@@ -236,8 +270,9 @@ public abstract class DRLDiffApp extends drcl.inet.sensorsim.SensorApp implement
 	{
 		double currentTime = getTime() ;
 		for(InterestCacheEntry entry:interestCache.values()){
+			entry.setPayable(macroLearner.calcPayable(entry.getInterest(),entry.getMaxGradient().getPayment()));
 			entry.gradientListPurge(currentTime) ;
-			microLearner.updateTaskExpectedPrice(entry.getInterest().getTaskId());
+			//microLearner.updateTaskExpectedPrice(entry.getInterest().getTaskId());
 			/*if ( entry.IsGradientListEmpty() == true ){
 				it.remove();
 			}	*/		
@@ -470,12 +505,17 @@ public abstract class DRLDiffApp extends drcl.inet.sensorsim.SensorApp implement
 			InterestPacket interest = (InterestPacket)data_ ;
 			if (delay != 0.0)
 			{
+				//pendingInterest=interest; //work-around to issue of JSim where timer event is sometimes getting lost
 				DiffTimer bcast_EVT = new DiffTimer(DiffTimer.TIMEOUT_DELAY_BROADCAST, interest);
 				bcast_EVT.handle = setTimeout(bcast_EVT, delay);
 			} 
 			else if(interest.getDestinationId()==BROADCAST_DEST){
+				pendingInterest=null;
+				/*try {
+					Thread.sleep(1000);
+				} catch (InterruptedException e) {}*/
 				downPort.doSending(new SensorAppWirelessAgentContract.Message(SensorAppWirelessAgentContract.BROADCAST_SENSOR_PACKET, INTEREST_PKT, interest)) ;
-			}else{
+			}else{				
 				downPort.doSending(new SensorAppWirelessAgentContract.Message(SensorAppWirelessAgentContract.UNICAST_SENSOR_PACKET, 
 						interest.getDestinationId(), nid, 100, INTEREST_PKT, interest)) ;				
 			}
@@ -532,6 +572,9 @@ public abstract class DRLDiffApp extends drcl.inet.sensorsim.SensorApp implement
 		{
 			DiffTimer d = (DiffTimer)data_ ;
 			int type = d.EVT_Type ;
+			if(pendingInterest!=null && type!=DiffTimer.TIMEOUT_DELAY_BROADCAST){
+				sendPacket(pendingInterest, 0.0) ;
+			}
 			switch ( type )
 			{
 				case DiffTimer.TIMEOUT_SEND_REINFORCEMENT :
@@ -632,7 +675,7 @@ public abstract class DRLDiffApp extends drcl.inet.sensorsim.SensorApp implement
 		}
 		//double avgReward= pktsReward/pkts.size();
 		//double avgCost=pktsCost/pkts.size();
-		return quality*maxReward- minCost;//+NO_OF_PKTS_FACTOR*pkts.size();		
+		return quality*payable- minCost;//+NO_OF_PKTS_FACTOR*pkts.size();		
 	}
 	
 	/**
@@ -717,6 +760,10 @@ public abstract class DRLDiffApp extends drcl.inet.sensorsim.SensorApp implement
 
 	public double getSamplingEnergy() {
 		return MicroLearner.ENERGY_SAMPLE; //default
+	}
+	
+	public boolean supportsHeartBeat(){
+		return false;
 	}
 	
 	protected String doubleArrToString(double[] arr){

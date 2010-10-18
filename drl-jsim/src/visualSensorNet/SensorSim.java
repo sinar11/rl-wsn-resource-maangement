@@ -3,6 +3,7 @@ package visualSensorNet;
 import drcl.comp.tool.Plotter;
 import drcl.inet.sensorsim.OneHop.*;
 import drcl.inet.sensorsim.OneHopTDMA.*;
+import drcl.inet.sensorsim.drl.diffext.DRLDiffApp;
 import drcl.inet.sensorsim.MultiHop.SinkAppMH;
 import drcl.inet.sensorsim.MultiHop.MultiHopApp;
 import drcl.inet.sensorsim.LEACH.SinkAppLEACH;
@@ -49,6 +50,11 @@ public class SensorSim extends JFrame implements ActionListener, Runnable {
 	static int total_sensor_nodes;// = total_nodes - total_target_nodes;
 	static int sink_id = 0;
 
+	static double MAX_X=200;
+	static double MIN_X=0;
+	static double MAX_Y=300;
+	static double MIN_Y=0;
+	
     static Random generator = new Random();
     static SensorSimple[] tabsens;
     static Sink sink0;
@@ -80,6 +86,7 @@ public class SensorSim extends JFrame implements ActionListener, Runnable {
 
     //North Panel components
     JLabel routingCaptionLabel = new JLabel("Routing Selections: " );
+    JRadioButton DRLButton = new JRadioButton("DRL");
     JRadioButton OH_80211Button = new JRadioButton("One-Hop & IEEE 802.11");
     JRadioButton OH_CSMAButton = new JRadioButton("One-Hop & CSMA");
     JRadioButton OH_TDMAButton = new JRadioButton("One-Hop & TDMA");
@@ -194,6 +201,11 @@ public class SensorSim extends JFrame implements ActionListener, Runnable {
           events that may need to run*/
 		if (now_ < simulationTime) {
 
+			//the following is only for Diffusion. It subscribes for the interest 
+            if (now_<0.001 && simChoice == 6)  {
+                DRLDiffApp diffApp=(DRLDiffApp)sink0.app;
+         //       diffApp.subscribe(10, 0.0, 30.0, 0.0, 100.0, simulationTime, 53.0, 5.0, 1000, 10.0);
+            }
             //print the locations of all sensors to the screen
             if (now_ < 0.001) {
                 sensorLocPrintOut();
@@ -224,6 +236,9 @@ public class SensorSim extends JFrame implements ActionListener, Runnable {
             else { //o.w. just call back this runnable component again in the future
                 sim.addRunnable(0.5, this);
             }
+            if(now_>=(simulationTime-0.25) && simChoice==6){
+    			collectStats();
+            }
 		}
 	}
 
@@ -232,6 +247,13 @@ public class SensorSim extends JFrame implements ActionListener, Runnable {
     //Helper Functions
     //***********************************************************
 
+    void collectStats(){
+    	 for(int k= 1; k < total_sensor_nodes; k++) {
+             ((DRLDiffApp)tabsens[k].sens.getComponent("DRLDiffApp")).collectStats();
+         }
+    	 DRLDiffApp diffApp=(DRLDiffApp)sink0.app;
+         diffApp.collectStats();
+    }
 
     /**
     * Go throught all sensors and prints their (x,y,z) coordinates
@@ -586,14 +608,16 @@ public class SensorSim extends JFrame implements ActionListener, Runnable {
             rootNorthPanel.setLayout(layout);
 
             //Check box menu settings
+            DRLButton.setMnemonic(KeyEvent.VK_D);
+            DRLButton.setSelected(true);
             OH_80211Button.setMnemonic(KeyEvent.VK_C);
-            OH_80211Button.setSelected(true);
             OH_CSMAButton.setMnemonic(KeyEvent.VK_G);
             OH_TDMAButton.setMnemonic(KeyEvent.VK_H);
             MH_CSMAButton.setMnemonic(KeyEvent.VK_T);
             MH_80211Button.setMnemonic(KeyEvent.VK_T);
             LEACHButton.setMnemonic(KeyEvent.VK_T);
 
+            group.add(DRLButton);
             group.add(OH_80211Button);
             group.add(OH_CSMAButton);
             group.add(OH_TDMAButton);
@@ -602,6 +626,7 @@ public class SensorSim extends JFrame implements ActionListener, Runnable {
             group.add(LEACHButton);
 
             //Register a listener for the check boxes.
+            DRLButton.addActionListener(this);
             OH_80211Button.addActionListener(this);
             OH_CSMAButton.addActionListener(this);
             OH_TDMAButton.addActionListener(this);
@@ -610,6 +635,7 @@ public class SensorSim extends JFrame implements ActionListener, Runnable {
             LEACHButton.addActionListener(this);
 
             //Put the radio buttons in a column in a panel.
+            radioPanel.add(DRLButton);
             radioPanel.add(OH_80211Button);
             radioPanel.add(OH_CSMAButton);
             radioPanel.add(OH_TDMAButton);
@@ -807,6 +833,8 @@ public class SensorSim extends JFrame implements ActionListener, Runnable {
                 simChoice = 4;
             else if (LEACHButton.isSelected())
                 simChoice = 5;
+            else if (DRLButton.isSelected())
+                simChoice = 6;
             System.out.println("SimChoice: " + simChoice);
 
 
@@ -843,7 +871,7 @@ public class SensorSim extends JFrame implements ActionListener, Runnable {
 
 		        topo = new Placer(300, 725, 1, total_sensor_nodes, total_target_nodes);
 		        test = new Environnement(total_nodes, total_target_nodes);
-		        test.setTopo(0.0, 30.0, 0.0, 100.0, 100.0, 100.0);
+		        test.setTopo(MIN_X, MAX_X, MIN_Y, MAX_Y, 100.0, 100.0);
                 topo.setLogSource( test.log );
             }
 
@@ -879,8 +907,8 @@ public class SensorSim extends JFrame implements ActionListener, Runnable {
             else { //o.w. no topology file was given so randomly generate the sensor locations.
                 for(int i = 1; i < total_sensor_nodes; i++) {
                     //create two random x, y coordinates
-                    xCoord = generator.nextDouble()* 30;
-                    yCoord = generator.nextDouble()* 100;
+                    xCoord = generator.nextDouble()* MAX_X;
+                    yCoord = generator.nextDouble()* MAX_Y;
 
                     //create the sensor
                     tabsens[i]=new SensorSimple(i, sink_id, test, simChoice, xCoord, yCoord, zCoord);
@@ -903,8 +931,8 @@ public class SensorSim extends JFrame implements ActionListener, Runnable {
             else{
                 for(int i= total_nodes - total_target_nodes ; i < total_nodes ;i++){
                     //create two random x, y coordinates
-                    xCoord = generator.nextDouble()* 30;
-                    yCoord = generator.nextDouble()* 100;
+                    xCoord = generator.nextDouble()* MAX_X;
+                    yCoord = generator.nextDouble()* MAX_Y;
 
                     tabtarg[i - total_nodes + total_target_nodes] = new Target(i, test);
                     topo.add_target(tabtarg[i - total_nodes + total_target_nodes].targ,0.0,xCoord,yCoord,0.0);
@@ -981,13 +1009,13 @@ public class SensorSim extends JFrame implements ActionListener, Runnable {
 
              }
              else {
-                ((SensorApp)sink0.sink.getComponent("SensorApp")).getPort(".PacketsReceivedPlot").connectTo(sinkPlot1_.addPort("0", "0"));
-                ((SensorApp)sink0.sink.getComponent("SensorApp")).getPort(".latencyPlot").connectTo(sinkPlot2_.addPort("0", "0"));
+              //  ((SensorApp)sink0.sink.getComponent("SensorApp")).getPort(".PacketsReceivedPlot").connectTo(sinkPlot1_.addPort("0", "0"));
+               // ((SensorApp)sink0.sink.getComponent("SensorApp")).getPort(".latencyPlot").connectTo(sinkPlot2_.addPort("0", "0"));
 
-                 for(int i = 0; i < total_target_nodes; i++){
+                /* for(int i = 0; i < total_target_nodes; i++){
 			        // connexion au plotter
 		    	    ((SensorApp) sink0.sink.getComponent( "SensorApp")).getPort(".snr"+i).connectTo( plot.addPort(i+"",i+""));
-		        }
+		        }*/
              }
 
             liveSensors.setID("liveSensors");

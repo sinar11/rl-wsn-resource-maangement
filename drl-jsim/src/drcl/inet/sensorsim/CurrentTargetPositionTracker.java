@@ -6,6 +6,10 @@ package drcl.inet.sensorsim;
 import java.util.HashMap;
 import java.util.Map;
 
+import drcl.inet.sensorsim.drl.demo.DRLDemo;
+import drcl.inet.sensorsim.drl.demo.DRLDemoFactory;
+import drcl.inet.sensorsim.drl.demo.IDRLDemo;
+
 /*
  * @author Kunal
  */
@@ -23,6 +27,12 @@ public class CurrentTargetPositionTracker {
     }
     
     public void setTargetPosition(long nodeId, double[] loc){
+    	if(!targetPositions.containsKey(nodeId))
+    		DRLDemoFactory.getDRLDemo().addNode((int)nodeId, loc, 50, IDRLDemo.TYPE_TARGET);
+    	else{
+    		DRLDemoFactory.getDRLDemo().updateNodePosition((int)nodeId, loc);
+    	}
+    		
         targetPositions.put(new Long(nodeId),loc);
     }
     

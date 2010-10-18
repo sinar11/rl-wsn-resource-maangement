@@ -16,7 +16,7 @@ public abstract class AbstractAlgorithm {
     
 	//exploration factors for algorithms using exploration
 	public static final double MAX_EPSILON=0.3;    // MAX exploration factor
-	public static final double MIN_EPSILON=0.1;    // MIN exploration factor
+	public static final double MIN_EPSILON=0.05;    // MIN exploration factor
 	
 	
 	 protected UniformDistribution uniformDist;
@@ -26,7 +26,11 @@ public abstract class AbstractAlgorithm {
 	 
 	 
 	 protected AbstractAlgorithm(Hashtable<Integer,SensorTask> taskList, IDRLSensorApp app){
-		 uniformDist= new UniformDistribution(0,taskList.size());
+		 long seed=(long)Math.random()*100;
+		 if(System.getProperty("mobility.seed")!=null){
+			 seed= Long.parseLong(System.getProperty("mobility.seed"));
+		 }
+		 uniformDist= new UniformDistribution(0,taskList.size(),seed);
 		 this.taskList=taskList;
 		 this.app=app;
 	 }

@@ -53,7 +53,7 @@ public class Target {
 	targ = new Component("targ"+nid);
 	TargetAgent agent = new TargetAgent();agent.setID("agent");
 	targ.addComponent( agent);
-	agent.setBcastRate( 20.0);
+	agent.setBcastRate( 1.0);
 	agent.setSampleRate( 1.0);
 	
 	
@@ -61,7 +61,7 @@ public class Target {
 	SensorPhy phy = new SensorPhy();phy.setID("phy");
 	targ.addComponent( phy);
 	phy.setNid(nid);
-	phy.setRadius(250.0);
+	phy.setRadius(100.0);
 	phy.setRxThresh( 0.0);
 	
 	mobility = new SensorMobilityModel();mobility.setID("mobility");

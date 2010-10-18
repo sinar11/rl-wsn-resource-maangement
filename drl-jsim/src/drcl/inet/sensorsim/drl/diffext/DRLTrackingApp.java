@@ -10,6 +10,7 @@ import drcl.inet.sensorsim.SensorAppAgentContract;
 import drcl.inet.sensorsim.SensorPositionReportContract;
 import drcl.inet.sensorsim.drl.CSVLogger;
 import drcl.inet.sensorsim.drl.EnergyStats;
+import drcl.inet.sensorsim.drl.demo.DRLDemoFactory;
 import drcl.inet.sensorsim.drl.diffext.InterestPacket.CostParam;
 import drcl.inet.sensorsim.drl.diffext.Tuple.Operator;
 import drcl.inet.sensorsim.drl.diffext.Tuple.Type;
@@ -91,6 +92,8 @@ public class DRLTrackingApp extends DRLDiffApp
 			averageDelay=(averageDelay*totalTrackingPkts+(lastTrackTime-dataPkt.getTimestamp()))/(totalTrackingPkts+1);
 			totalTrackingPkts++;
 			EnergyStats.markAsReporting();
+			dataPkt.getTrace().add(nid);
+			//DRLDemoFactory.getDRLDemo().markActiveStream(dataPkt.getTrace());
 			totalEnergyUsed=EnergyStats.getTotalEnergy();
 			CSVLogger.log("Delay", ""+averageDelay ,false,microLearner.algorithm.getAlgorithm());
 			//CSVLogger.log("Delay", ""+averageDelay ,false,algorithm.getAlgorithm());
