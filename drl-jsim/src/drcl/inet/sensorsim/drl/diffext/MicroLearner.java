@@ -94,7 +94,7 @@ public class MicroLearner {
  
     public void timeout(Object data) {
 		if (data.equals("performTask")) {
-			diffApp.getRemainingEnergy();
+			double currEnergy=diffApp.getRemainingEnergy();
 			if (currentTask != null) {
 				currentTask.computeReward();
 				totalReward += currentTask.lastReward;
@@ -110,8 +110,10 @@ public class MicroLearner {
 			resetForNewTask();
 			if (currentTask != null)
 				currentTask.executeTask();
-			taskTimer = diffApp.setTimeout("performTask", TIMER_INTERVAL);
-			++timesteps;	
+			if(currEnergy>0){ //stop timer if out of energy
+				taskTimer = diffApp.setTimeout("performTask", TIMER_INTERVAL);
+				++timesteps;
+			}
 		}else if (data.equals("reinforce")){ //reinforcement as used by sink 		
 			//if(noOfPkts>0) mlearner.computeReinforcements();  //compute reinforcements for arriving data at this timestep
 			diffApp.sendReinforcements();
