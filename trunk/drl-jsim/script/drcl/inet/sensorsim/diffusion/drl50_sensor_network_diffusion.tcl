@@ -28,7 +28,7 @@ mkdir drcl.inet.sensorsim.SeismicProp seismic_Prop
 
 # create the sensor node position tracker
 mkdir drcl.inet.sensorsim.SensorNodePositionTracker nodetracker
-! nodetracker setGrid 600.0 100.0 500.0 100.0
+! nodetracker setGrid 700.0 100.0 600.0 100.0
 
 # connect the sensor channel to the sensor node position tracker
 connect chan/.tracker@ -and nodetracker/.channel@
@@ -43,7 +43,7 @@ mkdir drcl.inet.mac.Channel channel
 # create the node position tracker
 mkdir drcl.inet.mac.NodePositionTracker tracker
 #                 maxX  minX  maxY   minY  dX   dY
-! tracker setGrid 600.0 100.0 500.0 100.0 100.0 100.0
+! tracker setGrid 700.0 100.0 600.0 100.0 100.0 100.0
 
 connect channel/.tracker@ -and tracker/.channel@
 
@@ -152,7 +152,7 @@ for {set i 0} {$i < [expr $sink_id + 1]} {incr i} {
 	! /aodvtest/channel attachPort $i [! wphy getPort .channel]
 	
 #                                maxX maxY maxZ minX minY minZ dX dY dZ
-    ! mobility setTopologyParameters 600.0 500.0 0.0 100.0 100.0 0.0 100.0 100.0 0.0
+    ! mobility setTopologyParameters 700.0 600.0 0.0 100.0 100.0 0.0 100.0 100.0 0.0
 
 	! mac  disable_MAC_TRACE_ALL
 
@@ -195,7 +195,7 @@ for {set i [expr $sink_id + 1]} {$i < [expr $node_num - $target_node_num]} {incr
 	connect app/.mobility@ -and mobility/.query@
 
 	! phy setNid $i 
-	! phy setRadius 50.0
+	! phy setRadius 75.0
 
 	# connect phyiscal layers to sensor agents so that nodes can receive
 	connect phy/.toAgent@ -to agent/.fromPhy@
@@ -321,7 +321,7 @@ for {set i [expr $sink_id + 1]} {$i < [expr $node_num - $target_node_num]} {incr
 	! /aodvtest/channel attachPort $i [! wphy getPort .channel]
 	
 #                                maxX maxY maxZ minX minY minZ dX dY dZ
-    	! mobility setTopologyParameters 600.0 500.0 0.0 100.0 100.0 0.0 100.0 100.0 0.0
+    	! mobility setTopologyParameters 700.0 600.0 0.0 100.0 100.0 0.0 100.0 100.0 0.0
 
 	! mac  disable_MAC_TRACE_ALL
 
@@ -350,7 +350,7 @@ if { $target_node_num == 0 } {
 		mkdir drcl.inet.sensorsim.SensorPhy phy 
 		! phy setRxThresh 0.0
 		! phy setNid $i
-		! phy setRadius 50.0
+		! phy setRadius 75.0
 
 		! phy setDebugEnabled 0
 
@@ -369,7 +369,7 @@ if { $target_node_num == 0 } {
 		! mobility setNid $i
 
 		# set the topology parameters
-		! mobility setTopologyParameters 300.0 400.0 0.0 100.0 100.0 0.0
+		! mobility setTopologyParameters 400.0 500.0 0.0 100.0 100.0 0.0
 
 		cd ..
 	}
@@ -394,7 +394,7 @@ for {set i 0} {$i < $target_node_num} {incr i} {
 }
 
 # set the position of sink nodes
-! n0/mobility setPosition 0.0 550.0 450.0 0.0
+! n0/mobility setPosition 0.0 250.0 650.0 0.0
 
 # set the position of target nodes
 # Max. speed is the first argument of setPosition.
@@ -408,7 +408,10 @@ puts "Positioning sensor nodes.."
 # for the sensors They will be randomly placed on the grid (2D only)
 # set the position of sensor nodes args=> (speed(m/sec), xCoord,yCoord,zCoord
 for {set i [expr $sink_id + 1]} {$i < [expr $node_num - $target_node_num]} {incr i} {
-   ! n$i/mobility setPosition 0.0 [expr 100+ rand()*400] [expr 100 + rand()*300] 0.0
+   ! n$i/mobility setPosition 0.0 [expr 100+ rand()*500] [expr 100 + rand()*400] 0.0
+   set y_ [expr {$i/10<1?100:($i/10)*100}]
+   puts "for i=$i, x=[expr 100+$i%10*50], y=$y_" 
+   ! n$i/mobility setPosition 0.0 [expr 100+$i%10*50] $y_ 0.0
      
 }
 
@@ -435,7 +438,7 @@ for {set i [expr $node_num - $target_node_num]} {$i < $node_num} {incr i} {
 
 # Sinks subscribing to interests
 #                         taskId longMin longMax latMin latMax duration interval data_interval refreshPeriod payment)
-script {! n0/app subscribe 10 100.0 300.0 100.0 400.0 200000.0 53.0 5.0 20000.0 10} -at 3.0 -on $sim
+script {! n0/app subscribe 10 100.0 400.0 100.0 500.0 200000.0 53.0 5.0 20000.0 10} -at 3.0 -on $sim
 
 
 set end 15000.0

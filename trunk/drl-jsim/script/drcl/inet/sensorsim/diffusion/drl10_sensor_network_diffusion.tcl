@@ -368,7 +368,7 @@ if { $target_node_num == 0 } {
 		! mobility setNid $i
 
 		# set the topology parameters
-		! mobility setTopologyParameters 500.0 500.0 0.0 100.0 100.0 0.0
+		! mobility setTopologyParameters 600.0 500.0 0.0 100.0 100.0 0.0
 
 		cd ..
 	}
@@ -404,17 +404,17 @@ for {set i 0} {$i < $target_node_num} {incr i} {
 # should be made to read from a scenario file
 ! n1/mobility setPosition 0.0 450.0 250.0 0.0
 ! n2/mobility setPosition 0.0 450.0 450.0 0.0
-! n3/mobility setPosition 0.0 360.0 330.0 0.0
-! n4/mobility setPosition 0.0 340.0 360.0 0.0
-! n5/mobility setPosition 0.0 300.0 300.0 0.0
+! n3/mobility setPosition 0.0 350.0 350.0 0.0
+! n4/mobility setPosition 0.0 360.0 340.0 0.0
+! n5/mobility setPosition 0.0 250.0 250.0 0.0
 ! n6/mobility setPosition 0.0 250.0 450.0 0.0
 ! n7/mobility setPosition 0.0 150.0 350.0 0.0
 ! n8/mobility setPosition 0.0 270.0 325.0 0.0
 #! n8/mobility setPosition 0.0 170.0 370.0 0.0
 
 ! n0/wphy setInitialEnergy 100
-! n4/wphy setInitialEnergy 100
-! n8/wphy setInitialEnergy 100
+#! n4/wphy setInitialEnergy 100
+#! n8/wphy setInitialEnergy 100
 
 
 
@@ -436,11 +436,12 @@ script {run n8} -at 1.1 -on $sim
 script {run n9} -at 10.0 -on $sim
 
 # Sinks subscribing to interests
+set costParam null
 if { $argc > 0 } {
        set costParam [lindex $argv 0]
 }
 #                         taskId longMin longMax latMin latMax duration interval data_interval refreshPeriod payment)
-script {! n0/app subscribe 10 100.0 500.0 100.0 500.0 25000.0 53.0 5.0 20000.0 5 $costParam} -at 1.5 -on $sim
+script {! n0/app subscribe 10 100.0 300.0 200.0 400.0 15000.0 53.0 5.0 20000.0 10 } -at 1.5 -on $sim
 #script {! n4/wphy setInitialEnergy 10} -at 5000.0 -on $sim
 
 
@@ -453,9 +454,9 @@ $t set 3 [java::new {double[]} 4 "6000 250.0 250.0 0"]
 $t set 4 [java::new {double[]} 4 "8000 275.0 300.0 0"]
 $t set 5 [java::new {double[]} 4 "10000 300.0 300.0 0"]
 $t set 6 [java::new {double[]} 4 "12000 300.0 300.0 0"]
-#! n9/mobility installTrajectory $t
+! n9/mobility installTrajectory $t
 
-set end 20000.0
+set end 15000.0
 
 script {! n0/app collectStats} -at $end -on $sim
 script {! n1/app collectStats} -at $end -on $sim
@@ -467,7 +468,7 @@ script {! n6/app collectStats} -at $end -on $sim
 script {! n7/app collectStats} -at $end -on $sim
 script {! n8/app collectStats} -at $end -on $sim
 
-
+script {! n0/app collectGlobalStats} -at $end -on $sim
 script {! $sim info} -at $end -on $sim
 script {! n0/app shutdown} -at $end -on $sim
 $sim resumeTo $end
