@@ -3,6 +3,7 @@ package drcl.inet.sensorsim.drl;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.Map;
 
 import drcl.inet.sensorsim.CurrentTargetPositionTracker;
 import drcl.inet.sensorsim.drl.DRLSensorApp.TrackingEvent;
@@ -152,6 +153,7 @@ public class BDGlobalRewardManager implements GlobalRewardManager{
 		}
 	}
 	
+
 	private void updateGlobalReward() {
 	    int size= globalRewards.size()>0?globalRewards.size():1;
 	    totalGlobalReward+=(totalReward-totalCost);

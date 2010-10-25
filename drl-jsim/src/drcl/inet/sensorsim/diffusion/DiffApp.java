@@ -149,7 +149,12 @@ public class DiffApp extends drcl.inet.sensorsim.SensorApp implements drcl.comp.
 	 protected void _resume() {		 
 	 }*/
 	  
-
+	//work-around to shutdown java
+    public void shutdown(){
+    	System.out.println("SHUTTING DOWN..");
+    	System.exit(0);
+    }
+    
 	class CPUCheck{	
 	}
 	

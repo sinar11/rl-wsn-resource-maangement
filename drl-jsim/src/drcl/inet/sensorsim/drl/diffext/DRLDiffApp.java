@@ -3,6 +3,7 @@ package drcl.inet.sensorsim.drl.diffext ;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -70,6 +71,7 @@ public abstract class DRLDiffApp extends drcl.inet.sensorsim.SensorApp implement
 	
 	protected static java.util.Random rand = new java.util.Random(7777) ;
 	protected static int seqNum=0;
+	protected static Map<Integer,Integer> taskExecutions= new HashMap<Integer, Integer>();
 	
 	int numSubscriptions ;
 	double initialEnergy; 
@@ -109,7 +111,9 @@ public abstract class DRLDiffApp extends drcl.inet.sensorsim.SensorApp implement
 	double totalEnergyUsed;
 	int totalTrackingPkts=0;
 	int totalHeartBeatPkts=0;
-
+	double totalTrackingError= 0;
+	int totalTrackCount=0;
+	
 	private InterestPacket pendingInterest;
 
 
@@ -580,7 +584,7 @@ public abstract class DRLDiffApp extends drcl.inet.sensorsim.SensorApp implement
 				case DiffTimer.TIMEOUT_SEND_REINFORCEMENT :
 					sendReinforcements() ;
 
-					// if the size of the dataCache has become 0, there is no need for the timer. The timer will be set next time dataCache_insert is called. 
+					/*// if the size of the dataCache has become 0, there is no need for the timer. The timer will be set next time dataCache_insert is called. 
 					if ( (dataCache.size() == 0) && (reinforcementTimer.handle != null) )
 					{
 						cancelTimeout(reinforcementTimer.handle) ;
@@ -588,10 +592,10 @@ public abstract class DRLDiffApp extends drcl.inet.sensorsim.SensorApp implement
 						reinforcementTimer.handle = null ; 
 						reinforcementTimer = null ;
 					}
-					else{
+					else{*/
 					//	 reset the timer. 
 						reinforcementTimer.handle = setTimeout(reinforcementTimer, REINFORCE_WINDOW) ;
-					}
+					//}
 					break ;
 				case DiffTimer.TIMEOUT_INTEREST_CACHE_PURGE :
 					interestCachePurge() ;
@@ -715,6 +719,22 @@ public abstract class DRLDiffApp extends drcl.inet.sensorsim.SensorApp implement
     public void addToTotalCost(double lastCost) { 	
 			
 	}
+    
+    public void collectGlobalStats() {
+		log(Level.INFO, "*******************GLOBAL STATS**************");
+		if(nid==sink_nid){
+        	EnergyStats.NodeStat lowestLifeNode=EnergyStats.getNodeWithLowestLifetime();
+        	String mobility=System.getProperties().getProperty("target.mobile", "true");
+        	String stats= noOfNodes+","+nid+","+totalHeartBeatPkts+","+totalTrackingPkts+","+lastTrackTime+","+averageDelay
+        		+","+totalEnergyUsed+","+lowestLifeNode.toString()+","+Boolean.parseBoolean(mobility)+","+this.costParam+","+this.macroLearner.utilFunc.toString()
+        		+","+(totalTrackingError/totalTrackCount);
+        	for(Integer taskId: taskExecutions.keySet()){
+    			stats+=",task-"+taskId+","+taskExecutions.get(taskId);
+    		}
+        	CSVLogger.logGlobal("sinkStats",stats,microLearner.algorithm.getAlgorithm());            
+        }
+	}
+    
     public void collectStats(){
         log(Level.INFO,"*******************STATS**************");
         String QValues=nid+",";
@@ -732,14 +752,9 @@ public abstract class DRLDiffApp extends drcl.inet.sensorsim.SensorApp implement
 						+ task.printExpPrices();
 			}
         }
+        updateTaskExecutions(microLearner.taskList);
        // stats+=","+totalCost+","+totalReward+","+globalRewardManager.getEffectiveCost();
-        if(nid==sink_nid){
-        	EnergyStats.NodeStat lowestLifeNode=EnergyStats.getNodeWithLowestLifetime();
-        	String mobility=System.getProperties().getProperty("target.mobile", "true");
-        	String stats= noOfNodes+","+nid+","+totalHeartBeatPkts+","+totalTrackingPkts+","+lastTrackTime+","+averageDelay
-        		+","+totalEnergyUsed+","+lowestLifeNode.toString()+","+Boolean.parseBoolean(mobility)+","+this.costParam;
-        	CSVLogger.logGlobal("sinkStats",stats,microLearner.algorithm.getAlgorithm());            
-        }
+        
         CSVLogger.log("Qvalues",QValues,microLearner.algorithm.getAlgorithm());
         CSVLogger.log("ExpPrices",expPrices,microLearner.algorithm.getAlgorithm());
         CSVLogger.log("States",microLearner.states.toString(),microLearner.algorithm.getAlgorithm());
@@ -771,5 +786,12 @@ public abstract class DRLDiffApp extends drcl.inet.sensorsim.SensorApp implement
 		for(double d:arr) s+=d+" ";
 		s+="]";
 		return s;
+	}
+	
+	public static void updateTaskExecutions(Hashtable<Integer, SensorTask> taskList) {
+		for(Integer id: taskList.keySet()){
+			int curr= taskExecutions.containsKey(id)?taskExecutions.get(id):0;
+			taskExecutions.put(id, curr+taskList.get(id).noOfExecutions);
+		}
 	}
 }
