@@ -481,5 +481,5 @@ script {! n12/app collectStats} -at $end -on $sim
 script {! n13/app collectStats} -at $end -on $sim
 
 script {! $sim info} -at $end -on $sim
- 
+script {! n0/app shutdown} -at $end -on $sim 
 $sim resumeTo $end

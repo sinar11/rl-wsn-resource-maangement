@@ -7,7 +7,7 @@ source "script/test/include.tcl"
 cd [mkdir -q drcl.comp.Component /aodvtest]
 
 # TOTAL number of nodes (sensor nodes + target nodes)
-set node_num 25
+set node_num 50
 
 # Number of TARGET nodes ONLY
 set target_node_num 1
@@ -28,7 +28,7 @@ mkdir drcl.inet.sensorsim.SeismicProp seismic_Prop
 
 # create the sensor node position tracker
 mkdir drcl.inet.sensorsim.SensorNodePositionTracker nodetracker
-! nodetracker setGrid 600.0 100.0 500.0 100.0
+! nodetracker setGrid 1000.0 0.0 1000.0 0.0
 
 # connect the sensor channel to the sensor node position tracker
 connect chan/.tracker@ -and nodetracker/.channel@
@@ -43,7 +43,7 @@ mkdir drcl.inet.mac.Channel channel
 # create the node position tracker
 mkdir drcl.inet.mac.NodePositionTracker tracker
 #                 maxX  minX  maxY   minY  dX   dY
-! tracker setGrid 600.0 100.0 500.0 100.0 100.0 100.0
+! tracker setGrid 1000.0 0.0 1000.0 0.0 100.0 100.0
 
 connect channel/.tracker@ -and tracker/.channel@
 
@@ -152,7 +152,7 @@ for {set i 0} {$i < [expr $sink_id + 1]} {incr i} {
 	! /aodvtest/channel attachPort $i [! wphy getPort .channel]
 	
 #                                maxX maxY maxZ minX minY minZ dX dY dZ
-    	! mobility setTopologyParameters 600.0 500.0 0.0 100.0 100.0 0.0 100.0 100.0 0.0
+    ! mobility setTopologyParameters 1000.0 1000.0 0.0 0.0 0.0 0.0 100.0 100.0 0.0
 
 	! mac  disable_MAC_TRACE_ALL
 
@@ -195,7 +195,7 @@ for {set i [expr $sink_id + 1]} {$i < [expr $node_num - $target_node_num]} {incr
 	connect app/.mobility@ -and mobility/.query@
 
 	! phy setNid $i 
-	! phy setRadius 100.0
+	! phy setRadius 200.0
 
 	# connect phyiscal layers to sensor agents so that nodes can receive
 	connect phy/.toAgent@ -to agent/.fromPhy@
@@ -321,7 +321,7 @@ for {set i [expr $sink_id + 1]} {$i < [expr $node_num - $target_node_num]} {incr
 	! /aodvtest/channel attachPort $i [! wphy getPort .channel]
 	
 #                                maxX maxY maxZ minX minY minZ dX dY dZ
-    	! mobility setTopologyParameters 600.0 500.0 0.0 100.0 100.0 0.0 100.0 100.0 0.0
+    	! mobility setTopologyParameters 1000.0 1000.0 0.0 0.0 0.0 0.0 100.0 100.0 0.0
 
 	! mac  disable_MAC_TRACE_ALL
 
@@ -350,7 +350,7 @@ if { $target_node_num == 0 } {
 		mkdir drcl.inet.sensorsim.SensorPhy phy 
 		! phy setRxThresh 0.0
 		! phy setNid $i
-		! phy setRadius 100.0
+		! phy setRadius 200.0
 
 		! phy setDebugEnabled 0
 
@@ -369,7 +369,7 @@ if { $target_node_num == 0 } {
 		! mobility setNid $i
 
 		# set the topology parameters
-		! mobility setTopologyParameters 600.0 500.0 0.0 100.0 100.0 0.0
+		! mobility setTopologyParameters 600.0 600.0 100.0 100.0 0.0 0.0 100.0 100.0 0.0
 
 		cd ..
 	}
@@ -394,39 +394,22 @@ for {set i 0} {$i < $target_node_num} {incr i} {
 }
 
 # set the position of sink nodes
-! n0/mobility setPosition 0.0 550.0 350.0 0.0
+! n0/mobility setPosition 0.0 700.0 600.0 0.0
 
 # set the position of target nodes
 # Max. speed is the first argument of setPosition.
 # In order to make the target nodes mobile with max. speed (e.g., 30) m/sec., 
 # set the first argument of setPosition to 30.0 
-! n24/mobility setPosition 0.0 251.0 270.0 0.0
+! n49/mobility setPosition 0.1 251.0 270.0 0.0
 
 # set the position of sensor nodes
-# should be made to read from a scenario file
-! n1/mobility setPosition 0.0 450.0 250.0 0.0
-! n2/mobility setPosition 0.0 450.0 450.0 0.0
-! n3/mobility setPosition 0.0 350.0 350.0 0.0
-! n4/mobility setPosition 0.0 360.0 340.0 0.0
-! n5/mobility setPosition 0.0 250.0 250.0 0.0
-! n6/mobility setPosition 0.0 250.0 450.0 0.0
-! n7/mobility setPosition 0.0 150.0 350.0 0.0
-! n8/mobility setPosition 0.0 270.0 325.0 0.0
-! n9/mobility setPosition 0.0 330.0 350.0 0.0
-! n10/mobility setPosition 0.0 440.0 460.0 0.0
-! n11/mobility setPosition 0.0 460.0 260.0 0.0
-! n12/mobility setPosition 0.0 230.0 230.0 0.0
-! n13/mobility setPosition 0.0 340.0 340.0 0.0
-! n14/mobility setPosition 0.0 425.0 325.0 0.0
-! n15/mobility setPosition 0.0 400.0 300.0 0.0
-! n16/mobility setPosition 0.0 380.0 400.0 0.0
-! n17/mobility setPosition 0.0 420.0 420.0 0.0
-! n18/mobility setPosition 0.0 300.0 380.0 0.0
-! n19/mobility setPosition 0.0 500.0 300.0 0.0
-! n20/mobility setPosition 0.0 500.0 400.0 0.0
-! n21/mobility setPosition 0.0 450.0 400.0 0.0
-! n22/mobility setPosition 0.0 250.0 275.0 0.0
-! n23/mobility setPosition 0.0 350.0 450.0 0.0
+puts "Positioning sensor nodes.."
+
+# for the sensors They will be randomly placed on the grid (2D only)
+# set the position of sensor nodes args=> (speed(m/sec), xCoord,yCoord,zCoord
+for {set i [expr $sink_id + 1]} {$i < [expr $node_num - $target_node_num]} {incr i} {
+   ! n$i/mobility setPosition 0.0 [expr 50+rand()*650] [expr 50+rand()*600] 0.0     
+}
 
 ! n0/wphy setInitialEnergy 100
 
@@ -436,75 +419,32 @@ $sim stop
 
 # need to start different nodes at different time
 # in order to avoid route request collision
-script {run n0} -at 0.3 -on $sim
-script {run n1} -at 0.4 -on $sim
-script {run n2} -at 0.5 -on $sim
-script {run n3} -at 0.6 -on $sim
-script {run n4} -at 0.7 -on $sim
-script {run n5} -at 0.8 -on $sim
-script {run n6} -at 0.9 -on $sim
-script {run n7} -at 1.0 -on $sim
-script {run n8} -at 1.1 -on $sim
-script {run n9} -at 1.2 -on $sim
-script {run n10} -at 1.3 -on $sim
-script {run n11} -at 1.4 -on $sim
-script {run n12} -at 1.5 -on $sim
-script {run n13} -at 1.6 -on $sim
-script {run n14} -at 1.7 -on $sim
-script {run n15} -at 1.8 -on $sim
-script {run n16} -at 1.9 -on $sim
-script {run n17} -at 2.0 -on $sim
-script {run n18} -at 2.1 -on $sim
-script {run n19} -at 2.2 -on $sim
-script {run n20} -at 2.3 -on $sim
-script {run n21} -at 2.4 -on $sim
-script {run n22} -at 2.5 -on $sim
-script {run n23} -at 2.6 -on $sim
-script {run n24} -at 2.7 -on $sim
 
+script {run n0} -at 0.1 -on $sim
+
+#***************start the sensors************************
+for {set i [expr $sink_id + 1]} {$i < [expr $node_num - $target_node_num]} {incr i} {
+    script puts "run n$i" -at 0.$i -on $sim
+}
+
+#*** Start target nodes ***
+for {set i [expr $node_num - $target_node_num]} {$i < $node_num} {incr i} {
+   	script puts "run n$i" -at 1.$i -on $sim
+}
 
 # Sinks subscribing to interests
 #                         taskId longMin longMax latMin latMax duration interval data_interval refreshPeriod payment)
-script {! n0/app subscribe 10 100.0 300.0 200.0 400.0 200000.0 53.0 5.0 200000.0 10} -at 3.0 -on $sim
+script {! n0/app subscribe 10 100.0 800.0 100.0 800.0 200000.0 53.0 5.0 20000.0 10} -at 3.0 -on $sim
 
-set np 7; # number of points
-set t [java::new {double[][]} $np]
-$t set 0 [java::new {double[]} 4 "0 100.0 300.0 0"]
-$t set 1 [java::new {double[]} 4 "2000 150.0 300.0 0"]
-$t set 2 [java::new {double[]} 4 "4000 200.0 250.0 0"]
-$t set 3 [java::new {double[]} 4 "6000 250.0 250.0 0"]
-$t set 4 [java::new {double[]} 4 "8000 275.0 300.0 0"]
-$t set 5 [java::new {double[]} 4 "10000 300.0 300.0 0"]
-$t set 6 [java::new {double[]} 4 "12000 300.0 300.0 0"]
-! n24/mobility installTrajectory $t
 
-set end 20000.0
+set end 15000.0
 
-script {! n0/app collectStats} -at $end -on $sim
-script {! n1/app collectStats} -at $end -on $sim
-script {! n2/app collectStats} -at $end -on $sim
-script {! n3/app collectStats} -at $end -on $sim
-script {! n4/app collectStats} -at $end -on $sim
-script {! n5/app collectStats} -at $end -on $sim
-script {! n6/app collectStats} -at $end -on $sim
-script {! n7/app collectStats} -at $end -on $sim
-script {! n8/app collectStats} -at $end -on $sim
-script {! n9/app collectStats} -at $end -on $sim
-script {! n10/app collectStats} -at $end -on $sim
-script {! n11/app collectStats} -at $end -on $sim
-script {! n12/app collectStats} -at $end -on $sim
-script {! n13/app collectStats} -at $end -on $sim
-script {! n14/app collectStats} -at $end -on $sim
-script {! n15/app collectStats} -at $end -on $sim
-script {! n16/app collectStats} -at $end -on $sim
-script {! n17/app collectStats} -at $end -on $sim
-script {! n18/app collectStats} -at $end -on $sim
-script {! n19/app collectStats} -at $end -on $sim
-script {! n20/app collectStats} -at $end -on $sim
-script {! n21/app collectStats} -at $end -on $sim
-script {! n22/app collectStats} -at $end -on $sim
-script {! n23/app collectStats} -at $end -on $sim
+for {set n  1} {$n < [expr $node_num - $target_node_num ]} {incr n} {
+	script puts "! n$n/app collectStats" -at $end -on $sim
+}
 script {! n0/app collectGlobalStats} -at $end -on $sim
+
 script {! $sim info} -at $end -on $sim
 script {! n0/app shutdown} -at $end -on $sim 
+ 
 $sim resumeTo $end

@@ -55,7 +55,7 @@ for {set i 0} {$i < [expr $sink_id + 1]} {incr i} {
 	
 	cd n$i
 
-	mkdir drcl.inet.sensorsim.drl.diffext.DRLDiffApp app
+	mkdir drcl.inet.sensorsim.drl.diffext.DRLTrackingApp app
 	! app setNid $i
 	! app setSinkNid $sink_id
 	! app setCoherentThreshold 1000.0
@@ -169,7 +169,7 @@ for {set i [expr $sink_id + 1]} {$i < [expr $node_num - $target_node_num]} {incr
 	
 	cd n$i
 
-	mkdir drcl.inet.sensorsim.drl.diffext.DRLDiffApp app
+	mkdir drcl.inet.sensorsim.drl.diffext.DRLTrackingApp app
 	! app setNid $i
 	! app setSinkNid $sink_id
 	! app setCoherentThreshold 1000.0
@@ -454,7 +454,7 @@ script {run n19} -at 2.2 -on $sim
 
 # Sinks subscribing to interests
 #                         taskId longMin longMax latMin latMax duration interval data_interval refreshPeriod payment)
-script {! n0/app subscribe 10 100.0 300.0 200.0 400.0 200000.0 53.0 5.0 2000.0 10} -at 3.0 -on $sim
+script {! n0/app subscribe 10 100.0 300.0 200.0 400.0 200000.0 53.0 5.0 200000.0 10} -at 3.0 -on $sim
 
 set np 7; # number of points
 set t [java::new {double[][]} $np]
@@ -488,6 +488,8 @@ script {! n15/app collectStats} -at $end -on $sim
 script {! n16/app collectStats} -at $end -on $sim
 script {! n17/app collectStats} -at $end -on $sim
 script {! n18/app collectStats} -at $end -on $sim
+
+script {! n0/app collectGlobalStats} -at $end -on $sim
 script {! $sim info} -at $end -on $sim
- 
+script {! n0/app shutdown} -at $end -on $sim 
 $sim resumeTo $end
