@@ -54,7 +54,11 @@ public class InterestCacheEntry
 	
 	/** The gradient list which contains several gradient fields (each of which is GradientEntry), up to one per neighbor */
 	public List<GradientEntry> gradientList ;
-
+	
+	GradientEntry currMax;
+	
+	DRLDiffApp app;
+	
 	public InterestCacheEntry(InterestCacheEntry iCacheEntry)
 	{
 		super() ;
@@ -68,12 +72,13 @@ public class InterestCacheEntry
 		}
 	}
 
-	public InterestCacheEntry(InterestPacket interest_, List<GradientEntry> gradientList_)
+	public InterestCacheEntry(InterestPacket interest_, List<GradientEntry> gradientList_, DRLDiffApp app)
 	{
 		interest = interest_ ;
 		lastTimeSent = 0 ;
 		gradientList = gradientList_ ;
-		lastRefresh=interest.getTimestamp();
+		lastRefresh=interest.getTimestamp();	
+		this.app=app;
 	}
 
 
@@ -105,13 +110,15 @@ public class InterestCacheEntry
 	
 	public GradientEntry getMaxGradient() {
 		if(gradientList==null || gradientList.size()==0) return null;
-		GradientEntry maxEntry=gradientList.get(0);
+		double max=0;
+		if(currMax!=null && currMax.isAlive(app.getTime())) max=currMax.getPayment();			
 		for(GradientEntry entry: gradientList){
-			if(entry.getPayment()>maxEntry.getPayment()){
-				maxEntry=entry;
+			if(entry.getPayment()>max+payable*0.025 && entry.isAlive(app.getTime())){
+				currMax=entry;
+				max=currMax.getPayment();
 			}
 		}
-		return maxEntry;
+		return currMax;
 	}
 
 	/*public GradientEntry getMaxAliveGradient(double currentTime){

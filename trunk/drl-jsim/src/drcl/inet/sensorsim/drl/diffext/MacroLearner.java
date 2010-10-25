@@ -20,10 +20,16 @@ public class MacroLearner {
 	private static final double EXPLORATION_FACTOR = 0.1;
 	
 	
+	enum GlobalUtilFunc{
+		WLU,
+		TEAM
+	}
 	DRLDiffApp diffApp;
+	GlobalUtilFunc utilFunc;
 	
 	public MacroLearner(DRLDiffApp diffApp) {
-		this.diffApp=diffApp;		
+		this.diffApp=diffApp;	
+		this.utilFunc= GlobalUtilFunc.valueOf(System.getProperty("global.util.function", "WLU"));
 	}
 
 	public String toString(){
@@ -38,9 +44,12 @@ public class MacroLearner {
 	 * @param outboundMsgs
 	 */
 	public void dataArriveAtUpPort(DataPacket pkt) {
+		boolean explore=false;
 		if(pkt.getReward()<=0){
 			if(Math.random()>EXPLORATION_FACTOR)
 			return;  //ignoring packet as doesn't have any reward for 
+			else
+				explore=true;
 		}
 		InterestCacheEntry interestEntry=diffApp.interestCacheLookup(pkt.getTaskId());
 		DataPacket dataPacket=new DataPacket(pkt);
@@ -53,12 +62,15 @@ public class MacroLearner {
 			return;
 		}else{   			
 			long destination=-1;
-			if (/*Math.random() < EXPLORATION_FACTOR || */pkt.isExplore()) { 
+			double delay=0.0;
+			if (explore || pkt.isExplore()) { 
 				//destination = interestEntry.getRandomGradient().getNeighbor(); // exploration choosen
 				destination = DRLDiffApp.BROADCAST_DEST;
+				delay=DRLDiffApp.DELAY;
 				//dataPacket.setExplore(true);
 			}else{	
 				GradientEntry gradient= interestEntry.getMaxGradient();
+				gradient.setUsedTimestamp(diffApp.getTime());
 				if(gradient.getPayment()<=0){
 					diffApp.log(Level.FINE,"Dropping packet as gradient's payment is zero or negative");
 					//diffApp.interestCachePrint();
@@ -68,8 +80,8 @@ public class MacroLearner {
 				//if(dataPacket.destination)
 			}
 			dataPacket.setDestinationId(destination);
-			dataPacket.setSourceId(diffApp.nid);			
-			diffApp.sendPacket(dataPacket,0.0);			
+			dataPacket.setSourceId(diffApp.nid);	
+			diffApp.sendPacket(dataPacket,delay);			
 		}		
 	}
 
@@ -130,10 +142,16 @@ public class MacroLearner {
 				for (DataStreamEntry stream : dataStreams) {
 					if(stream.getNoOfPackets() == 0)
 						continue;
-					List<DataPacket> clampedPkts = getDataAcceptStream(pkts,stream);
-					double clReward = diffApp.calcTotalReward(clampedPkts, interest,
-							payable);
-					double wlReward = totalReward - clReward;
+					double wlReward=0;
+					if (utilFunc == GlobalUtilFunc.WLU) {
+						List<DataPacket> clampedPkts = getDataAcceptStream(
+								pkts, stream);
+						double clReward = diffApp.calcTotalReward(clampedPkts,
+								interest, payable);
+						wlReward = totalReward - clReward;
+					}else if(utilFunc== GlobalUtilFunc.TEAM){
+						wlReward = totalReward;
+					}
 					stream.updateStatsOnNewWLReward(wlReward);
 				}
 			}
@@ -199,7 +217,7 @@ public class MacroLearner {
 			/* create an interest entry whose parameters are instantiated from the received interest. */
 			gradientList = new ArrayList<GradientEntry>() ;
 			/* Insert an entry in the interest cache */
-			interestEntry=new InterestCacheEntry(interestPkt, gradientList);
+			interestEntry=new InterestCacheEntry(interestPkt, gradientList, diffApp);
 			diffApp.interestCacheInsert(interestEntry) ;
 			shouldProcess=true;
 		}else{
@@ -269,7 +287,7 @@ public class MacroLearner {
 	public double calcPayable(InterestPacket interest, double payment){
 		if(diffApp.nid==diffApp.sink_nid) return payment;
 		double costOfParticipation= calcCostOfParticipation(interest);
-		diffApp.log(Level.INFO,"Cost of participation:"+costOfParticipation);
+		diffApp.log(Level.FINE,"Cost of participation:"+costOfParticipation);
 		//double profit= (payment-costOfParticipation)*PROFIT_MARGIN;
 		return payment-costOfParticipation; //+profit);		
 	}

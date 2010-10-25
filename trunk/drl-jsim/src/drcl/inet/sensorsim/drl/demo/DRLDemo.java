@@ -114,7 +114,7 @@ public class DRLDemo extends JApplet implements IDRLDemo {
    		// create a simple graph for the demo
         graph = new DirectedSparseMultigraph<Integer, Number>();
         
-        Dimension layoutSize = new Dimension(600,600);
+        Dimension layoutSize = new Dimension(800,800);
         
         layout = new StaticLayout<Integer,Number>(graph,
         		new ChainedTransformer(new Transformer[]{
@@ -129,7 +129,6 @@ public class DRLDemo extends JApplet implements IDRLDemo {
         vv.getRenderer().setVertexRenderer(
         		new GradientVertexRenderer<Integer,Number>(
         				Color.white, Color.red, false));
-        //vv.getRenderContext().setVe
         vv.getRenderContext().setVertexShapeTransformer(new VertexShapeSizeAspect(graph));
         // add my listeners for ToolTips
         vv.setVertexToolTipTransformer(new Transformer<Integer,String>(){

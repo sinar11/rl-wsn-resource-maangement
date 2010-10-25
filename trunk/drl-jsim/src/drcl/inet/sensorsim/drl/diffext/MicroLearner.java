@@ -391,13 +391,9 @@ public class MicroLearner {
 			if(targetNid<0){
 				dataPkt.setHeartBeat(true);
 				diffApp.noOfHeartBeats++;
-			}else{  //remove heart beat packets from queue as we got real data..
-				/*for(Iterator<DataPacket> it=outboundMsgs.iterator();it.hasNext();){
-					DataPacket pkt=it.next();
-					if(pkt.isHeartBeat()) it.remove();					
-				}*/
-				diffApp.noOfSrcPkts++;
-				//outboundMsgs.clear();
+			}else{ 
+				diffApp.log(Level.FINE, "Received target packet as source");
+				diffApp.noOfSrcPkts++;				
 			}
 			//filtering of data for same task for this timestep, 
 			if(!shouldFilter(dataPkt)){

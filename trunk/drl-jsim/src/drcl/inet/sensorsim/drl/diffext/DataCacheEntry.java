@@ -100,20 +100,13 @@ public class DataCacheEntry
 		Map<Long,ReinforcementPacket> pkts= new HashMap<Long,ReinforcementPacket>();
 		if((currentTime-lastReinforcedTime)<DRLDiffApp.REINFORCE_WINDOW)
 			return pkts.values();	
-		//if(recentData.size()==0) return pkts;
-		//DataStreamEntry bestStream= findBestStream(interest);
+		
 		for(DataStreamEntry stream: dataStreams){
 			if(stream.getSourceId()==nid || stream.getNoOfPackets()==0) continue;
-			populateReinforcements(pkts, nid, stream, payable, margin);
-			/*if(stream.getAvgWLReward()>0){  //|| stream.equals(bestStream)
-					System.out.println(nid+":+VE Reinforcement:"+payable+"-"+stream);
-					populateReinforcements(pkts, nid, stream, payable);
-				} 
-			}else if(stream.getNoOfPackets()>0){
-				System.out.println(nid+":-VE Reinforcement:"+stream);//+" bestStream:"+bestStream);
-				populateReinforcements(pkts,nid,stream,0);
-			}	*/			
+			populateReinforcements(pkts, nid, stream, payable, margin);					
 		}
+		if(pkts.size()>0)
+			System.out.println(nid+"Reinforcements:"+pkts);
 		reset(currentTime);
 		return pkts.values();
 	}
@@ -136,7 +129,7 @@ public class DataCacheEntry
 			reinf=new ReinforcementPacket(taskId,payable,nid,stream.getSourceId());
 			pkts.put(stream.getSourceId(),reinf);
 		}
-		reinf.addStreamPayment(stream.getStreamId(), payment);				
+		reinf.addStreamPayment(stream.getStreamId(), payment);		
 	}
 	
 	public List<List<Long>> getRecentDataStreams(){

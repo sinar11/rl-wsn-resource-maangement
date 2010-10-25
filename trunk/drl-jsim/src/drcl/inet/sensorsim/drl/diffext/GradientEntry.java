@@ -87,22 +87,30 @@ public class GradientEntry
 			return false ;
 	}
 
-	/*public boolean isAlive(double currentTime){
-		if((currentTime- usedTimestamp)< 4*DRLDiffApp.REINFORCE_WINDOW
-				&& (currentTime- updateTimestamp)> 2*DRLDiffApp.REINFORCE_WINDOW)
+	public boolean isAlive(double currentTime){
+		if(usedTimestamp==0 || neighbor==0) return true;
+		if((currentTime- usedTimestamp)> 3*DRLDiffApp.REINFORCE_WINDOW && (currentTime- usedTimestamp)< 10*DRLDiffApp.REINFORCE_WINDOW
+				&& (currentTime- updateTimestamp)> 8*DRLDiffApp.REINFORCE_WINDOW){
+			System.out.println("Neighbor not alive- entry:"+toString());
+			this.payment=0.0;
 			return false;
-		else
+		}else{
 			return true;
-	}*/
+		}
+		//return true;
+	}
+	
 	public double getUsedTimestamp() {
 		return usedTimestamp;
 	}
 
 	public void setUsedTimestamp(double usedTimestamp) {
-		this.usedTimestamp = usedTimestamp;
+		if(this.usedTimestamp<=updateTimestamp)
+			this.usedTimestamp = usedTimestamp;
 	}
 
 	public String toString(){
-		return "GradientEntry[neighbor="+neighbor+",payment="+payment+",duration="+duration+"interestTimestamp="+interestTimestamp+",updateTimestamp="+updateTimestamp+"]";
+		return "GradientEntry[neighbor="+neighbor+",payment="+payment+",duration="+duration+"interestTimestamp="+interestTimestamp+",updateTimestamp="+updateTimestamp+",usedTimestamp="+usedTimestamp+"]";
 	}
+	
 }

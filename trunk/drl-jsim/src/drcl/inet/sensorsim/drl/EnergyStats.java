@@ -74,7 +74,7 @@ public class EnergyStats {
 	public static NodeStat getNodeWithLowestLifetime(){
 		NodeStat lowest=null;
 		for(int i=0;i<stats.length;i++){
-			if(stats[i].lifetime==0) continue;
+			if(i==0 || stats[i].lifetime==0) continue;
 			if(lowest==null){
 				lowest=stats[i];
 				continue;

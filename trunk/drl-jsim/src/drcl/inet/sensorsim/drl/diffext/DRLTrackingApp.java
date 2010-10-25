@@ -10,7 +10,6 @@ import drcl.inet.sensorsim.SensorAppAgentContract;
 import drcl.inet.sensorsim.SensorPositionReportContract;
 import drcl.inet.sensorsim.drl.CSVLogger;
 import drcl.inet.sensorsim.drl.EnergyStats;
-import drcl.inet.sensorsim.drl.demo.DRLDemoFactory;
 import drcl.inet.sensorsim.drl.diffext.InterestPacket.CostParam;
 import drcl.inet.sensorsim.drl.diffext.Tuple.Operator;
 import drcl.inet.sensorsim.drl.diffext.Tuple.Type;
@@ -23,7 +22,7 @@ import drcl.inet.sensorsim.drl.diffext.Tuple.Type;
 public class DRLTrackingApp extends DRLDiffApp
 {
 	private static final long serialVersionUID = -4429342392878956966L;
-
+	
 	public DRLTrackingApp(){
 		super(); 
 	}
@@ -61,7 +60,7 @@ public class DRLTrackingApp extends DRLDiffApp
 	}
 	
 	/** Initiates a sensing task by sending an INTEREST packet */
-	public void subscribe(int taskId, double longMin, double longMax, double latMin, double latMax, double duration, double interval, double dataInterval, double refreshPeriod, double payment, String costParam)
+	public void subscribe(int taskId, double longMin, double longMax, double latMin, double latMax, double duration, double interval, double dataInterval, double refreshPeriod, double payment)
 	{
 		/* constructs an interest */
 		List<Tuple> interest = new ArrayList<Tuple>() ;
@@ -72,12 +71,12 @@ public class DRLTrackingApp extends DRLDiffApp
 		interest.add(new Tuple(Tuple.TARGET_KEY, Type.STRING_TYPE, Operator.IS, TargetName) ) ;
 		interest.add(new Tuple(Tuple.TARGET_NID, Type.INT32_TYPE, Operator.EQ_ANY, TargetName) ) ;
 		List<CostParam> costParams= new ArrayList<CostParam>();
+		costParam= System.getProperty("costParam");
 		if(costParam!=null){
-			this.costParam=costParam;
 			costParams.add(new CostParam(CostParam.Type.valueOf(costParam),1));
 		}else{
-		     costParams.add(new CostParam(CostParam.Type.NoOfHops,0.5));
-		     costParams.add(new CostParam(CostParam.Type.Lifetime,0.5));
+		     costParams.add(new CostParam(CostParam.Type.NoOfHops,0.75));
+		     costParams.add(new CostParam(CostParam.Type.Lifetime,0.25));
 		}
 		List<Tuple> qosConstraints= new ArrayList<Tuple>();
 		qosConstraints.add(new Tuple(Tuple.SNR,Type.FLOAT32_TYPE,Operator.GE, new Double(50)));
@@ -112,10 +111,11 @@ public class DRLTrackingApp extends DRLDiffApp
 					+ doubleArrToString(curr));
 			double dist = Math.sqrt(Math.pow(Math.abs(target_location[0]- curr[0]), 2)
 	                  + Math.pow(Math.abs(target_location[1] - curr[1]), 2));
+			totalTrackingError+=dist;
+			totalTrackCount++;
 			CSVLogger.log("target"+targetNid,target_location[0] + "," + target_location[1]
 						+ "," + curr[0] + "," + curr[1] + "," + dist,false,microLearner.algorithm.getAlgorithm());	
 		}		
 	}
-	
 	
 }
