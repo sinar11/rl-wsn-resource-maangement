@@ -32,6 +32,7 @@ import org.apache.commons.collections15.Transformer;
 import org.apache.commons.collections15.functors.ChainedTransformer;
 
 import drcl.inet.sensorsim.drl.EnergyStats.NodeStat;
+import drcl.inet.sensorsim.drl.diffext.DRLDiffApp;
 
 import edu.uci.ics.jung.algorithms.layout.Layout;
 import edu.uci.ics.jung.algorithms.layout.StaticLayout;
@@ -133,7 +134,7 @@ public class DRLDemo extends JApplet implements IDRLDemo {
         // add my listeners for ToolTips
         vv.setVertexToolTipTransformer(new Transformer<Integer,String>(){
         	public String transform(Integer v) {
-				return nodeTypes.get(v)+"-"+v+",Energy="+nodeStats[v].getCurrEnergy();
+				return nodeTypes.get(v)+"-"+v+"["+DRLDiffApp.doubleArrToString(map.get(v))+"]"+",Energy="+nodeStats[v].getCurrEnergy();
 		}});
         vv.setEdgeToolTipTransformer(new Transformer<Number,String>() {
 			public String transform(Number edge) {
@@ -153,7 +154,7 @@ public class DRLDemo extends JApplet implements IDRLDemo {
         vv.setGraphMouse(graphMouse);
         
         vv.addKeyListener(graphMouse.getModeKeyListener());
-        vv.setToolTipText("<html><center>Type 'p' for Pick mode<p>Type 't' for Transform mode");
+       // vv.setToolTipText("<html><center>Type 'p' for Pick mode<p>Type 't' for Transform mode");
         
         final ScalingControl scaler = new CrossoverScalingControl();
         
@@ -311,7 +312,7 @@ public class DRLDemo extends JApplet implements IDRLDemo {
 		if(dist<5) return;
 		map.put(nid,loc);
 		layout.lock(nid, true);
-		layout.setLocation(nid, new Point2D.Double(loc[0],loc[1]));
+		layout.setLocation(nid, new Point2D.Double(loc[1],loc[0]));
 		/*graph.removeVertex(nid);
 		*/
 		layout.initialize();

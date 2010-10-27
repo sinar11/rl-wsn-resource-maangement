@@ -116,6 +116,8 @@ public abstract class DRLDiffApp extends drcl.inet.sensorsim.SensorApp implement
 	
 	private InterestPacket pendingInterest;
 
+	private double[] myLoc;
+
 
 	
 	protected DRLDiffApp ()
@@ -130,23 +132,22 @@ public abstract class DRLDiffApp extends drcl.inet.sensorsim.SensorApp implement
 		macroLearner= new MacroLearner(this);
 		microLearner=new MicroLearner(this,macroLearner);		
 	}
-
+	
 	 protected void _start() {
-		 double[] loc;
 		 if(nid==sink_nid){
 				EnergyStats.init(noOfNodes);
-				loc= new double[]{550,350};
 				this.initialEnergy=100;
 				EnergyStats.update((int) nid, 0, initialEnergy,
 						initialEnergy > 0, getTime());
 		 }else{
-			 this.initialEnergy=getRemainingEnergy();
+			 this.initialEnergy=getRemainingEnergy();	
 			 SensorPositionReportContract.Message positionMsg = new SensorPositionReportContract.Message();
 			 positionMsg = (SensorPositionReportContract.Message) mobilityPort
 					.sendReceive(positionMsg);
-			 loc= new double[]{positionMsg.getX(),positionMsg.getY()};
+			 myLoc= new double[]{positionMsg.getX(),positionMsg.getY()};
 		 }
-		 DRLDemoFactory.getDRLDemo().addNode((int)nid,loc,initialEnergy, getMyType());		 
+		 
+		 DRLDemoFactory.getDRLDemo().addNode((int)nid,myLoc,initialEnergy, getMyType());		 
 		 microLearner._start();		 
 	 }
 
@@ -170,6 +171,9 @@ public abstract class DRLDiffApp extends drcl.inet.sensorsim.SensorApp implement
 	public void setNoOfNodes(int noOfNodes) {
 		this.noOfNodes = noOfNodes;
 		CSVLogger.noOfNodes=noOfNodes;
+	}
+	public void setPosition(double speed, double x, double y, double z){
+		myLoc= new double[]{x,y};
 	}
 	
 	public String getName() { return "DRLDiffApp"; }
@@ -781,7 +785,7 @@ public abstract class DRLDiffApp extends drcl.inet.sensorsim.SensorApp implement
 		return false;
 	}
 	
-	protected String doubleArrToString(double[] arr){
+	public static String doubleArrToString(double[] arr){
 		String s="[";
 		for(double d:arr) s+=d+" ";
 		s+="]";
