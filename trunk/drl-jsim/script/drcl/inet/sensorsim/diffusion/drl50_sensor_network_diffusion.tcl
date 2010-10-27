@@ -3,6 +3,7 @@
 # Date: 12/23/2003
 
 source "script/test/include.tcl"
+expr {srand(1)}
 
 cd [mkdir -q drcl.comp.Component /aodvtest]
 
@@ -394,7 +395,8 @@ for {set i 0} {$i < $target_node_num} {incr i} {
 }
 
 # set the position of sink nodes
-! n0/mobility setPosition 0.0 250.0 650.0 0.0
+! n0/mobility setPosition 0.0 600.0 300.0 0.0
+! n0/app setPosition  0.0 600.0 300.0 0.0
 
 # set the position of target nodes
 # Max. speed is the first argument of setPosition.
@@ -407,12 +409,9 @@ puts "Positioning sensor nodes.."
 
 # for the sensors They will be randomly placed on the grid (2D only)
 # set the position of sensor nodes args=> (speed(m/sec), xCoord,yCoord,zCoord
+
 for {set i [expr $sink_id + 1]} {$i < [expr $node_num - $target_node_num]} {incr i} {
-   ! n$i/mobility setPosition 0.0 [expr 100+ rand()*500] [expr 100 + rand()*400] 0.0
-   set y_ [expr {$i/10<1?100:($i/10)*100}]
-   puts "for i=$i, x=[expr 100+$i%10*50], y=$y_" 
-   ! n$i/mobility setPosition 0.0 [expr 100+$i%10*50] $y_ 0.0
-     
+   ! n$i/mobility setPosition 0.0 [expr 100+ rand()*500] [expr 100 + rand()*500] 0.0     
 }
 
 ! n0/wphy setInitialEnergy 100
@@ -424,16 +423,16 @@ $sim stop
 # need to start different nodes at different time
 # in order to avoid route request collision
 
-script {run n0} -at 0.1 -on $sim
+script {run n0} -at 0.8 -on $sim
 
 #***************start the sensors************************
 for {set i [expr $sink_id + 1]} {$i < [expr $node_num - $target_node_num]} {incr i} {
-    script puts "run n$i" -at 0.$i -on $sim
+    script puts "run n$i" -at 1.$i -on $sim
 }
 
 #*** Start target nodes ***
 for {set i [expr $node_num - $target_node_num]} {$i < $node_num} {incr i} {
-   	script puts "run n$i" -at 1.$i -on $sim
+   	script puts "run n$i" -at 10.$i -on $sim
 }
 
 # Sinks subscribing to interests
