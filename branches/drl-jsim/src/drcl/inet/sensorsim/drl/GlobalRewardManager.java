@@ -30,6 +30,7 @@ public class GlobalRewardManager implements GlobalRewardManagerMBean{
 	List<Double> globalRewards=new ArrayList<Double>(1000);
 	double totalReward=0;
 	double effectiveCost=0;
+	double dataCost=0;
 	double totalCost=0;
 	private long noOfTracks=0;
 	
@@ -83,7 +84,7 @@ public class GlobalRewardManager implements GlobalRewardManagerMBean{
 	
 	public synchronized void manage(long timestep, Algorithm algorithm) {
 		if (pendingData == null || pendingData.size() == 0) {
-			globalRewards.add(totalReward);
+			globalRewards.add(totalReward/this.totalCost);
 			//updateTrackingStats(timestep,algorithm);
 			return;
 		}
@@ -123,11 +124,14 @@ public class GlobalRewardManager implements GlobalRewardManagerMBean{
 			// double glReward=bestStrReward-totalCost+bestStream.cost;
 			double glReward = (bestStrReward * bestStream.cost) / totalCost;
 			noOfTracks += bestStream.pktIds.size();
-			totalReward += glReward;
 			effectiveCost += bestStream.cost;
 			if(algorithm==Algorithm.ORACLE){
 				this.totalCost+=bestStream.cost;
+				this.totalReward+=bestStrReward;
+			}else{
+				totalReward += glReward;				
 			}
+			this.dataCost+=totalCost;
 			// calc WL based on best stream
 			double[] streamRewards= new double[CSVLogger.noOfNodes];
 			for (Stream stream : allStreams) {
@@ -224,7 +228,7 @@ public class GlobalRewardManager implements GlobalRewardManagerMBean{
 		StringBuffer buff= new StringBuffer();
 		buff.append("RewardUpdates,"+rewardUpdates+",positiveUpdates,"+positiveUpdates);
 		buff.append(",effectiveCost,"+effectiveCost+",totalCost,"+totalCost+",globalReward,"+totalReward/totalCost);
-		buff.append(",avgTrackError,"+(totalTrackingError/totalTrackCount)+",noOfTracks,"+noOfTracks);
+		buff.append(",avgTrackError,"+(totalTrackingError/totalTrackCount)+",noOfTracks,"+noOfTracks+",dataCost,"+dataCost);
 		for(Integer taskId: taskExecutions.keySet()){
 			buff.append(",task-"+taskId+","+taskExecutions.get(taskId));
 		}
