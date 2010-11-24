@@ -27,8 +27,8 @@ public abstract class AbstractAlgorithm {
 	 
 	 protected AbstractAlgorithm(Hashtable<Integer,SensorTask> taskList, DRLSensorApp app){
 		 long seed=(long)Math.random()*100;
-		 if(System.getProperty("mobility.seed")!=null){
-			 seed= Long.parseLong(System.getProperty("mobility.seed"));
+		 if(System.getProperty("algorithm.seed")!=null){
+			 seed= Long.parseLong(System.getProperty("algorithm.seed"));
 		 }
 		 uniformDist= new UniformDistribution(0,taskList.size(),seed);
 		 this.taskList=taskList;

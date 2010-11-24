@@ -81,7 +81,10 @@ public class DRLSensorApp extends SensorApp implements drcl.comp.ActiveComponent
     double totalCost=0;
     String[] tasks;
     GlobalRewardManagerMBean globalRewardManager;
-    //List<Double> globalRewards= new ArrayList<Double>(500);
+    
+    //static variables shared by all nodes
+    static double allNodesTotalReward=0; //this is sum of rewards of individual agents and not a global system wide reward which is based on system's goal
+    static List<Double> allNodesAvgRewards= new ArrayList<Double>(500);
     
 	private long currStream=-1;
 
@@ -152,6 +155,7 @@ public class DRLSensorApp extends SensorApp implements drcl.comp.ActiveComponent
 			if(nid==sink_nid){
 				globalRewardManager.updateTrackingStats(totalExecutions, algorithm.getAlgorithm());
 				myTimer = setTimeout("performTask", TIMER_INTERVAL);
+				++totalExecutions;
 				return;
 			}
 			if (currentTask != null) {
@@ -160,6 +164,7 @@ public class DRLSensorApp extends SensorApp implements drcl.comp.ActiveComponent
 				totalCost += currentTask.lastCost;
 				endTask(currentTask, currentState);
 				globalRewardManager.addToTotalCost(currentTask.lastCost, algorithm.getAlgorithm());
+				allNodesTotalReward+=currentTask.lastReward;
 			}
 			SensorState prevState = currentState;
 			currentState = getMatchingState(lastSeenSNR, destId >= 0,
@@ -177,6 +182,10 @@ public class DRLSensorApp extends SensorApp implements drcl.comp.ActiveComponent
 			setTimeout("manageReward", MANAGE_REWARD_INTERVAL);
 			if (nid == sink_nid) {
 				globalRewardManager.manage(totalExecutions,algorithm.getAlgorithm());
+				if (totalExecutions > 0) {
+					double avgRew = (allNodesTotalReward / globalRewardManager.getTotalCost());
+					allNodesAvgRewards.add(avgRew);
+				}
 			}else{
 			// update to macro-learners
 				List<WLReward> wlrewards = globalRewardManager
@@ -251,7 +260,8 @@ public class DRLSensorApp extends SensorApp implements drcl.comp.ActiveComponent
     }
 
     public void log(Level level, String string) {
-        log.log(level,getTime()+"[Node:"+nid+"] "+string);        
+    	String algo=(algorithm==null)?"":algorithm.getAlgorithm().toString();
+        log.log(level,getTime()+"[Node:"+nid+"]["+algo+"]"+string);        
     }
 
     private void exportvalues(){
@@ -266,11 +276,8 @@ public class DRLSensorApp extends SensorApp implements drcl.comp.ActiveComponent
             executions+=element.getNoOfExecutions()+",";
         }
         //CSVLogger.log("executions-"+nid,executions,false,algorithm.getAlgorithm());
-        double avgRew=(totalReward/totalExecutions);
-        /*synchronized(DRLSensorApp.class){
-        	double avgRew=
-            globalRewards.[totalExecutions]+=avgRew;
-        }*/
+        
+       
         //CSVLogger.log("reward-"+nid,new Double(avgRew).toString(),false,algorithm.getAlgorithm());
         /*
 		 * energyPort.exportEvent("Energy Node:" + nid, new DoubleObj(
@@ -556,11 +563,18 @@ public class DRLSensorApp extends SensorApp implements drcl.comp.ActiveComponent
     
     public void collectGlobalStats() {
 		log(Level.INFO, "*******************GLOBAL STATS**************");
+		StringBuffer globalReward= new StringBuffer();
 		for (int i = 0; i < globalRewardManager.getGlobalRewards().size(); i++) {
-			CSVLogger.log("reward", ""
-					+ globalRewardManager.getGlobalRewards().get(i), false,
-					algorithm.getAlgorithm());
+			globalReward.append(globalRewardManager.getGlobalRewards().get(i)+",");
 		}
+		CSVLogger.logGlobal("global-reward", globalReward.toString(),
+				algorithm.getAlgorithm());
+		StringBuffer avgReward= new StringBuffer();
+		for (int i = 0; i < allNodesAvgRewards.size(); i++) {
+			avgReward.append(allNodesAvgRewards.get(i)+",");			
+		}
+		CSVLogger.logGlobal("avg-reward", avgReward.toString(),
+				algorithm.getAlgorithm());
 		CSVLogger.logGlobal("global-stats", globalRewardManager.getStats(),
 				algorithm.getAlgorithm());
 	}

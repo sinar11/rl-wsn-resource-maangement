@@ -114,7 +114,7 @@ public class DIRLWoLFAlgorithm extends AbstractAlgorithm{
 			}
 			double delta=determineDelta(prevState,currentTask);
 			policyValues[currentTask.getId()]= policyValues[currentTask.getId()] + delta;
-			//CSVLogger.log("Delta"+app.getNid(), ""+delta,false, Algorithm.DIRLWoLF);
+			CSVLogger.log("Delta"+app.getNid(), ""+delta,false, Algorithm.DIRLWoLF);
 			log(Level.FINE,"isWinning:"+isWinning+", ***task:"+currentTask.getTaskId()+" ***state:"+prevState.getStateId()+" ***policy="+print(policyValues)+" and ***avgPolicy="+print(avgPolicyValues)+" ***delta="+delta);
 		}		
 	}
