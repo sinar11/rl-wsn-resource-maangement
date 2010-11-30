@@ -18,7 +18,7 @@ public class DIRLWoLFAlgorithm extends AbstractAlgorithm{
 	Map<Integer,double[]> avgPolicy;
 	int[] stateCount= new int[SensorState.MAX_STATES];
 	double deltaW=0.5;
-	double deltaL=0.1;
+	double deltaL=0.9;
 	double currentDelta=0;
 	
 	protected DIRLWoLFAlgorithm(Hashtable<Integer, SensorTask> taskList,

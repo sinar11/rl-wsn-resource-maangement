@@ -3,6 +3,9 @@
  */
 package drcl.inet.sensorsim.drl;
 
+import drcl.inet.sensorsim.drl.SensorState.BestTask;
+import drcl.inet.sensorsim.drl.algorithms.AbstractAlgorithm.Algorithm;
+
 
 /*
  * @author Kunal
@@ -11,7 +14,7 @@ package drcl.inet.sensorsim.drl;
 public abstract class SensorTask {
     
     public final double ALPHA=0.5; // LEARNING RATE PARAMETER
-    public final double GAMMA=0.5; //DISCOUNT FACTOR 
+    public final double GAMMA=0.05; //DISCOUNT FACTOR 
     
     String taskId;  // String id 
     int id;
@@ -44,7 +47,7 @@ public abstract class SensorTask {
     }
     
     public void updateQValue(SensorState lastState, double QforBestAction){
-        Qvalues[lastState.getStateId()]= (1-ALPHA)*Qvalues[lastState.getStateId()]+ ALPHA*(lastReward + GAMMA * QforBestAction);
+        Qvalues[lastState.getStateId()]= (1-ALPHA)*Qvalues[lastState.getStateId()]+ ALPHA*(lastReward + GAMMA * QforBestAction);     
     }
     
     public void executeTask(){

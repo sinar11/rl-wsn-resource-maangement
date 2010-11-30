@@ -32,8 +32,8 @@ public class DRLSensorApp extends SensorApp implements drcl.comp.ActiveComponent
     private static final long serialVersionUID = 1933018614040188069L;
 
     public static Logger log= Logger.global;
-    private static final double TIMER_INTERVAL =10;
-    private static final double MANAGE_REWARD_INTERVAL=20*TIMER_INTERVAL;
+    public static final double TIMER_INTERVAL =10;
+    public static final double MANAGE_REWARD_INTERVAL=20*TIMER_INTERVAL;
     public static final double ENERGY_SAMPLE=8.41*0.00001;
     public static final double ENERGY_ROUTE=((2.45*0.001) + (5.97*0.001));	
     public static final double ENERGY_SLEEP=8.0*0.000001;
@@ -83,7 +83,8 @@ public class DRLSensorApp extends SensorApp implements drcl.comp.ActiveComponent
     GlobalRewardManagerMBean globalRewardManager;
     
     //static variables shared by all nodes
-    static double allNodesTotalReward=0; //this is sum of rewards of individual agents and not a global system wide reward which is based on system's goal
+    static double allNodesCurrentReward=0; //this is sum of rewards of individual agents and not a global system wide reward which is based on system's goal
+    static double allNodesCurrentCost=0;
     static List<Double> allNodesAvgRewards= new ArrayList<Double>(500);
     
 	private long currStream=-1;
@@ -164,7 +165,8 @@ public class DRLSensorApp extends SensorApp implements drcl.comp.ActiveComponent
 				totalCost += currentTask.lastCost;
 				endTask(currentTask, currentState);
 				globalRewardManager.addToTotalCost(currentTask.lastCost, algorithm.getAlgorithm());
-				allNodesTotalReward+=currentTask.lastReward;
+				allNodesCurrentReward+=currentTask.lastReward;
+				allNodesCurrentCost+=currentTask.lastCost;
 			}
 			SensorState prevState = currentState;
 			currentState = getMatchingState(lastSeenSNR, destId >= 0,
@@ -183,8 +185,14 @@ public class DRLSensorApp extends SensorApp implements drcl.comp.ActiveComponent
 			if (nid == sink_nid) {
 				globalRewardManager.manage(totalExecutions,algorithm.getAlgorithm());
 				if (totalExecutions > 0) {
-					double avgRew = (allNodesTotalReward / globalRewardManager.getTotalCost());
+					double avgRew = (allNodesCurrentReward-allNodesCurrentCost);
+				    log(Level.INFO,"Reward:"+avgRew+",allNodesCurrentReward="+allNodesCurrentReward+",allNodesCurrentCost="+allNodesCurrentCost);
+					int len=allNodesAvgRewards.size();
+					if(len>0)
+						avgRew= (allNodesAvgRewards.get(len-1)*len+ avgRew)/(len+1);
 					allNodesAvgRewards.add(avgRew);
+					allNodesCurrentReward=0;
+					allNodesCurrentCost=0;
 				}
 			}else{
 			// update to macro-learners
@@ -204,8 +212,8 @@ public class DRLSensorApp extends SensorApp implements drcl.comp.ActiveComponent
             return; // no destination node present
         }
         if(outboundMsgs.size()==0) return;
-        double reward= currentTask.lastReward/outboundMsgs.size();
-        double cost= currentTask.lastCost/outboundMsgs.size();
+        double reward= currentTask.lastReward;
+        double cost= currentTask.lastCost;
         for (Iterator<SensorAppWirelessAgentContract.Message> iter = outboundMsgs.iterator(); iter.hasNext();) {
             noOfTx++;
             SensorAppWirelessAgentContract.Message msg = iter.next();
@@ -216,8 +224,6 @@ public class DRLSensorApp extends SensorApp implements drcl.comp.ActiveComponent
             iter.remove();
         }
 	}
-
-
 
     public SensorState getMatchingState(double lastSeenSNR, boolean hasNeighbours, boolean successfulRx, boolean successfulSample) {
         SensorState state= new SensorState(lastSeenSNR,hasNeighbours,successfulSample,successfulRx,currStream);
@@ -332,6 +338,7 @@ public class DRLSensorApp extends SensorApp implements drcl.comp.ActiveComponent
         long pktId;
         long targetId;
         double[] targetLocation;
+        double timestamp;
         
         public void addReward(long node, double reward, double cost){
         	this.reward+=reward;
@@ -355,7 +362,7 @@ public class DRLSensorApp extends SensorApp implements drcl.comp.ActiveComponent
                 currentEnergy=currentEnergy-ENERGY_ROUTE;
             }
             public synchronized double computeCost() {
-            	return ENERGY_ROUTE/currentEnergy; //RX +TX
+            	return ENERGY_ROUTE;///currentEnergy; //RX +TX
             }
             public synchronized double computePrice() {
             	/*return (noOfRx>0)?expectedPrices[currentState.stateId]:0;*/
@@ -374,7 +381,7 @@ public class DRLSensorApp extends SensorApp implements drcl.comp.ActiveComponent
                 currentEnergy=currentEnergy-ENERGY_SAMPLE;
             }
             public synchronized double computeCost() {
-            	return ENERGY_SAMPLE/currentEnergy; 
+            	return ENERGY_SAMPLE;///currentEnergy; 
             }
             public synchronized double computePrice() {
             	//return (noOfSensedEvents>0)?(expectedPrices[currentState.stateId]):0;
@@ -392,7 +399,7 @@ public class DRLSensorApp extends SensorApp implements drcl.comp.ActiveComponent
             }
 
             public synchronized double computeCost() {
-            	return ENERGY_SLEEP/currentEnergy; 
+            	return ENERGY_SLEEP;///currentEnergy; 
             }
             public synchronized double computePrice() {
             	//return (expectedPrices[currentState.stateId]);
@@ -451,6 +458,7 @@ public class DRLSensorApp extends SensorApp implements drcl.comp.ActiveComponent
 			te.snr = msg.getSNR();
 			te.streamId = nid;
 			te.targetId=targetId;
+			te.timestamp=totalExecutions;
 			double[] target_location = new double[2];
 			target_location[0] = round_digit(msg.getTargetX() - X_shift, 4);
 			target_location[1] = round_digit(msg.getTargetY() - Y_shift, 4);
@@ -636,13 +644,21 @@ public class DRLSensorApp extends SensorApp implements drcl.comp.ActiveComponent
     		recentTuples.remove(tuple.pktId);
     	}
 		
-		private void updateExpPrice(Tuple tuple, double reward){
-			SensorTask task=taskList.get(tuple.taskId);
-			if(algorithm.getAlgorithm().equals(Algorithm.COIN) || algorithm.getAlgorithm().equals(Algorithm.TEAM)){
-    			task.expectedPrice=(1-task.ALPHA)*task.expectedPrice+ task.ALPHA*reward;
-    			/*for(int i=0;i<task.Qvalues.length;i++)
-    				task.Qvalues[i]=0;*/
-    		}
+		private void updateExpPrice(Tuple tuple, double reward) {
+			SensorTask task = taskList.get(tuple.taskId);
+			if (task.getTaskId().equals(SAMPLE)) {
+				if (algorithm.getAlgorithm().equals(Algorithm.COIN)
+						|| algorithm.getAlgorithm().equals(Algorithm.TEAM)) {
+					task.expectedPrice = (1 - task.ALPHA) * task.expectedPrice
+							+ task.ALPHA * reward;
+					if(task.expectedPrice> 10*ENERGY_SAMPLE){
+						task.expectedPrice=10*ENERGY_SAMPLE;
+					}
+					/*
+					 * for(int i=0;i<task.Qvalues.length;i++) task.Qvalues[i]=0;
+					 */
+				}
+			}
 		}
     }
     

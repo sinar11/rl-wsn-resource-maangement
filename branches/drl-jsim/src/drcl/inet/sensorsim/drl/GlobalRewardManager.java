@@ -11,7 +11,7 @@ import drcl.inet.sensorsim.drl.DRLSensorApp.TrackingEvent;
 import drcl.inet.sensorsim.drl.algorithms.AbstractAlgorithm.Algorithm;
 
 public class GlobalRewardManager implements GlobalRewardManagerMBean{
-	static final double REWARD_PER_TRACK=0.01;
+	static final double PAYMENT=1.0;
 	private static final double SNR_WEIGHT = 0.00;
 	private static final double MAX_SNR = 100;
 	private static final double MIN_REWARD = 0.25;
@@ -28,10 +28,11 @@ public class GlobalRewardManager implements GlobalRewardManagerMBean{
 	int rewardUpdates=0;
 	private static int positiveUpdates=0;
 	List<Double> globalRewards=new ArrayList<Double>(1000);
-	double totalReward=0;
+	double avgReward=0;
 	double effectiveCost=0;
 	double dataCost=0;
 	double totalCost=0;
+	double costFromLastReinforcement=0;
 	private long noOfTracks=0;
 	
 	public GlobalRewardManager(){		
@@ -54,7 +55,7 @@ public class GlobalRewardManager implements GlobalRewardManagerMBean{
 	}
 
 	public double getTotalReward() {
-		return totalReward;
+		return avgReward;
 	}
 
 	public double getEffectiveCost() {
@@ -66,9 +67,11 @@ public class GlobalRewardManager implements GlobalRewardManagerMBean{
 	}
 	
 	public void addToTotalCost(double cost, Algorithm algorithm){
-		if(algorithm==Algorithm.ORACLE) totalCost+=DRLSensorApp.ENERGY_SLEEP/100.0;
-		else
-			totalCost+=cost;
+		if(algorithm==Algorithm.ORACLE){
+			cost=DRLSensorApp.ENERGY_SLEEP;
+		}
+		totalCost+=cost;
+		costFromLastReinforcement+=cost;
 	}
 	
 	public  synchronized void dataArrived(long timestep, TrackingEvent trEvent){
@@ -83,20 +86,25 @@ public class GlobalRewardManager implements GlobalRewardManagerMBean{
 	}
 	
 	public synchronized void manage(long timestep, Algorithm algorithm) {
-		if (pendingData == null || pendingData.size() == 0) {
-			globalRewards.add(totalReward/this.totalCost);
+		/*if (pendingData == null || pendingData.size() == 0) {
+			System.out.println("Zero global reward..");
+			updateGlobalReward(0);
+			costFromLastReinforcement=0;
 			//updateTrackingStats(timestep,algorithm);
 			return;
-		}
+		}*/
 
 		// multiple events received for same target
 		// only encouraging one with least cost for each target
+		double totalReward=0;
+		
 		for (Long targetId : targetEventMap.keySet()) {
 			List<TrackingEvent> targetEvents = targetEventMap.get(targetId);
-			double totalCost = 0;
+			double targetCost = 0;
 			ArrayList<Stream> allStreams = new ArrayList<Stream>();
+			noOfTracks +=targetEvents.size();
 			for (TrackingEvent event : targetEvents) {
-				totalCost += event.cost;
+				targetCost += event.cost;
 				Stream stream = new Stream(event.streamId, event.nodes);
 				int index = allStreams.indexOf(stream);
 				if (index == -1) {
@@ -106,64 +114,103 @@ public class GlobalRewardManager implements GlobalRewardManagerMBean{
 				}
 				stream.addPkt(event.pktId);
 				stream.addCost(event.cost);
-				if (event.snr > MAX_SNR)
+				/*if (event.snr > MAX_SNR)
 					event.snr = MAX_SNR;
 				stream.addReward((REWARD_PER_TRACK + event.snr * SNR_WEIGHT - event.cost)
-								/ (REWARD_PER_TRACK + MAX_SNR * SNR_WEIGHT));
+								/ (REWARD_PER_TRACK + MAX_SNR * SNR_WEIGHT));*/
 				stream.addPktsReward(event.reward);
 			}
-			Stream bestStream = null;
-			double bestStrReward = Double.MIN_VALUE;
+			double globalReward= calcTotalReward(pendingData, PAYMENT);
+			Stream bestStream=allStreams.get(0);
+			double maxWLReward=0;
 			for (Stream stream : allStreams) {
-				if (stream.reward > bestStrReward) {
-					bestStream = stream;
-					bestStrReward = stream.reward;
+				if(stream.pktIds.size() == 0)
+					continue;
+				List<TrackingEvent> clampedPkts = getDataAcceptStream(
+							pendingData, stream);
+				double clReward = calcTotalReward(clampedPkts, PAYMENT);
+				double wlReward = globalReward - clReward;
+				if(wlReward>maxWLReward){
+					maxWLReward=wlReward;
+					bestStream=stream;
 				}
+				stream.updateStatsOnNewWLReward(wlReward);
 			}
 			
-			// double glReward=bestStrReward-totalCost+bestStream.cost;
-			double glReward = (bestStrReward * bestStream.cost) / totalCost;
-			noOfTracks += bestStream.pktIds.size();
-			effectiveCost += bestStream.cost;
+			for (Stream stream : allStreams) {
+				if(algorithm==Algorithm.COIN){
+				if(stream.avgWLReward>0 || maxWLReward<=0){
+					addToPendingRwds(stream, PAYMENT, algorithm);
+				}else{
+					addToPendingRwds(stream, 0, algorithm);
+				}
+				}
+				if(stream.avgWLReward>bestStream.avgWLReward)
+					bestStream=stream;
+				stream.resetStatsOnReinforcement(timestep);
+			}
+					
 			if(algorithm==Algorithm.ORACLE){
 				this.totalCost+=bestStream.cost;
-				this.totalReward+=bestStrReward;
-			}else{
-				totalReward += glReward;				
+				this.costFromLastReinforcement+=bestStream.cost;
 			}
-			this.dataCost+=totalCost;
-			// calc WL based on best stream
-			double[] streamRewards= new double[CSVLogger.noOfNodes];
-			for (Stream stream : allStreams) {
-				if (algorithm.equals(Algorithm.COIN)) {
-					double stReward = (glReward - stream.pktsReward)
-							/ (stream.nodes.size()*stream.pktIds.size());
-					if (stReward < 0)
-						stReward = 0;
-					if (stream.streamId != bestStream.streamId) {
-						stReward= -stream.cost / totalCost;
-					}
-					addToPendingRwds(stream, stReward, algorithm);
-					streamRewards[(int)stream.streamId]=stReward;
-				} else if (algorithm.equals(Algorithm.TEAM)) {
-					addToPendingRwds(stream, (glReward - stream.pktsReward)
-							/ stream.nodes.size(),algorithm);
-				}
-				stream.pktIds.clear();
-				stream.pktsReward = 0;
-				stream.cost = 0;
-				stream.reward = 0;
-			}
+			totalReward+=globalReward;				
+						
 			
-			CSVLogger.log("Delta-Macro",timestep+","+toString(streamRewards),false,algorithm);
+			//CSVLogger.log("Delta-Macro",timestep+","+toString(streamRewards),false,algorithm);
 		}
-		globalRewards.add(totalReward / this.totalCost);
+		System.out.println("Reward:"+(totalReward-costFromLastReinforcement)+",totalReward="+totalReward+",costFromLastReinforcement="+costFromLastReinforcement+",noOfTracks="+pendingData.size());
+		updateGlobalReward(totalReward-this.costFromLastReinforcement);
 		//updateTrackingStats(timestep,algorithm);
 		pendingData.clear();
 		targetEventMap.clear();
+		this.costFromLastReinforcement=0;
 	}
 	
-    private String toString(double[] streamRewards) {
+	public double calcTotalReward(List<TrackingEvent> pkts,	 double payable){
+		if(pkts==null || pkts.size()==0) return 0;
+		//int distPkts= getNoOfDistinctPkts(pkts);
+		double quality=1.0;// 0.75+ Math.min(0.25, 0.25*(distPkts/5));
+		//if(quality>1) quality=1.0;//1.0;
+		double minCost=Integer.MAX_VALUE;
+		for(TrackingEvent pkt: pkts){
+			if(pkt.cost<minCost){
+				minCost=pkt.cost;
+			}	
+		}
+		//double avgReward= pktsReward/pkts.size();
+		//double avgCost=pktsCost/pkts.size();
+		return quality*payable- minCost;//+NO_OF_PKTS_FACTOR*pkts.size();		
+	}
+	
+	private int getNoOfDistinctPkts(List<TrackingEvent> pkts) {
+		HashMap<Double,Object> timedPkts= new HashMap<Double, Object>();
+		for(TrackingEvent pkt: pkts){
+			timedPkts.put(pkt.timestamp, pkt);
+		}
+		return timedPkts.size();
+	}
+
+	private List<TrackingEvent> getDataAcceptStream(List<TrackingEvent> recentData, Stream stream) {
+		List<TrackingEvent> list= new ArrayList<TrackingEvent>();
+		for(TrackingEvent pkt:recentData){
+			if(pkt.streamId!=stream.streamId)
+				list.add(pkt);			
+		}
+		return list;
+	}
+	
+    private void updateGlobalReward(double reward) {
+    	//globalRewards.add(totalReward/this.totalCost);
+    	int len=globalRewards.size();
+    	if(len>0)
+    		this.avgReward=(this.avgReward*len+reward)/(len+1);
+    	else
+    		this.avgReward=reward;
+    	globalRewards.add(this.avgReward);		
+	}
+
+	private String toString(double[] streamRewards) {
 		StringBuffer buff= new StringBuffer();
 		for(int i=0;i<streamRewards.length;i++){
 			buff.append(i+","+streamRewards[i]+",");
@@ -201,8 +248,8 @@ public class GlobalRewardManager implements GlobalRewardManagerMBean{
     }
 	
 	private void addToPendingRwds(Stream stream, double d, Algorithm algorithm) {
-		if(Math.abs(d)<MIN_REWARD) return;   //not significant change
-		else rewardUpdates++;
+		/*if(Math.abs(d)<MIN_REWARD) return;   //not significant change
+		else */rewardUpdates++;
 		DRLSensorApp.log.info("Reward:"+d+" to stream:"+stream.nodes);
 		if(d>0) positiveUpdates++;
 		else{
@@ -227,7 +274,7 @@ public class GlobalRewardManager implements GlobalRewardManagerMBean{
 	public String getStats(){
 		StringBuffer buff= new StringBuffer();
 		buff.append("RewardUpdates,"+rewardUpdates+",positiveUpdates,"+positiveUpdates);
-		buff.append(",effectiveCost,"+effectiveCost+",totalCost,"+totalCost+",globalReward,"+totalReward/totalCost);
+		buff.append(",effectiveCost,"+effectiveCost+",totalCost,"+totalCost+",globalReward,"+this.avgReward);
 		buff.append(",avgTrackError,"+(totalTrackingError/totalTrackCount)+",noOfTracks,"+noOfTracks+",dataCost,"+dataCost);
 		for(Integer taskId: taskExecutions.keySet()){
 			buff.append(",task-"+taskId+","+taskExecutions.get(taskId));

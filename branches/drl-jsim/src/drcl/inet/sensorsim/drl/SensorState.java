@@ -20,7 +20,30 @@ public class SensorState {
     protected boolean successInRecentRX=false;
     protected long streamId;
     
-    public SensorState(double snr, boolean hasNeighbours, boolean successInRecentSampling, boolean successInRecentRX, long streamId){
+    //temp to track best task id for this state
+    BestTask bestTask;
+    
+    public class BestTask{
+    	public int id;
+    	public double qValue;
+    	
+    	BestTask(int id, double qValue){
+    		this.id=id;
+    		this.qValue=qValue;
+    	}
+    	public String toString(){
+    		return id+":"+qValue;
+    	}
+    }
+    public BestTask getBestTask() {
+		return bestTask;
+	}
+
+	public void setBestTask(SensorTask bestTask, double qValue) {
+		this.bestTask = new BestTask(bestTask.id,qValue);
+	}
+
+	public SensorState(double snr, boolean hasNeighbours, boolean successInRecentSampling, boolean successInRecentRX, long streamId){
         this.snr=snr;
         this.hasNeighbours=hasNeighbours;
         this.successInRecentRX=successInRecentRX;
@@ -38,7 +61,7 @@ public class SensorState {
     }
 
     public String toString(){
-        return stateId+":"+snr+","+hasNeighbours+","+successInRecentRX+","+successInRecentSampling+","+streamId;
+        return stateId+":"+hasNeighbours+":"+successInRecentRX+":"+successInRecentSampling;
     }
     private double getHammingDistance(SensorState s) {
         double dist=0;
@@ -46,7 +69,7 @@ public class SensorState {
         if(s.successInRecentRX!=this.successInRecentRX) dist+=1;
         if(s.successInRecentSampling!=this.successInRecentSampling) dist+=1;
         //if(s.streamId!=this.streamId) dist+=1;
-        dist+= SNR_WEIGHT*Math.abs(s.snr-this.snr);
+        //dist+= SNR_WEIGHT*Math.abs(s.snr-this.snr);
         return dist;
     }
 

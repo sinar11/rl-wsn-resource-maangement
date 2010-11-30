@@ -9,7 +9,7 @@ import drcl.inet.sensorsim.drl.CSVLogger;
 import drcl.inet.sensorsim.drl.DRLSensorApp;
 import drcl.inet.sensorsim.drl.SensorState;
 import drcl.inet.sensorsim.drl.SensorTask;
-import drcl.inet.sensorsim.drl.algorithms.AbstractAlgorithm.Algorithm;
+import drcl.inet.sensorsim.drl.SensorState.BestTask;
 
 public class DIRLAlgorithm extends AbstractAlgorithm{
 	
@@ -21,11 +21,15 @@ public class DIRLAlgorithm extends AbstractAlgorithm{
 	public SensorTask getNextTaskToExecute(SensorState currentState) {
 		SensorTask nextTask=null;
 		double expFactor=calcExplorationFactor();
-		CSVLogger.log("Exp"+app.getNid(),""+expFactor,false,Algorithm.DIRL);	
+		//CSVLogger.log("Exp"+app.getNid(),""+expFactor,false,Algorithm.DIRL);
+		//double delta=0.0;
 		if (Math.random() < expFactor) { // exploration choosen
 			nextTask = getRandomTaskToExecute();
-		}else	
-			nextTask = determineBestTaskToExecute(currentState);
+		//	CSVLogger.log("Delta"+app.getNid(), ""+diff,false,Algorithm.DIRL);
+		}else{	
+			nextTask = determineBestTaskToExecute(currentState);				
+		}
+			
 		return nextTask;
 	}
 
@@ -67,6 +71,17 @@ public class DIRLAlgorithm extends AbstractAlgorithm{
 		if (currentTask != null) {
 			currentTask.updateQValue(prevState,
 					determineBestTaskToExecute(currentState).getQvalue(currentState));
+			SensorTask currBTask= determineBestTaskToExecute(prevState);
+			BestTask prevBTask= prevState.getBestTask();
+			double delta=0.0;
+			if(currBTask!=null && prevBTask!=null /*&& currentState.getStateId()==prevState.getStateId()*/){
+				if(currBTask.getId()==prevBTask.id) delta=0.0;
+				else{
+					delta=currBTask.getQvalue(prevState)-prevBTask.qValue;//)?1.0:-1.0;
+				}
+			}
+			prevState.setBestTask(currBTask, currBTask.getQvalue(prevState));
+			CSVLogger.log("Delta"+app.getNid(),delta+","+(prevBTask!=null?prevBTask.id:"N")+","+currBTask.getId()+","+prevState+","+currentState,true,Algorithm.DIRL);
 		}		
 	}
 }
