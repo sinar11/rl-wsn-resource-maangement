@@ -434,14 +434,14 @@ $t set 12 [java::new {double[]} 4 "12000 300.0 250.0 0"]
 #! n9/mobility installTrajectory $t
 
 
-script {! n9/mobility setPosition 0.0 200.0  230.0 0.0} -at 10.0 -on $sim
+script {! n9/mobility setPosition 0.1 200.0  230.0 0.0} -at 10.0 -on $sim
 
 #script {! n9/mobility setPosition 0.0 100.0  475.0 0.0} -at 10.0 -on $sim
 #script {! n2/app setDestId -1} -at 1500.0 -on $sim
 #script {! n2/app setDestId 1} -at 3000.0 -on $sim
 
 # collect statistics at the end
-set end 12000.0
+set end 30000.0
 script {! n0/app collectStats} -at $end -on $sim
 script {! n1/app collectStats} -at $end -on $sim
 script {! n2/app collectStats} -at $end -on $sim
